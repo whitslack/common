@@ -65,6 +65,71 @@ public:
 };
 
 
+class BufferedSourceBase : public Source {
+
+private:
+	Source * const source;
+	uint8_t *buffer_ptr, *buffer_end;
+
+protected:
+	explicit BufferedSourceBase(Source *source) : source(source), buffer_ptr(), buffer_end() { }
+
+public:
+	size_t avail() override { return buffer_end - buffer_ptr; }
+
+protected:
+	ssize_t read(void *buf, size_t n, uint8_t buffer[], size_t buffer_size);
+
+};
+
+
+class BufferedSinkBase : public Sink {
+
+private:
+	Sink * const sink;
+	uint8_t *buffer_ptr, *buffer_end;
+
+protected:
+	BufferedSinkBase(Sink *sink, uint8_t buffer[]) : sink(sink), buffer_ptr(buffer), buffer_end(buffer) { }
+
+protected:
+	size_t write(const void *buf, size_t n, bool more, uint8_t buffer[], size_t buffer_size);
+	bool finish(uint8_t buffer[], size_t buffer_size);
+
+};
+
+
+template <size_t Buffer_Size>
+class BufferedSource : public BufferedSourceBase {
+
+private:
+	std::array<uint8_t, Buffer_Size> buffer;
+
+public:
+	explicit BufferedSource(Source *source) : BufferedSourceBase(source) { }
+
+public:
+	ssize_t read(void *buf, size_t n) override { return this->BufferedSourceBase::read(buf, n, buffer.data(), buffer.size()); }
+
+};
+
+
+template <size_t Buffer_Size>
+class BufferedSink : public BufferedSinkBase {
+
+private:
+	std::array<uint8_t, Buffer_Size> buffer;
+
+public:
+	explicit BufferedSink(Sink *sink) : BufferedSinkBase(sink, buffer.data()) { }
+
+public:
+	size_t write(const void *buf, size_t n, bool more = false) override { return this->BufferedSinkBase::write(buf, n, more, buffer.data(), buffer.size()); }
+	bool finish() override { return this->BufferedSinkBase::finish(buffer.data(), buffer.size()); }
+
+};
+
+
 class StringSource : public Source {
 
 private:
@@ -72,7 +137,7 @@ private:
 	std::string::const_iterator string_itr;
 
 public:
-	StringSource(const std::string *string) : string(string), string_itr(string->begin()) { }
+	explicit StringSource(const std::string *string) : string(string), string_itr(string->begin()) { }
 
 public:
 	ssize_t read(void *buf, size_t n) override;
@@ -87,7 +152,7 @@ private:
 	std::string *string;
 
 public:
-	StringSink(std::string *string) : string(string) { }
+	explicit StringSink(std::string *string) : string(string) { }
 
 public:
 	size_t write(const void *buf, size_t n, bool more = false) override;

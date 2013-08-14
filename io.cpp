@@ -60,20 +60,78 @@ size_t MemorySink::write(const void *buf, size_t n, bool) {
 }
 
 
+ssize_t BufferedSourceBase::read(void *buf, size_t n, uint8_t buffer[], size_t buffer_size) {
+	if (n == 0) {
+		return 0;
+	}
+	ptrdiff_t r;
+	if ((r = buffer_end - buffer_ptr) <= 0) {
+		if ((r = source->read(buffer, buffer_size)) <= 0) {
+			return r;
+		}
+		buffer_end = (buffer_ptr = buffer) + r;
+	}
+	if (n > static_cast<size_t>(r)) {
+		n = r;
+	}
+	std::memcpy(buf, buffer_ptr, n);
+	buffer_ptr += n;
+	return n;
+}
+
+
+size_t BufferedSinkBase::write(const void *buf, size_t n, bool more, uint8_t buffer[], size_t buffer_size) {
+	size_t ret = 0;
+	do {
+		if (n >= buffer_size && buffer_end == buffer) {
+			return ret + sink->write(buf, n, more);
+		}
+		ptrdiff_t r;
+		if ((r = buffer + buffer_size - buffer_end) > 0) {
+			size_t w = std::min(n, static_cast<size_t>(r));
+			std::memcpy(buffer_end, buf, w);
+			buffer_end += w, ret += w;
+			if ((r -= w) > 0 && more) {
+				return ret;
+			}
+			buf = static_cast<const uint8_t *>(buf) + w, n -= w;
+		}
+		if ((r = buffer_end - buffer_ptr) > 0) {
+			size_t w = sink->write(buffer_ptr, r, more || n > 0);
+			if ((buffer_ptr += w) < buffer_end) {
+				return ret;
+			}
+			buffer_end = buffer_ptr = buffer;
+		}
+	} while (n > 0);
+	return ret;
+}
+
+bool BufferedSinkBase::finish(uint8_t buffer[], size_t buffer_size) {
+	if (buffer_ptr < buffer_end) {
+		this->write(nullptr, 0, false, buffer, buffer_size);
+		if (buffer_ptr < buffer_end) {
+			return false;
+		}
+	}
+	return sink->finish();
+}
+
+
 ssize_t StringSource::read(void *buf, size_t n) {
 	if (n == 0) {
 		return 0;
 	}
-	size_t r = string->end() - string_itr;
-	if (r == 0) {
+	ptrdiff_t r;
+	if ((r = string->end() - string_itr) <= 0) {
 		return -1;
 	}
-	if (r > n) {
-		r = n;
+	if (n > static_cast<size_t>(r)) {
+		n = r;
 	}
-	std::memcpy(buf, &*string_itr, r);
-	string_itr += r;
-	return r;
+	std::memcpy(buf, &*string_itr, n);
+	string_itr += n;
+	return n;
 }
 
 
