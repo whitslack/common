@@ -3,7 +3,7 @@
 
 #include <pthread.h>
 
-namespace compat {
+namespace posix {
 
 
 class ReadLock {
@@ -19,6 +19,7 @@ public:
 	void lock();
 	bool try_lock();
 	bool try_lock_for(const timespec &timeout_duration);
+
 	template <typename Rep, typename Period>
 	bool try_lock_for(const std::chrono::duration<Rep, Period> &timeout_duration) {
 		std::chrono::nanoseconds nanos = timeout_duration;
@@ -27,10 +28,12 @@ public:
 		ts.tv_nsec = nanos.count() % 1000000000;
 		return this->try_lock_for(ts);
 	}
+
 	template <typename Clock, typename Duration>
 	bool try_lock_until(const std::chrono::time_point<Clock, Duration> &timeout_time) {
 		return this->try_lock_for(timeout_time - Clock::now());
 	}
+
 	void unlock();
 
 };
@@ -49,6 +52,7 @@ public:
 	void lock();
 	bool try_lock();
 	bool try_lock_for(const timespec &timeout_duration);
+
 	template <typename Rep, typename Period>
 	bool try_lock_for(const std::chrono::duration<Rep, Period> &timeout_duration) {
 		std::chrono::nanoseconds nanos = timeout_duration;
@@ -57,10 +61,12 @@ public:
 		ts.tv_nsec = nanos.count() % 1000000000;
 		return this->try_lock_for(ts);
 	}
+
 	template <typename Clock, typename Duration>
 	bool try_lock_until(const std::chrono::time_point<Clock, Duration> &timeout_time) {
 		return this->try_lock_for(timeout_time - Clock::now());
 	}
+
 	void unlock();
 
 };
@@ -84,4 +90,4 @@ private:
 };
 
 
-} // namespace compat
+} // namespace posix

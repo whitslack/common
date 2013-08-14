@@ -2,18 +2,19 @@
 
 #include <system_error>
 
-namespace compat {
+namespace posix {
+
 
 void ReadLock::lock() {
-	int error = ::pthread_rwlock_rdlock(rwlock);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_rdlock(rwlock)) != 0) {
 		throw std::system_error(error, std::system_category(), "pthread_rwlock_rdlock");
 	}
 }
 
 bool ReadLock::try_lock() {
-	int error = ::pthread_rwlock_tryrdlock(rwlock);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_tryrdlock(rwlock)) != 0) {
 		if (error == EBUSY) {
 			return false;
 		}
@@ -23,8 +24,8 @@ bool ReadLock::try_lock() {
 }
 
 bool ReadLock::try_lock_for(const timespec &timeout_duration) {
-	int error = ::pthread_rwlock_timedrdlock(rwlock, &timeout_duration);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_timedrdlock(rwlock, &timeout_duration)) != 0) {
 		if (error == ETIMEDOUT) {
 			return false;
 		}
@@ -34,22 +35,23 @@ bool ReadLock::try_lock_for(const timespec &timeout_duration) {
 }
 
 void ReadLock::unlock() {
-	int error = ::pthread_rwlock_unlock(rwlock);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_unlock(rwlock)) != 0) {
 		throw std::system_error(error, std::system_category(), "pthread_rwlock_unlock");
 	}
 }
 
+
 void WriteLock::lock() {
-	int error = ::pthread_rwlock_wrlock(rwlock);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_wrlock(rwlock)) != 0) {
 		throw std::system_error(error, std::system_category(), "pthread_rwlock_wrlock");
 	}
 }
 
 bool WriteLock::try_lock() {
-	int error = ::pthread_rwlock_trywrlock(rwlock);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_trywrlock(rwlock)) != 0) {
 		if (error == EBUSY) {
 			return false;
 		}
@@ -59,8 +61,8 @@ bool WriteLock::try_lock() {
 }
 
 bool WriteLock::try_lock_for(const timespec &timeout_duration) {
-	int error = ::pthread_rwlock_timedwrlock(rwlock, &timeout_duration);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_timedwrlock(rwlock, &timeout_duration)) != 0) {
 		if (error == ETIMEDOUT) {
 			return false;
 		}
@@ -70,24 +72,26 @@ bool WriteLock::try_lock_for(const timespec &timeout_duration) {
 }
 
 void WriteLock::unlock() {
-	int error = ::pthread_rwlock_unlock(rwlock);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_unlock(rwlock)) != 0) {
 		throw std::system_error(error, std::system_category(), "pthread_rwlock_unlock");
 	}
 }
 
+
 RWLock::RWLock() : rwlock() {
-	int error = ::pthread_rwlock_init(&rwlock, nullptr);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_init(&rwlock, nullptr)) != 0) {
 		throw std::system_error(error, std::system_category(), "pthread_rwlock_init");
 	}
 }
 
 RWLock::~RWLock() {
-	int error = ::pthread_rwlock_destroy(&rwlock);
-	if (error != 0) {
+	int error;
+	if ((error = ::pthread_rwlock_destroy(&rwlock)) != 0) {
 		throw std::system_error(error, std::system_category(), "pthread_rwlock_destroy");
 	}
 }
 
-} // namespace compat
+
+} // namespace posix
