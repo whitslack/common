@@ -3,6 +3,8 @@
 #include <mutex>
 #include <queue>
 
+#include "compiler.h"
+
 
 template <typename Clock>
 class Scheduler {
@@ -25,7 +27,7 @@ private:
 	std::priority_queue<Work, std::vector<Work>, std::greater<Work>> queue;
 
 public:
-	void run();
+	void run() _noreturn;
 
 	template <typename T>
 	void call_at(time_point_t deadline, T &&task) {
