@@ -22,14 +22,14 @@ CPPFLAGS += -pthread
 CFLAGS += -std=c99
 CXXFLAGS += -std=c++11
 LDFLAGS += -Wl,--as-needed
-ifdef DEBUG
-CFLAGS += -O0 -ggdb
-CXXFLAGS += -O0 -ggdb
-else
 ifneq ($(PIE),0)
 CPPFLAGS += -fPIE
 LDFLAGS += -pie
 endif
+ifdef DEBUG
+CFLAGS += -O0 -ggdb
+CXXFLAGS += -O0 -ggdb
+else
 CPPFLAGS += -DNDEBUG
 CFLAGS += -O3 -fvisibility=hidden -ffunction-sections -fdata-sections
 CXXFLAGS += -O3 -fvisibility=hidden -ffunction-sections -fdata-sections
