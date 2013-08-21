@@ -166,11 +166,9 @@ static std::istream & read_header_fields(std::istream &is, HttpHeaders &headers)
 				std::string field_value;
 				if (read_text(is, field_value)) {
 					if (!field_value.empty() && field_value.back() == ' ') {
-						// C++11: field_value.pop_back();
-						field_value.resize(field_value.size() - 1);
+						field_value.pop_back();
 					}
-					// C++11: headers.emplace(field_name, field_value);
-					headers.insert({ field_name, field_value });
+					headers.emplace(field_name, field_value);
 					if (skip_crlf(is)) {
 						continue;
 					}
@@ -249,8 +247,7 @@ std::istream & operator >> (std::istream &is, HttpResponseHeaders &headers) {
 	if (!read_word(is, headers.protocol_version) || headers.protocol_version.empty() || is.get() != ' ' || !(is >> headers.status_code) || is.get() != ' ' || !std::getline(is, headers.reason_phrase) || headers.reason_phrase.empty() || headers.reason_phrase.back() != '\r') {
 		throw std::ios_base::failure("bad status line");
 	}
-	// C++11: headers.reason_phrase.pop_back();
-	headers.reason_phrase.resize(headers.reason_phrase.size() - 1);
+	headers.reason_phrase.pop_back();
 	return read_header_fields(is, headers);
 }
 

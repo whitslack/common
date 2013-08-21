@@ -9,7 +9,7 @@ class WebSocketServer : public Socket6, public EPollable {
 	friend Handshake;
 
 protected:
-	// [C++11] using Socket6::Socket6;
+	using Socket6::Socket6;
 
 protected:
 	operator int () const override _pure;

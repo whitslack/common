@@ -213,8 +213,7 @@ static std::istream & parse_object(std::istream &is, Object::map_t &map) {
 		is.get();
 		ValuePtr value;
 		is >> value;
-		// [C++11] map.emplace(std::move(key), std::move(value));
-		map.insert(std::make_pair(std::move(key), std::move(value)));
+		map.emplace(std::move(key), std::move(value));
 	}
 }
 
@@ -241,7 +240,7 @@ static std::istream & parse_array(std::istream &is, Array::vector_t &vector) {
 		}
 		ValuePtr value;
 		is >> value;
-		vector.push_back(std::move(value));
+		vector.emplace_back(std::move(value));
 	}
 }
 

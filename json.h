@@ -40,13 +40,11 @@ public:
 	map_t * operator -> () { return &map; }
 	const map_t * operator -> () const { return &map; }
 	std::pair<map_t::iterator, bool> insert(const std::string &key, std::nullptr_t) {
-		// [C++11] return map.emplace(key, nullptr);
-		return map.insert(std::make_pair(key, nullptr));
+		return map.emplace(key, nullptr);
 	}
 	template <typename V>
 	std::pair<map_t::iterator, bool> insert(const std::string &key, V &&value) {
-		// [C++11] return map.emplace(key, ValuePtr(new V(std::move(value))));
-		return map.insert(std::make_pair(key, ValuePtr(new V(std::move(value)))));
+		return map.emplace(key, ValuePtr(new V(std::move(value))));
 	}
 	std::ostream & format(std::ostream &) const override;
 

@@ -205,9 +205,8 @@ bool WebSocketServerHandshake::ready() {
 			if (host_itr != end_itr && upgrade_itr != end_itr && connection_itr_pair.first != connection_itr_pair.second && key_itr != end_itr && version_itr != end_itr && compare_ci(upgrade_itr->second, "websocket") == 0 && any_equal_ci(connection_itr_pair.first, connection_itr_pair.second, "Upgrade") && key_itr->second.size() == 24) {
 				if (version_itr->second != "13") {
 					HttpResponseHeaders response_headers("HTTP/1.1", 426, HTTP_REASON_PHRASE_426);
-					// C++11: response_headers.emplace_hint(…)
-					response_headers.insert(response_headers.end(), { "Connection", "close" });
-					response_headers.insert(response_headers.end(), { "Sec-WebSocket-Version", "13" });
+					response_headers.emplace_hint(response_headers.end(), "Connection", "close");
+					response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Version", "13");
 					SinkBuf sb(&socket);
 					char buf[1024];
 					sb.pubsetbuf(buf, sizeof buf);
@@ -215,10 +214,9 @@ bool WebSocketServerHandshake::ready() {
 					throw std::ios_base::failure(HTTP_REASON_PHRASE_426);
 				}
 				HttpResponseHeaders response_headers("HTTP/1.1", error_pair.first, error_pair.second);
-				// C++11: response_headers.emplace_hint(…)
-				response_headers.insert(response_headers.end(), { "Connection", "Upgrade" });
-				response_headers.insert(response_headers.end(), { "Sec-WebSocket-Accept", make_accept_field_value(key_itr->second) });
-				response_headers.insert(response_headers.end(), { "Upgrade", "websocket" });
+				response_headers.emplace_hint(response_headers.end(), "Connection", "Upgrade");
+				response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Accept", make_accept_field_value(key_itr->second));
+				response_headers.emplace_hint(response_headers.end(), "Upgrade", "websocket");
 				this->prepare_response_headers(request_headers, response_headers);
 				SinkBuf sb(&socket);
 				char buf[1024];
@@ -256,9 +254,8 @@ void WebSocketServerHandshake::prepare_response_headers(const HttpRequestHeaders
 
 void WebSocketServerHandshake::send_error(int status_code, const char reason_phrase[]) {
 	HttpResponseHeaders response_headers("HTTP/1.1", status_code, reason_phrase);
-	// C++11: response_headers.emplace_hint(…)
-	response_headers.insert(response_headers.end(), { "Connection", "close" });
-	response_headers.insert(response_headers.end(), { "Sec-WebSocket-Version", "13" });
+	response_headers.emplace_hint(response_headers.end(), "Connection", "close");
+	response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Version", "13");
 	SinkBuf sb(&socket);
 	char buf[1024];
 	sb.pubsetbuf(buf, sizeof buf);
@@ -268,14 +265,14 @@ void WebSocketServerHandshake::send_error(int status_code, const char reason_phr
 
 void WebSocketClientHandshake::start(const char host[], uint16_t port, const char request_uri[]) {
 	HttpRequestHeaders request_headers("GET", request_uri, "HTTP/1.1");
-	request_headers.insert(request_headers.end(), { "Connection", "Upgrade" });
+	request_headers.emplace_hint(request_headers.end(), "Connection", "Upgrade");
 	if (port == 0) {
-		request_headers.insert(request_headers.end(), { "Host", host });
+		request_headers.emplace_hint(request_headers.end(), "Host", host);
 	}
 	else {
 		std::ostringstream ss;
 		ss << host << ':' << port;
-		request_headers.insert(request_headers.end(), { "Host", ss.str() });
+		request_headers.emplace_hint(request_headers.end(), "Host", ss.str());
 	}
 	{
 		uint32_t key[4];
@@ -284,10 +281,10 @@ void WebSocketClientHandshake::start(const char host[], uint16_t port, const cha
 		}
 		StringSink ss(&this->key);
 		CodecSink<Base64Encoder>(&ss).write(key, sizeof key);
-		request_headers.insert(request_headers.end(), { "Sec-WebSocket-Key", this->key });
+		request_headers.emplace_hint(request_headers.end(), "Sec-WebSocket-Key", this->key);
 	}
-	request_headers.insert(request_headers.end(), { "Sec-WebSocket-Version", "13" });
-	request_headers.insert(request_headers.end(), { "Upgrade", "websocket" });
+	request_headers.emplace_hint(request_headers.end(), "Sec-WebSocket-Version", "13");
+	request_headers.emplace_hint(request_headers.end(), "Upgrade", "websocket");
 	this->prepare_request_headers(request_headers);
 	SinkBuf sb(&socket);
 	char buf[1024];
