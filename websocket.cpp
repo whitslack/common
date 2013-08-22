@@ -7,7 +7,6 @@
 #include "base64.h"
 #include "codec.h"
 #include "connect.h"
-#include "rawstrbuf.h"
 #include "sha.h"
 
 template <typename T, size_t N>
@@ -189,9 +188,9 @@ bool WebSocketServerHandshake::ready() {
 		return false;
 	}
 	if ((request_pos += r) > 4 && ::memcmp(&request_buf[request_pos - 4], "\r\n\r\n", 4) == 0) {
-		rawstrbuf rsb(reinterpret_cast<const char *>(request_buf.data()), request_pos);
 		HttpRequestHeaders request_headers;
-		if (std::istream(&rsb) >> request_headers) {
+		MemoryBuf mb(request_buf.data(), request_pos);
+		if (std::istream(&mb) >> request_headers) {
 			auto error_pair = this->validate_request_headers(request_headers);
 			if (error_pair.first >= 300) {
 				this->send_error(error_pair.first, error_pair.second);
@@ -305,9 +304,9 @@ bool WebSocketClientHandshake::ready() {
 		return false;
 	}
 	if ((response_pos += r) > 4 && ::memcmp(&response_buf[response_pos - 4], "\r\n\r\n", 4) == 0) {
-		rawstrbuf rsb(reinterpret_cast<const char *>(response_buf.data()), response_pos);
 		HttpResponseHeaders response_headers;
-		if (std::istream(&rsb) >> response_headers) {
+		MemoryBuf mb(response_buf.data(), response_pos);
+		if (std::istream(&mb) >> response_headers) {
 			if (response_headers.status_code != 101) {
 				throw std::ios_base::failure(response_headers.reason_phrase);
 			}

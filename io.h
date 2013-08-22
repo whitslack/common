@@ -32,6 +32,37 @@ public:
 };
 
 
+class MemorySource : public Source {
+
+public:
+	const void *buffer;
+	size_t remaining;
+
+public:
+	MemorySource(const void *buffer, size_t remaining) : buffer(buffer), remaining(remaining) { }
+
+public:
+	ssize_t read(void *buf, size_t n) override;
+	size_t avail() override _pure { return remaining; }
+
+};
+
+
+class MemorySink : public Sink {
+
+public:
+	void *buffer;
+	size_t remaining;
+
+public:
+	MemorySink(void *buffer, size_t remaining) : buffer(buffer), remaining(remaining) { }
+
+public:
+	size_t write(const void *buf, size_t n, bool more = false) override;
+
+};
+
+
 class StringSource : public Source {
 
 private:
@@ -43,7 +74,7 @@ public:
 
 public:
 	ssize_t read(void *buf, size_t n) override;
-	size_t avail() override _pure;
+	size_t avail() override _pure { return string->end() - string_itr; }
 
 };
 
@@ -115,9 +146,21 @@ class SourceSinkBuf : public SourceBuf, public SinkBuf {
 public:
 	template <typename T>
 	explicit SourceSinkBuf(T *source_sink) : SourceBuf(source_sink), SinkBuf(source_sink) { }
+
 	SourceSinkBuf(Source *source, Sink *sink) : SourceBuf(source), SinkBuf(sink) { }
 
 protected:
 	std::streambuf * setbuf(char_type s[], std::streamsize n) override;
+
+};
+
+
+class MemoryBuf : public std::streambuf {
+
+public:
+	MemoryBuf(const void *buf, size_t n);
+
+protected:
+	MemoryBuf * setbuf(char s[], std::streamsize n) override;
 
 };

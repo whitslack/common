@@ -34,6 +34,30 @@ void Sink::write_fully(const void *buf, size_t n, bool more) {
 }
 
 
+ssize_t MemorySource::read(void *buf, size_t n) {
+	if (n == 0) {
+		return 0;
+	}
+	if (remaining == 0) {
+		return -1;
+	}
+	size_t r = std::min(n, remaining);
+	std::memcpy(buf, buffer, r);
+	buffer = static_cast<const uint8_t *>(buffer) + r, remaining -= r;
+	return r;
+}
+
+
+size_t MemorySink::write(const void *buf, size_t n, bool) {
+	size_t r = std::min(n, remaining);
+	if (r != 0) {
+		std::memcpy(buffer, buf, r);
+		buffer = static_cast<uint8_t *>(buffer) + r, remaining -= r;
+	}
+	return r;
+}
+
+
 ssize_t StringSource::read(void *buf, size_t n) {
 	if (n == 0) {
 		return 0;
@@ -48,10 +72,6 @@ ssize_t StringSource::read(void *buf, size_t n) {
 	std::memcpy(buf, &*string_itr, r);
 	string_itr += r;
 	return r;
-}
-
-size_t StringSource::avail() {
-	return string->end() - string_itr;
 }
 
 
@@ -167,5 +187,15 @@ std::streambuf * SourceSinkBuf::setbuf(char_type s[], std::streamsize n) {
 	std::streamsize h = n / 2;
 	this->SourceBuf::setbuf(s, h);
 	this->SinkBuf::setbuf(s + h, n - h);
+	return this;
+}
+
+
+MemoryBuf::MemoryBuf(const void *buf, size_t n) {
+	this->pubsetbuf(const_cast<char *>(static_cast<const char *>(buf)), static_cast<std::streamsize>(n));
+}
+
+MemoryBuf * MemoryBuf::setbuf(char s[], std::streamsize n) {
+	this->setg(s, s, s + n);
 	return this;
 }

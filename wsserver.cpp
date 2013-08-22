@@ -7,7 +7,6 @@
 #include <netinet/tcp.h>
 
 #include "base64.h"
-#include "rawstrbuf.h"
 #include "sha.h"
 #include "websocket.h"
 
