@@ -6,6 +6,7 @@
 
 #include "base64.h"
 #include "codec.h"
+#include "connect.h"
 #include "rawstrbuf.h"
 #include "sha.h"
 
@@ -360,4 +361,38 @@ WebSocketBuf::int_type WebSocketBuf::overflow(int_type ch) {
 		this->pbump(1);
 	}
 	return 0;
+}
+
+
+Socket connect_websocket(const char host[], uint16_t port, const char request_uri[], const char origin_uri[]) {
+	class Handshake : public WebSocketClientHandshake {
+
+	public:
+		bool finished;
+
+	private:
+		const char *origin_uri;
+
+	public:
+		Handshake(Socket &&socket, const char origin_uri[]) : WebSocketClientHandshake(std::move(socket)), finished(), origin_uri(origin_uri) { }
+
+		Socket & socket() { return WebSocketClientHandshake::socket; }
+
+	protected:
+		void prepare_request_headers(HttpRequestHeaders &request_headers) override {
+			if (origin_uri) {
+				request_headers.emplace("Origin", origin_uri);
+			}
+		}
+
+		void connected(const HttpResponseHeaders &) override {
+			finished = true;
+		}
+
+	} handshake(connect(host, port), origin_uri);
+	handshake.start(host, port, request_uri);
+	while (!handshake.finished) {
+		handshake.ready();
+	}
+	return std::move(handshake.socket());
 }

@@ -131,3 +131,6 @@ protected:
 	int_type overflow(int_type ch) override;
 
 };
+
+
+Socket connect_websocket(const char host[], uint16_t port, const char request_uri[], const char origin_uri[] = nullptr);
