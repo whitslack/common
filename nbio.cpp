@@ -94,7 +94,7 @@ void EPoll::pump() {
 		throw std::system_error(errno, std::system_category(), "epoll_wait");
 	}
 	if (n > 0) {
-		reinterpret_cast<EPollable *>(event.data.ptr)->ready(*this, event.events);
+		static_cast<EPollable *>(event.data.ptr)->ready(*this, event.events);
 	}
 }
 
