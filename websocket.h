@@ -124,7 +124,6 @@ protected:
 
 public:
 	WebSocketBuf(WebSocket *ws, bool mask = false, WebSocket::Opcode opcode = WebSocket::Text);
-	~WebSocketBuf() { this->sync(); }
 
 protected:
 	virtual int sync(bool more);
