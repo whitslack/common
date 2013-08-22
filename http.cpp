@@ -279,6 +279,7 @@ HttpConnectionBase::HttpConnectionBase(Source *source, Sink *sink) : ssb(source,
 
 void HttpConnectionBase::request(const HttpRequestHeaders &request_headers) {
 	std::ostream os(&ssb);
+	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 	os << request_headers << std::flush;
 	write_chunked = request_headers.find("Content-Length") == request_headers.end();
 	response_headers_read = false;
@@ -350,6 +351,7 @@ size_t HttpConnectionBase::write(const void *buf, size_t n, bool more) {
 		return w;
 	}
 	std::ostream os(&ssb);
+	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 	(os << std::hex << n << "\r\n").write(static_cast<const char *>(buf), n) << "\r\n";
 	if (!more) {
 		os << 0 << "\r\n" << std::flush;

@@ -221,7 +221,9 @@ bool WebSocketServerHandshake::ready() {
 				SinkBuf sb(&socket);
 				char buf[1024];
 				sb.pubsetbuf(buf, sizeof buf);
-				std::ostream(&sb) << response_headers << std::flush;
+				std::ostream os(&sb);
+				os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
+				os << response_headers << std::flush;
 				this->connected(request_headers, response_headers);
 				return false;
 			}
@@ -259,7 +261,9 @@ void WebSocketServerHandshake::send_error(int status_code, const char reason_phr
 	SinkBuf sb(&socket);
 	char buf[1024];
 	sb.pubsetbuf(buf, sizeof buf);
-	std::ostream(&sb) << response_headers << std::flush;
+	std::ostream os(&sb);
+	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
+	os << response_headers << std::flush;
 }
 
 
@@ -289,7 +293,9 @@ void WebSocketClientHandshake::start(const char host[], uint16_t port, const cha
 	SinkBuf sb(&socket);
 	char buf[1024];
 	sb.pubsetbuf(buf, sizeof buf);
-	std::ostream(&sb) << request_headers << std::flush;
+	std::ostream os(&sb);
+	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
+	os << request_headers << std::flush;
 }
 
 bool WebSocketClientHandshake::ready() {
