@@ -34,12 +34,12 @@ public:
 	};
 
 public:
-	std::ostream * const trace_stream_ptr;
-	std::ostream * const debug_stream_ptr;
-	std::ostream * const info_stream_ptr;
-	std::ostream * const warn_stream_ptr;
-	std::ostream * const error_stream_ptr;
-	std::ostream * const fatal_stream_ptr;
+	std::ostream * trace_stream_ptr;
+	std::ostream * debug_stream_ptr;
+	std::ostream * info_stream_ptr;
+	std::ostream * warn_stream_ptr;
+	std::ostream * error_stream_ptr;
+	std::ostream * fatal_stream_ptr;
 
 private:
 	static const char trace_label[];
