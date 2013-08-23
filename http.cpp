@@ -170,42 +170,63 @@ static std::ostream & write_header_fields(std::ostream &os, const HttpHeaders &h
 	return os << "\r\n";
 }
 
-std::pair<HttpHeaders::iterator, HttpHeaders::iterator> HttpHeaders::split(const std::string &field_name) {
-	auto pair = this->equal_range(field_name);
-	for (auto it = pair.first; it != pair.second; ++it) {
-		auto &field_values = it->second;
-		size_t i = 0, n = field_values.size();
-		for (; i < n && std::isblank(field_values[i]); ++i);
-		for (size_t j = i; j < n;) {
-			char c = field_values[j];
-			if (c == ',') {
-				size_t k = j;
-				for (; k > i && std::isblank(field_values[k - 1]); --k);
-				// [C++11] this->emplace_hint(it, it->first, field_values.substr(i, k - i));
-				auto inserted = this->insert(it, { it->first, field_values.substr(i, k - i) });
-				if (it == pair.first) {
-					pair.first = inserted;
-				}
-				while (++j < n && std::isblank(field_values[j]));
-				i = j;
-				continue;
-			}
-			else if (c == '"') {
-				while (++j < n && (c = field_values[j]) != '"') {
-					if ((c = field_values[j]) == '\\') {
-						++j;
+
+HttpHeaders::const_iterator HttpHeaders::find_token(const std::string &field_name, const std::string &token) const {
+	auto range = this->equal_range(field_name);
+	for (auto field_itr = range.first; field_itr != range.second; ++field_itr) {
+		auto value_itr = field_itr->second.begin(), value_end = field_itr->second.end();
+		while (value_itr < value_end) {
+			while ((std::isblank(*value_itr) || *value_itr == ',') && ++value_itr < value_end);
+			if (value_itr < value_end && *value_itr == '"') {
+				for (auto token_itr = token.begin(); ++value_itr < value_end; ++token_itr) {
+					if (*value_itr == '"') {
+						if (token_itr == token.end()) {
+							do {
+								if (++value_itr == value_end || *value_itr == ',') {
+									return field_itr;
+								}
+							} while (std::isblank(*value_itr));
+						}
+						break;
+					}
+					if (*value_itr == '\\' && ++value_itr == value_end) {
+						break;
+					}
+					if (token_itr == token.end() || std::toupper(*value_itr) != std::toupper(*token_itr)) {
+						while (++value_itr < value_end && *value_itr != '"') {
+							if (*value_itr == '\\' && ++value_itr == value_end) {
+								break;
+							}
+						}
+						break;
 					}
 				}
 			}
-			++j;
-		}
-		size_t k = n;
-		for (; k > i && std::isblank(field_values[k - 1]); --k);
-		if (i > 0 || k < n) {
-			field_values.assign(field_values, i, k - i);
+			else {
+				for (auto token_itr = token.begin();; ++value_itr, ++token_itr) {
+					if (value_itr == value_end || *value_itr == ',') {
+						if (token_itr == token.end()) {
+							return field_itr;
+						}
+						break;
+					}
+					if (token_itr == token.end() || std::toupper(*value_itr) != std::toupper(*token_itr)) {
+						while (std::isblank(*value_itr)) {
+							if (++value_itr == value_end) {
+								return field_itr;
+							}
+						}
+						if (*value_itr == ',') {
+							return field_itr;
+						}
+						break;
+					}
+				}
+			}
+			while (value_itr < value_end && *value_itr++ != ',');
 		}
 	}
-	return pair;
+	return this->end();
 }
 
 std::istream & operator >> (std::istream &is, HttpRequestHeaders &headers) {
@@ -272,8 +293,7 @@ void HttpConnectionBase::request(const HttpRequestHeaders &request_headers) {
 const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 	if (!response_headers_read) {
 		std::istream(&ssb) >> response_headers;
-		auto transfer_encoding_range = response_headers.split("Transfer-Encoding");
-		read_chunked = any_equal_ci(transfer_encoding_range.first, transfer_encoding_range.second, "chunked");
+		read_chunked = response_headers.find_token("Transfer-Encoding", "chunked") != response_headers.end();
 		if (read_chunked) {
 			chunk_rem = 0;
 		}

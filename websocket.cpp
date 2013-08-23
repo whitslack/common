@@ -198,11 +198,11 @@ bool WebSocketServerHandshake::ready() {
 			}
 			auto host_itr = request_headers.find("Host");
 			auto upgrade_itr = request_headers.find("Upgrade");
-			auto connection_itr_pair = request_headers.split("Connection");
+			auto connection_itr = request_headers.find_token("Connection", "Upgrade");
 			auto key_itr = request_headers.find("Sec-WebSocket-Key");
 			auto version_itr = request_headers.find("Sec-WebSocket-Version");
 			auto end_itr = request_headers.end();
-			if (host_itr != end_itr && upgrade_itr != end_itr && connection_itr_pair.first != connection_itr_pair.second && key_itr != end_itr && version_itr != end_itr && compare_ci(upgrade_itr->second, "websocket") == 0 && any_equal_ci(connection_itr_pair.first, connection_itr_pair.second, "Upgrade") && key_itr->second.size() == 24) {
+			if (host_itr != end_itr && upgrade_itr != end_itr && connection_itr != end_itr && key_itr != end_itr && version_itr != end_itr && compare_ci(upgrade_itr->second, "websocket") == 0 && key_itr->second.size() == 24) {
 				if (version_itr->second != "13") {
 					HttpResponseHeaders response_headers("HTTP/1.1", 426, HTTP_REASON_PHRASE_426);
 					response_headers.emplace_hint(response_headers.end(), "Connection", "close");
@@ -312,10 +312,10 @@ bool WebSocketClientHandshake::ready() {
 			}
 			this->validate_response_headers(response_headers);
 			auto upgrade_itr = response_headers.find("Upgrade");
-			auto connection_itr_pair = response_headers.split("Connection");
+			auto connection_itr = response_headers.find_token("Connection", "Upgrade");
 			auto accept_itr = response_headers.find("Sec-WebSocket-Accept");
 			auto end_itr = response_headers.end();
-			if (upgrade_itr != end_itr && connection_itr_pair.first != connection_itr_pair.second && accept_itr != end_itr && compare_ci(upgrade_itr->second, "websocket") == 0 && any_equal_ci(connection_itr_pair.first, connection_itr_pair.second, "Upgrade") && accept_itr->second.size() == 28 && accept_itr->second == make_accept_field_value(key)) {
+			if (upgrade_itr != end_itr && connection_itr != end_itr && accept_itr != end_itr && compare_ci(upgrade_itr->second, "websocket") == 0 && accept_itr->second.size() == 28 && accept_itr->second == make_accept_field_value(key)) {
 				this->connected(response_headers);
 				return false;
 			}

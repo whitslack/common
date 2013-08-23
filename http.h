@@ -22,16 +22,10 @@ extern const char
 		HTTP_REASON_PHRASE_500[], HTTP_REASON_PHRASE_501[], HTTP_REASON_PHRASE_502[], HTTP_REASON_PHRASE_503[], HTTP_REASON_PHRASE_504[], HTTP_REASON_PHRASE_505[], HTTP_REASON_PHRASE_511[];
 
 
-template <typename Itr>
-static bool any_equal_ci(Itr first, Itr last, const std::string &str) {
-	return std::find_if(first, last, [&](const std::pair<std::string, std::string> &elem) { return compare_ci(elem.second, str) == 0; }) != last;
-}
-
-
 class HttpHeaders : public std::multimap<std::string, std::string, less_ci> {
 
 public:
-	std::pair<iterator, iterator> split(const std::string &field_name);
+	const_iterator find_token(const std::string &field_name, const std::string &token) const;
 
 };
 
