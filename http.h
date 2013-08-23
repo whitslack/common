@@ -67,24 +67,63 @@ std::ostream & operator << (std::ostream &os, const HttpResponseHeaders &headers
 std::string rfc2822_date(struct tm &tm, bool is_utc);
 
 
+class ChunkedSource : public Source {
+
+private:
+	Source * const source;
+	size_t chunk_rem;
+	enum { Size, Size_CR, Extensions, Extensions_CR, Data, Data_End, Data_CR, End } state;
+
+public:
+	explicit ChunkedSource(Source *source) : source(source), chunk_rem(), state() { }
+
+public:
+	void reset() { chunk_rem = 0, state = Size; }
+	ssize_t read(void *buf, size_t n) override;
+	size_t avail() override;
+
+};
+
+
+class ChunkedSink : public Sink {
+
+private:
+	Sink * const sink;
+	size_t write_size;
+	enum { Idle, Size, Size_CR, Size_LF, Data, Data_CR, Data_LF, End } state;
+
+public:
+	explicit ChunkedSink(Sink *sink) : sink(sink), write_size(), state() { }
+
+public:
+	void reset() { write_size = 0, state = Idle; }
+	size_t write(const void *buf, size_t n, bool more = false) override;
+	bool finish() override;
+
+};
+
+
 class HttpConnectionBase : public Source, public Sink {
 
 private:
-	SourceSinkBuf ssb;
+	Source * const source;
+	Sink * const sink;
+	ChunkedSource chunked_source;
+	ChunkedSink chunked_sink;
 	bool read_chunked, write_chunked;
 	bool response_headers_read;
 	HttpResponseHeaders response_headers;
-	ssize_t chunk_rem;
-	char buf[3000];
+	size_t remaining;
 
 protected:
-	HttpConnectionBase(Source *source, Sink *sink);
+	HttpConnectionBase(Source *source, Sink *sink) : source(source), sink(sink), chunked_source(source), chunked_sink(sink), read_chunked(), write_chunked(), response_headers_read(), remaining() { }
 
 public:
 	void request(const HttpRequestHeaders &request_headers);
 	const HttpResponseHeaders & get_response_headers();
 	ssize_t read(void *buf, size_t n) override;
 	size_t write(const void *buf, size_t n, bool more = false) override;
+	bool finish() override;
 
 };
 
@@ -93,6 +132,8 @@ class HttpConnection : public HttpConnectionBase {
 
 private:
 	Socket socket;
+	BufferedSource<1500> buffered_source;
+	BufferedSink<1500> buffered_sink;
 
 public:
 	HttpConnection(const std::string &host, uint16_t port = 80);

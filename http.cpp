@@ -3,6 +3,8 @@
 #include <iomanip>
 #include <sstream>
 
+#define BITS(l, o) (((size_t(1) << (l)) - 1) << (o))
+
 template <typename T, size_t N>
 constexpr size_t countof(T (&)[N]) { return N; }
 
@@ -278,12 +280,251 @@ std::string rfc2822_date(struct tm &tm, bool is_utc) {
 }
 
 
-HttpConnectionBase::HttpConnectionBase(Source *source, Sink *sink) : ssb(source, sink), read_chunked(), write_chunked(), response_headers_read(), chunk_rem() {
-	ssb.pubsetbuf(buf, sizeof buf);
+ssize_t ChunkedSource::read(void *buf, size_t n) {
+	static const int8_t UNHEX['f' - '0' + 1] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15 };
+	ssize_t r;
+	char c;
+	for (;;) {
+		switch (state) {
+			case Size:
+				for (;;) {
+					if ((r = source->read(&c, 1)) <= 0) {
+						goto Exit;
+					}
+					if (c == ';') {
+						state = Extensions;
+						break;
+					}
+					if (c == '\r') {
+						state = Size_CR;
+						break;
+					}
+					int8_t v;
+					if (c < '0' || c > 'f' || (v = UNHEX[static_cast<uint8_t>(c - '0')]) < 0) {
+						throw std::ios_base::failure("invalid chunk size");
+					}
+					chunk_rem = chunk_rem << 4 | v;
+				}
+				break;
+			case Size_CR:
+				if ((r = source->read(&c, 1)) <= 0) {
+					goto Exit;
+				}
+				if (c != '\n') {
+					throw std::ios_base::failure("invalid chunk size");
+				}
+				state = chunk_rem ? Data : End;
+				break;
+			case Extensions:
+				for (;;) {
+					if ((r = source->read(&c, 1)) <= 0) {
+						goto Exit;
+					}
+					if (c == '\r') {
+						state = Extensions_CR;
+						break;
+					}
+				}
+				break;
+			case Extensions_CR:
+				if ((r = source->read(&c, 1)) <= 0) {
+					goto Exit;
+				}
+				if (c != '\n') {
+					if (c != '\r') {
+						state = Extensions;
+					}
+					break;
+				}
+				state = chunk_rem ? Data : End;
+				break;
+			case Data:
+				if ((r = source->read(buf, std::min(n, chunk_rem))) <= 0) {
+					goto Exit;
+				}
+				if ((chunk_rem -= r) == 0) {
+					state = Data_End;
+				}
+				return r;
+			case Data_End:
+				if ((r = source->read(&c, 1)) <= 0) {
+					goto Exit;
+				}
+				if (c != '\r') {
+					throw std::ios_base::failure("invalid chunk");
+				}
+				state = Data_CR;
+				// fall through
+			case Data_CR:
+				if ((r = source->read(&c, 1)) <= 0) {
+					goto Exit;
+				}
+				if (c != '\n') {
+					throw std::ios_base::failure("invalid chunk");
+				}
+				state = Size;
+				break;
+			case End:
+				return -1;
+		}
+	}
+Exit:
+	if (r < 0) {
+		throw std::ios_base::failure("premature End");
+	}
+	return 0;
 }
 
+size_t ChunkedSource::avail() {
+	return std::min(source->avail(), chunk_rem);
+}
+
+
+size_t ChunkedSink::write(const void *buf, size_t n, bool more) {
+	static const char HEX[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
+	size_t ret = 0, mask;
+	char c;
+	for (;;) {
+		switch (state) {
+			case Idle:
+				if (n == 0 && more) {
+					return ret;
+				}
+				write_size = n;
+				state = Size;
+				// fall through
+			case Size:
+				for (;;) {
+					if (write_size & BITS(32, 32)) {
+						if (write_size & BITS(16, 48)) {
+							if (write_size & BITS(8, 56)) {
+								if (mask = write_size & BITS(4, 60)) {
+									c = HEX[mask >> 60];
+								}
+								else {
+									c = HEX[(mask = write_size & BITS(4, 56)) >> 56];
+								}
+							}
+							else if (mask = write_size & BITS(4, 52)) {
+								c = HEX[mask >> 52];
+							}
+							else {
+								c = HEX[(mask = write_size & BITS(4, 48)) >> 48];
+							}
+						}
+						else if (write_size & BITS(8, 40)) {
+							if (mask = write_size & BITS(4, 44)) {
+								c = HEX[mask >> 44];
+							}
+							else {
+								c = HEX[(mask = write_size & BITS(4, 40)) >> 40];
+							}
+						}
+						else if (mask = write_size & BITS(4, 36)) {
+							c = HEX[mask >> 36];
+						}
+						else {
+							c = HEX[(mask = write_size & BITS(4, 32)) >> 32];
+						}
+					}
+					else if (write_size & BITS(16, 16)) {
+						if (write_size & BITS(8, 24)) {
+							if (mask = write_size & BITS(4, 28)) {
+								c = HEX[mask >> 28];
+							}
+							else {
+								c = HEX[(mask = write_size & BITS(4, 24)) >> 24];
+							}
+						}
+						else if (mask = write_size & BITS(4, 20)) {
+							c = HEX[mask >> 20];
+						}
+						else {
+							c = HEX[(mask = write_size & BITS(4, 16)) >> 16];
+						}
+					}
+					else if (write_size & BITS(8, 8)) {
+						if (mask = write_size & BITS(4, 12)) {
+							c = HEX[mask >> 12];
+						}
+						else {
+							c = HEX[(mask = write_size & BITS(4, 8)) >> 8];
+						}
+					}
+					else if (mask = write_size & BITS(4, 4)) {
+						c = HEX[mask >> 4];
+					}
+					else {
+						c = HEX[mask = write_size & BITS(4, 0)];
+					}
+					if (sink->write(&c, 1, true) == 0) {
+						return ret;
+					}
+					if ((write_size ^= mask) == 0) {
+						state = Size_CR;
+						break;
+					}
+				}
+				// fall through
+			case Size_CR:
+				c = '\r';
+				if (sink->write(&c, 1, true) == 0) {
+					return ret;
+				}
+				state = Size_LF;
+				// fall through
+			case Size_LF:
+				c = '\n';
+				if (sink->write(&c, 1, n) == 0) {
+					return ret;
+				}
+				state = n ? Data : End;
+				break;
+			case Data:
+				if ((ret = sink->write(buf, n, true)) < n) {
+					return ret;
+				}
+				buf = nullptr;
+				n = 0;
+				state = Data_CR;
+				// fall through
+			case Data_CR:
+				c = '\r';
+				if (sink->write(&c, 1, true) == 0) {
+					return ret;
+				}
+				state = Data_LF;
+				// fall through
+			case Data_LF:
+				c = '\n';
+				if (sink->write(&c, 1, true) == 0) {
+					return ret;
+				}
+				state = Idle;
+				break;
+			case End:
+				if (n > 0) {
+					throw std::logic_error("final chunk already sent");
+				}
+				return ret;
+		}
+	}
+}
+
+bool ChunkedSink::finish() {
+	if (state != End) {
+		this->write(nullptr, 0, false);
+		if (state != End) {
+			return false;
+		}
+	}
+	return sink->finish();
+}
+
+
 void HttpConnectionBase::request(const HttpRequestHeaders &request_headers) {
-	std::ostream os(&ssb);
+	SinkBuf sb(sink);
+	std::ostream os(&sb);
 	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 	os << request_headers << std::flush;
 	write_chunked = request_headers.find("Content-Length") == request_headers.end();
@@ -292,14 +533,18 @@ void HttpConnectionBase::request(const HttpRequestHeaders &request_headers) {
 
 const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 	if (!response_headers_read) {
-		std::istream(&ssb) >> response_headers;
+		DelimitedSource ds(source, "\r\n\r\n");
+		SourceBuf sb(&ds);
+		char buf[1500];
+		sb.pubsetbuf(buf, sizeof buf);
+		std::istream(&sb) >> response_headers;
 		read_chunked = response_headers.find_token("Transfer-Encoding", "chunked") != response_headers.end();
 		if (read_chunked) {
-			chunk_rem = 0;
+			chunked_source.reset();
 		}
 		else {
 			auto content_length_itr = response_headers.find("Content-Length");
-			chunk_rem = content_length_itr == response_headers.end() ? -1 : std::stoul(content_length_itr->second);
+			remaining = content_length_itr == response_headers.end() ? ~0 : std::stoul(content_length_itr->second);
 		}
 		response_headers_read = true;
 	}
@@ -308,63 +553,42 @@ const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 
 ssize_t HttpConnectionBase::read(void *buf, size_t n) {
 	this->get_response_headers();
-	if (!read_chunked) {
-		if (chunk_rem < 0) {
-			return ssb.sgetn(reinterpret_cast<char *>(buf), n);
-		}
-		if (chunk_rem == 0) {
-			return -1;
-		}
-		std::streamsize r = ssb.sgetn(reinterpret_cast<char *>(buf), std::min(n, static_cast<size_t>(chunk_rem)));
-		if (r > 0) {
-			chunk_rem -= r;
-		}
-		return r;
-	}
-	std::istream is(&ssb);
-	if (chunk_rem <= 0) {
-		if (chunk_rem < 0) {
-			return -1;
-		}
-		is >> std::hex >> chunk_rem;
-		if (!skip_crlf(is)) {
-			throw std::ios_base::failure("bad chunk");
-		}
-		if (chunk_rem == 0) {
-			chunk_rem = -1;
+	ssize_t r;
+	if (read_chunked) {
+		if ((r = chunked_source.read(buf, n)) < 0) {
+			read_chunked = false;
+			remaining = 0;
+			SourceBuf sb(source);
+			std::istream is(&sb);
 			if (!skip_crlf(is)) {
 				throw std::ios_base::failure("HTTP trailers not supported");
 			}
-			return -1;
 		}
 	}
-	is.read(static_cast<char *>(buf), std::min(n, static_cast<size_t>(chunk_rem)));
-	n = is.gcount();
-	if (n > 0 && (chunk_rem -= n) == 0 && !skip_crlf(is)) {
-		throw std::ios_base::failure("bad chunk");
+	else {
+		if (~remaining == 0) {
+			r = source->read(buf, n);
+		}
+		else if (remaining == 0) {
+			r = -1;
+		}
+		else if ((r = source->read(buf, std::min(n, remaining))) > 0) {
+			remaining -= r;
+		}
 	}
-	return n;
+	return r;
 }
 
 size_t HttpConnectionBase::write(const void *buf, size_t n, bool more) {
-	if (!write_chunked) {
-		std::streamsize w = ssb.sputn(reinterpret_cast<const char *>(buf), n);
-		if (!more) {
-			ssb.pubsync();
-		}
-		return w;
-	}
-	std::ostream os(&ssb);
-	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
-	(os << std::hex << n << "\r\n").write(static_cast<const char *>(buf), n) << "\r\n";
-	if (!more) {
-		os << 0 << "\r\n" << std::flush;
-	}
-	return os ? n : 0;
+	return write_chunked ? chunked_sink.write(buf, n, more) : sink->write(buf, n, more);
+}
+
+bool HttpConnectionBase::finish() {
+	return write_chunked ? chunked_sink.finish() : sink->finish();
 }
 
 
-HttpConnection::HttpConnection(const std::string &host, uint16_t port) : HttpConnectionBase(&socket, &socket) {
+HttpConnection::HttpConnection(const std::string &host, uint16_t port) : HttpConnectionBase(&buffered_source, &buffered_sink), buffered_source(&socket), buffered_sink(&socket) {
 	for (auto &info : getaddrinfo(host.c_str())) {
 		if (info.ai_family == AF_INET) {
 			reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port = htobe16(port);
