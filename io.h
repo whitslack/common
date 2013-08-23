@@ -1,5 +1,6 @@
 #pragma once
 
+#include <array>
 #include <streambuf>
 
 #include "compiler.h"
@@ -90,6 +91,37 @@ public:
 
 public:
 	size_t write(const void *buf, size_t n, bool more = false) override;
+
+};
+
+
+template <size_t N>
+class Tee : public Sink {
+
+private:
+	std::array<Sink *, N> sinks;
+
+public:
+	explicit Tee(const std::array<Sink *, N> &sinks) : sinks(sinks) { }
+
+	template <typename... Args>
+	explicit Tee(Args&&... args) : sinks({ args... }) { }
+
+public:
+	size_t write(const void *buf, size_t n, bool more = false) override {
+		for (auto sink : sinks) {
+			sink->write_fully(buf, n, more);
+		}
+		return n;
+	}
+
+	bool finish() override {
+		bool ret = true;
+		for (auto sink : sinks) {
+			ret &= sink->finish();
+		}
+		return ret;
+	}
 
 };
 
