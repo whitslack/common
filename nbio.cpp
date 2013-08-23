@@ -7,6 +7,7 @@
 
 #include <netdb.h>
 #include <unistd.h>
+#include <sys/stat.h>
 
 
 void FileDescriptor::open(const char pathname[], int flags, mode_t mode) {
@@ -53,6 +54,12 @@ off_t FileDescriptor::lseek(off_t offset, int whence) {
 		throw std::system_error(errno, std::system_category(), "lseek");
 	}
 	return p;
+}
+
+void FileDescriptor::fstat(struct stat *st) {
+	if (::fstat(fd, st) < 0) {
+		throw std::system_error(errno, std::system_category(), "fstat");
+	}
 }
 
 void FileDescriptor::fallocate(off_t offset, off_t length) {

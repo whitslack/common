@@ -35,6 +35,7 @@ public:
 	ssize_t read(void *buf, size_t n) override;
 	size_t write(const void *buf, size_t n, bool more = false) override;
 	off_t lseek(off_t offset, int whence = SEEK_SET);
+	void fstat(struct stat *st);
 	void fallocate(off_t offset, off_t length);
 	void ftruncate(off_t length);
 	void fsync();
