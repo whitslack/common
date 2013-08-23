@@ -9,6 +9,7 @@
 
 #include <sys/types.h>
 
+#include "ci.h"
 #include "compiler.h"
 #include "nbio.h"
 
@@ -20,14 +21,6 @@ extern const char
 		HTTP_REASON_PHRASE_429[], HTTP_REASON_PHRASE_431[],
 		HTTP_REASON_PHRASE_500[], HTTP_REASON_PHRASE_501[], HTTP_REASON_PHRASE_502[], HTTP_REASON_PHRASE_503[], HTTP_REASON_PHRASE_504[], HTTP_REASON_PHRASE_505[], HTTP_REASON_PHRASE_511[];
 
-
-int compare_ci(const std::string &str1, const std::string &str2) _pure;
-
-struct less_ci {
-	bool operator () (const std::string &str1, const std::string &str2) const {
-		return compare_ci(str1, str2) < 0;
-	}
-};
 
 template <typename Itr>
 static bool any_equal_ci(Itr first, Itr last, const std::string &str) {

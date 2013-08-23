@@ -53,22 +53,6 @@ const char
 		HTTP_REASON_PHRASE_505[] = "HTTP Version not supported",
 		HTTP_REASON_PHRASE_511[] = "Network Authentication Required";
 
-int compare_ci(const std::string &str1, const std::string &str2) {
-	auto it1 = str1.begin(), end1 = str1.end(), it2 = str2.begin(), end2 = str2.end();
-	for (;;) {
-		if (it1 == end1) {
-			return it2 == end2 ? 0 : -1;
-		}
-		if (it2 == end2) {
-			return 1;
-		}
-		int c1 = std::toupper(*it1++), c2 = std::toupper(*it2++);
-		if (c1 != c2) {
-			return c1 < c2 ? -1 : 1;
-		}
-	}
-}
-
 static bool skip_crlf(std::istream &is) {
 	if (is.peek() == '\r') {
 		is.get();
