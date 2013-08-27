@@ -4,6 +4,8 @@
 #include <cstring>
 #include <system_error>
 
+#include "narrow.h"
+
 
 void Source::read_fully(void *buf, size_t n) {
 	while (n > 0) {
@@ -192,7 +194,7 @@ std::streambuf * SourceSinkBuf::setbuf(char_type s[], std::streamsize n) {
 
 
 MemoryBuf::MemoryBuf(const void *buf, size_t n) {
-	this->pubsetbuf(const_cast<char *>(static_cast<const char *>(buf)), static_cast<std::streamsize>(n));
+	this->pubsetbuf(const_cast<char *>(static_cast<const char *>(buf)), saturate<std::streamsize>(n));
 }
 
 MemoryBuf * MemoryBuf::setbuf(char s[], std::streamsize n) {

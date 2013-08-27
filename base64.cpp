@@ -54,7 +54,7 @@ size_t Base64Decoder::process(uint8_t (&out)[3], const uint8_t in[], size_t n) {
 		throw std::ios_base::failure("invalid base64");
 	}
 	unsigned int b0, b1;
-	if ((b0 = in[0] - '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0 || (b1 = in[1] - '+') > 'z' - '+' || static_cast<int8_t>(b1 = decode[b1]) < 0) {
+	if ((b0 = in[0] - '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0 || (b1 = in[1] - '+') > 'z' - '+' || static_cast<int>(b1 = decode[b1]) < 0) {
 		throw std::ios_base::failure("invalid base64");
 	}
 	out[0] = static_cast<uint8_t>(b0 << 2 | b1 >> 4);
@@ -64,14 +64,14 @@ size_t Base64Decoder::process(uint8_t (&out)[3], const uint8_t in[], size_t n) {
 		}
 		return 1;
 	}
-	if ((b0 -= '+') > 'z' - '+' || static_cast<int8_t>(b0 = decode[b0]) < 0) {
+	if ((b0 -= '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0) {
 		throw std::ios_base::failure("invalid base64");
 	}
 	out[1] = static_cast<uint8_t>(b1 << 4 | b0 >> 2);
 	if ((b1 = in[3]) == '=') {
 		return 2;
 	}
-	if ((b1 -= '+') > 'z' - '+' || static_cast<int8_t>(b1 = decode[b1]) < 0) {
+	if ((b1 -= '+') > 'z' - '+' || static_cast<int>(b1 = decode[b1]) < 0) {
 		throw std::ios_base::failure("invalid base64");
 	}
 	out[2] = static_cast<uint8_t>(b0 << 6 | b1);

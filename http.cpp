@@ -120,8 +120,8 @@ static std::istream & read_token(std::istream &is, std::string &token) {
 		/*"x"*/ true, /*"y"*/ true, /*"z"*/ true, /*"{"*/false, /*"|"*/ true, /*"}"*/false, /*"~"*/ true, /*DEL*/false
 	};
 	token.clear();
-	for (int c; !std::istream::traits_type::eq_int_type(c = is.peek(), std::istream::traits_type::eof()) && c >= 0 && c < static_cast<int>(countof(map)) && map[c];) {
-		token.push_back(static_cast<char>(is.get()));
+	for (int c; !std::istream::traits_type::eq_int_type(c = is.peek(), std::istream::traits_type::eof()) && c >= 0 && static_cast<size_t>(c) < countof(map) && map[c];) {
+		token.push_back(std::istream::traits_type::to_char_type(is.get()));
 	}
 	return is;
 }
@@ -129,7 +129,7 @@ static std::istream & read_token(std::istream &is, std::string &token) {
 static std::istream & read_word(std::istream &is, std::string &word) {
 	word.clear();
 	for (int c; !std::istream::traits_type::eq_int_type(c = is.peek(), std::istream::traits_type::eof()) && !std::iscntrl(c) && c != ' ';) {
-		word.push_back(static_cast<char>(is.get()));
+		word.push_back(std::istream::traits_type::to_char_type(is.get()));
 	}
 	return is;
 }
@@ -144,7 +144,7 @@ static std::istream & read_text(std::istream &is, std::string &text) {
 			break;
 		}
 		else {
-			text.push_back(static_cast<char>(is.get()));
+			text.push_back(std::istream::traits_type::to_char_type(is.get()));
 		}
 	}
 	return is;
