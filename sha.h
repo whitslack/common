@@ -36,7 +36,7 @@ protected:
 
 public:
 	size_t write(const void *buf, size_t n, bool more = false) override;
-	const uint8_t (& finish())[digest_size];
+	const uint8_t (& digest())[digest_size];
 
 protected:
 	virtual void update(const uint8_t (&block)[block_size]) = 0;

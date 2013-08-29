@@ -18,6 +18,7 @@ public:
 
 public:
 	size_t write(const void *buf, size_t n, bool more = false) override { return hash.write(buf, n, more); }
-	const uint8_t (& finish())[digest_size];
+	bool finish() override { return hash.finish(); }
+	const uint8_t (& digest())[digest_size];
 
 };

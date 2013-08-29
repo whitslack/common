@@ -26,6 +26,7 @@ public:
 
 public:
 	virtual size_t write(const void *buf, size_t n, bool more = false) = 0;
+	virtual bool finish() { return true; }
 
 	void write_fully(const void *buf, size_t n, bool more = false);
 

@@ -173,15 +173,13 @@ int SinkBuf::sync(bool more) {
 	char_type *pbase = this->pbase();
 	ptrdiff_t r = this->pptr() - pbase;
 	if (r > 0) {
-		ssize_t n = sink->write(pbase, r, more);
-		if (n > 0) {
-			this->pbump(static_cast<int>(-n));
-			if ((r -= n) > 0) {
-				std::memcpy(pbase, pbase + n, r);
-			}
-		}
+		sink->write_fully(pbase, r, more);
+		this->setp(pbase, this->epptr());
 	}
-	return r == 0 ? 0 : -1;
+	else if (!more) {
+		sink->write(nullptr, 0, false);
+	}
+	return 0;
 }
 
 

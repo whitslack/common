@@ -43,5 +43,6 @@ public:
 
 public:
 	size_t write(const void *buf, size_t n, bool more = false) override;
+	bool finish() override;
 
 };

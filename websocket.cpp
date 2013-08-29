@@ -175,7 +175,7 @@ static std::string make_accept_field_value(const std::string &key) {
 	SHA1 sha1;
 	SinkBuf sink(&sha1);
 	std::ostream(&sink) << key << "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
-	auto &hash = sha1.finish();
+	auto &hash = sha1.digest();
 	std::string str;
 	StringSink ss(&str);
 	CodecSink<Base64Encoder>(&ss).write(hash, sizeof hash);

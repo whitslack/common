@@ -111,7 +111,7 @@ size_t SHABase<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type>::wri
 }
 
 template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type>
-const uint8_t (& SHABase<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type>::finish())[digest_size] {
+const uint8_t (& SHABase<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type>::digest())[digest_size] {
 	length_type length = htobe(this->length + buffer_pos << 3);
 	uint8_t marker = 0x80;
 	this->write(&marker, sizeof marker);

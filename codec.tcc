@@ -54,7 +54,7 @@ size_t CodecSink<Codec>::write(const void *buf, size_t n, bool more) {
 	size_t ret = 0;
 	for (;;) {
 		for (size_t r; (r = osize - opos) > 0; opos += r) {
-			if ((r = sink->write(obuf + opos, r)) == 0) {
+			if ((r = sink->write(obuf + opos, r, more || n > 0)) == 0) {
 				return ret;
 			}
 		}
@@ -78,4 +78,15 @@ size_t CodecSink<Codec>::write(const void *buf, size_t n, bool more) {
 			buf = static_cast<const uint8_t *>(buf) + sizeof ibuf, n -= sizeof ibuf, ret += sizeof ibuf;
 		}
 	}
+}
+
+template <typename Codec>
+bool CodecSink<Codec>::finish() {
+	if (opos < osize) {
+		this->write(nullptr, 0, false);
+		if (opos < osize) {
+			return false;
+		}
+	}
+	return sink->finish();
 }

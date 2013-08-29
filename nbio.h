@@ -120,6 +120,7 @@ public:
 
 	size_t avail() override;
 	size_t write(const void *buf, size_t n, bool more = false) override;
+	bool finish() override;
 
 };
 

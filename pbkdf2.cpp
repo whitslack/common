@@ -10,7 +10,7 @@ void prf(const void *key, size_t key_len, const void *msg, size_t msg_len, void 
 	assert(out_len == Func::digest_size);
 	Func func(key, key_len);
 	func.write(msg, msg_len, false);
-	std::memcpy(out, func.finish(), Func::digest_size);
+	std::memcpy(out, func.digest(), Func::digest_size);
 }
 
 template void prf<HMAC<SHA1>>(const void *, size_t, const void *, size_t, void *, size_t);

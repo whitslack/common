@@ -216,6 +216,11 @@ size_t Socket::write(const void *buf, size_t n, bool more) {
 	return this->send(buf, n, more ? MSG_MORE | MSG_NOSIGNAL : MSG_NOSIGNAL);
 }
 
+bool Socket::finish() {
+	this->write(nullptr, 0, false);
+	return true;
+}
+
 
 template <typename T, typename A>
 void SocketBase<T, A>::getsockname(A &addr) const {
