@@ -16,12 +16,17 @@ static bool skip_crlf(std::istream &is) {
 }
 
 
-void HttpConnectionBase::request(const HttpRequestHeaders &request_headers) {
+void HttpConnectionBase::request(HttpRequestHeaders &request_headers) {
+#ifdef HTTP_GZIP
+	if (request_headers.find_token("Accept-Encoding", "gzip") == request_headers.end()) {
+		request_headers.emplace("Accept-Encoding", "gzip");
+	}
+#endif
 	SinkBuf sb(sink);
 	std::ostream os(&sb);
 	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 	os << request_headers << std::flush;
-	write_chunked = request_headers.find("Content-Length") == request_headers.end();
+	write_sink = request_headers.find("Content-Length") == request_headers.end() ? &chunked_sink : sink;
 	response_headers_read = false;
 }
 
@@ -32,14 +37,26 @@ const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 		char buf[1500];
 		sb.pubsetbuf(buf, sizeof buf);
 		std::istream(&sb) >> response_headers;
-		read_chunked = response_headers.find_token("Transfer-Encoding", "chunked") != response_headers.end();
-		if (read_chunked) {
+		if (read_chunked = response_headers.find_token("Transfer-Encoding", "chunked") != response_headers.end()) {
 			chunked_source.reset();
+			read_source = &chunked_source;
 		}
 		else {
 			auto content_length_itr = response_headers.find("Content-Length");
-			remaining = content_length_itr == response_headers.end() ? ~0 : std::stoul(content_length_itr->second);
+			if (content_length_itr == response_headers.end()) {
+				read_source = source;
+			}
+			else {
+				limited_source.remaining = std::stoul(content_length_itr->second);
+				read_source = &limited_source;
+			}
 		}
+#ifdef HTTP_GZIP
+		if (response_headers.find_token("Content-Encoding", "gzip") != response_headers.end()) {
+			gzip_source.reset(new GZipSource(read_source));
+			read_source = gzip_source.get();
+		}
+#endif
 		response_headers_read = true;
 	}
 	return response_headers;
@@ -48,10 +65,11 @@ const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 ssize_t HttpConnectionBase::read(void *buf, size_t n) {
 	this->get_response_headers();
 	ssize_t r;
-	if (read_chunked) {
-		if ((r = chunked_source.read(buf, n)) < 0) {
+	if ((r = read_source->read(buf, n)) < 0) {
+		if (read_chunked) {
 			read_chunked = false;
-			remaining = 0;
+			limited_source.remaining = 0;
+			read_source = &limited_source;
 			SourceBuf sb(source);
 			std::istream is(&sb);
 			if (!skip_crlf(is)) {
@@ -59,26 +77,15 @@ ssize_t HttpConnectionBase::read(void *buf, size_t n) {
 			}
 		}
 	}
-	else {
-		if (~remaining == 0) {
-			r = source->read(buf, n);
-		}
-		else if (remaining == 0) {
-			r = -1;
-		}
-		else if ((r = source->read(buf, std::min(n, remaining))) > 0) {
-			remaining -= r;
-		}
-	}
 	return r;
 }
 
 size_t HttpConnectionBase::write(const void *buf, size_t n, bool more) {
-	return write_chunked ? chunked_sink.write(buf, n, more) : sink->write(buf, n, more);
+	return write_sink->write(buf, n, more);
 }
 
 bool HttpConnectionBase::finish() {
-	return write_chunked ? chunked_sink.finish() : sink->finish();
+	return write_sink->finish();
 }
 
 
