@@ -1,17 +1,9 @@
 #pragma once
 
-#include <algorithm>
-#include <functional>
-#include <iostream>
 #include <map>
-#include <memory>
-#include <string>
-
-#include <sys/types.h>
 
 #include "ci.h"
-#include "compiler.h"
-#include "nbio.h"
+#include "io.h"
 
 extern const char
 		HTTP_REASON_PHRASE_100[], HTTP_REASON_PHRASE_101[],
@@ -99,43 +91,5 @@ public:
 	void reset() { write_size = 0, state = Idle; }
 	size_t write(const void *buf, size_t n, bool more = false) override;
 	bool finish() override;
-
-};
-
-
-class HttpConnectionBase : public Source, public Sink {
-
-private:
-	Source * const source;
-	Sink * const sink;
-	ChunkedSource chunked_source;
-	ChunkedSink chunked_sink;
-	bool read_chunked, write_chunked;
-	bool response_headers_read;
-	HttpResponseHeaders response_headers;
-	size_t remaining;
-
-protected:
-	HttpConnectionBase(Source *source, Sink *sink) : source(source), sink(sink), chunked_source(source), chunked_sink(sink), read_chunked(), write_chunked(), response_headers_read(), remaining() { }
-
-public:
-	void request(const HttpRequestHeaders &request_headers);
-	const HttpResponseHeaders & get_response_headers();
-	ssize_t read(void *buf, size_t n) override;
-	size_t write(const void *buf, size_t n, bool more = false) override;
-	bool finish() override;
-
-};
-
-
-class HttpConnection : public HttpConnectionBase {
-
-private:
-	Socket socket;
-	BufferedSource<1500> buffered_source;
-	BufferedSink<1500> buffered_sink;
-
-public:
-	HttpConnection(const std::string &host, uint16_t port = 80);
 
 };

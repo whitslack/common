@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <vector>
 
 #include "base64.h"
 #include "codec.h"
@@ -45,7 +46,7 @@ void WebSocketBase::send(WebSocket::Opcode opcode, bool mask, const void *buf, s
 		*p++ = static_cast<uint8_t>(mask >> 8);
 		*p++ = static_cast<uint8_t>(mask >> 16);
 		*p++ = static_cast<uint8_t>(mask >> 24);
-		std::vector<uint8_t> masked(n);
+		std::vector<uint8_t> masked(n); // [C++14] std::dynarray
 		for (size_t i = 0; i < n; ++i) {
 			masked[i] = static_cast<const uint8_t *>(buf)[i] ^ static_cast<uint8_t>(mask >> i % 4 * 8);
 		}
