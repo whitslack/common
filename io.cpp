@@ -1,7 +1,6 @@
 #include "io.h"
 
 #include <cstddef>
-#include <cstring>
 #include <system_error>
 
 #include "narrow.h"
@@ -138,6 +137,27 @@ ssize_t StringSource::read(void *buf, size_t n) {
 size_t StringSink::write(const void *buf, size_t n, bool) {
 	string->append(static_cast<const char *>(buf), n);
 	return n;
+}
+
+
+ssize_t DelimitedSource::read(void *buf, size_t n) {
+	ssize_t r = 0;
+	while (n > 0) {
+		std::ptrdiff_t d;
+		if ((d = delim_end - delim_ptr) <= 0) {
+			return r == 0 ? -1 : r;
+		}
+		ssize_t s;
+		if ((s = source->read(buf, std::min(static_cast<size_t>(d), n))) <= 0) {
+			return r == 0 ? s : r;
+		}
+		for (ssize_t i = 0; i < s; ++i) {
+			char c = static_cast<char *>(buf)[i];
+			delim_ptr = c == *delim_ptr ? delim_ptr + 1 : c == *delim_begin ? delim_begin + 1 : delim_begin;
+		}
+		buf = static_cast<char *>(buf) + s, n -= s, r += s;
+	}
+	return r;
 }
 
 

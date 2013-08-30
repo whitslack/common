@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <cstring>
 #include <streambuf>
 
 #include "compiler.h"
@@ -156,6 +157,24 @@ public:
 
 public:
 	size_t write(const void *buf, size_t n, bool more = false) override;
+
+};
+
+
+class DelimitedSource : public Source {
+
+private:
+	Source * const source;
+	const char * const delim_begin, * const delim_end;
+	const char *delim_ptr;
+
+public:
+	DelimitedSource(Source *source, const char delimiter[], const char *delim_end) : source(source), delim_begin(delimiter), delim_end(delim_end), delim_ptr(delimiter) { }
+	DelimitedSource(Source *source, const char delimiter[]) : DelimitedSource(source, delimiter, delimiter + std::strlen(delimiter)) { }
+
+public:
+	void reset() { delim_ptr = delim_begin; }
+	ssize_t read(void *buf, size_t n) override;
 
 };
 
