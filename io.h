@@ -161,6 +161,23 @@ public:
 };
 
 
+class LimitedSource : public Source {
+
+public:
+	size_t remaining;
+
+private:
+	Source * const source;
+
+public:
+	LimitedSource(Source *source, size_t remaining) : remaining(remaining), source(source) { }
+
+public:
+	ssize_t read(void *buf, size_t n) override;
+
+};
+
+
 class DelimitedSource : public Source {
 
 private:

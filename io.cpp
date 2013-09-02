@@ -140,6 +140,24 @@ size_t StringSink::write(const void *buf, size_t n, bool) {
 }
 
 
+ssize_t LimitedSource::read(void *buf, size_t n) {
+	if (n == 0) {
+		return 0;
+	}
+	if (n > remaining) {
+		if (remaining == 0) {
+			return -1;
+		}
+		n = remaining;
+	}
+	ssize_t r = source->read(buf, n);
+	if (r > 0) {
+		remaining -= r;
+	}
+	return r;
+}
+
+
 ssize_t DelimitedSource::read(void *buf, size_t n) {
 	ssize_t r = 0;
 	while (n > 0) {
