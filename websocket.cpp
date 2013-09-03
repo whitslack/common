@@ -60,52 +60,50 @@ void WebSocketBase::send(WebSocket::Opcode opcode, bool mask, const void *buf, s
 }
 
 void WebSocketBase::ready() {
-	for (;;) {
-		if (header_pos < 2) {
-			if ((header_pos += this->recv(header_buf.data() + header_pos, 2 - header_pos)) < 2) {
-				return;
-			}
-			data_rem = header_buf[1] & (1 << 7) - 1;
-		}
-		bool masked = static_cast<int8_t>(header_buf[1]) < 0;
-		size_t header_len = masked ? 6 : 2, data_len = header_buf[1] & (1 << 7) - 1;
-		if (data_len > 125) {
-			if (data_len == 127) {
-				throw std::length_error("received frame exceeds size limit");
-			}
-			header_len += 2;
-			if (header_pos < header_len) {
-				if ((header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
-					return;
-				}
-				data_rem = header_buf[2] << 8 | header_buf[3];
-			}
-		}
-		else if (header_pos < header_len && (header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
+	if (header_pos < 2) {
+		if ((header_pos += this->recv(header_buf.data() + header_pos, 2 - header_pos)) < 2) {
 			return;
 		}
-		if (data_rem > 0) {
-			size_t n = this->recv(data_buf.data() + data_pos, data_rem);
-			if (n == 0) {
+		data_rem = header_buf[1] & (1 << 7) - 1;
+	}
+	bool masked = static_cast<int8_t>(header_buf[1]) < 0;
+	size_t header_len = masked ? 6 : 2, data_len = header_buf[1] & (1 << 7) - 1;
+	if (data_len > 125) {
+		if (data_len == 127) {
+			throw std::length_error("received frame exceeds size limit");
+		}
+		header_len += 2;
+		if (header_pos < header_len) {
+			if ((header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
 				return;
 			}
-			data_rem -= n;
-			if (masked) {
-				const uint8_t *mask = header_buf.data() + header_len - 4;
-				do {
-					data_buf[data_pos] ^= mask[data_pos % 4];
-					++data_pos;
-				} while (--n > 0);
-			}
-			else {
-				data_pos += n;
-			}
+			data_rem = header_buf[2] << 8 | header_buf[3];
 		}
-		if (data_rem == 0) {
-			size_t n = data_pos;
-			data_pos = header_pos = 0;
-			this->received(static_cast<Opcode>(header_buf[0] & (1 << 4) - 1), masked, data_buf.data(), n, static_cast<int8_t>(header_buf[0]) >= 0);
+	}
+	else if (header_pos < header_len && (header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
+		return;
+	}
+	if (data_rem > 0) {
+		size_t n = this->recv(data_buf.data() + data_pos, data_rem);
+		if (n == 0) {
+			return;
 		}
+		data_rem -= n;
+		if (masked) {
+			const uint8_t *mask = header_buf.data() + header_len - 4;
+			do {
+				data_buf[data_pos] ^= mask[data_pos % 4];
+				++data_pos;
+			} while (--n > 0);
+		}
+		else {
+			data_pos += n;
+		}
+	}
+	if (data_rem == 0) {
+		size_t n = data_pos;
+		data_pos = header_pos = 0;
+		this->received(static_cast<Opcode>(header_buf[0] & (1 << 4) - 1), masked, data_buf.data(), n, static_cast<int8_t>(header_buf[0]) >= 0);
 	}
 }
 
@@ -120,7 +118,7 @@ void WebSocket::send(const void *buf, size_t n, bool more) {
 
 size_t WebSocket::recv(void *buf, size_t n) {
 	ssize_t r;
-	if ((r = socket.recv(buf, n)) < 0) {
+	if ((r = socket.recv(buf, n, MSG_DONTWAIT)) < 0) {
 		throw std::ios_base::failure("connection terminated");
 	}
 	return static_cast<size_t>(r);
