@@ -96,11 +96,12 @@ protected:
 
 private:
 	std::string key;
+	DelimitedSource delimited_source;
 	std::array<uint8_t, 1460> response_buf;
 	size_t response_pos;
 
 public:
-	WebSocketClientHandshake(Socket &&socket) : socket(std::move(socket)), response_pos() { }
+	WebSocketClientHandshake(Socket &&socket) : socket(std::move(socket)), delimited_source(&this->socket, "\r\n\r\n"), response_pos() { }
 
 public:
 	void start(const char host[], uint16_t port = 0, const char request_uri[] = "/");

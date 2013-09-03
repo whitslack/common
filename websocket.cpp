@@ -301,7 +301,7 @@ void WebSocketClientHandshake::start(const char host[], uint16_t port, const cha
 
 bool WebSocketClientHandshake::ready() {
 	ssize_t r;
-	if ((r = socket.recv(response_buf.data() + response_pos, response_buf.size() - response_pos)) < 0) {
+	if ((r = delimited_source.read(response_buf.data() + response_pos, response_buf.size() - response_pos)) < 0) {
 		return false;
 	}
 	if ((response_pos += r) > 4 && ::memcmp(&response_buf[response_pos - 4], "\r\n\r\n", 4) == 0) {
