@@ -7,7 +7,7 @@
 
 extern Log elog;
 
-Socket connect(const char host[], uint16_t port) {
+Socket connect(const char host[], uint16_t port, int send_buffer_size) {
 	for (auto &info : getaddrinfo(host)) {
 		if (info.ai_family == AF_INET) {
 			reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port = htobe16(port);
@@ -28,6 +28,9 @@ Socket connect(const char host[], uint16_t port) {
 			Socket socket(info.ai_family, info.ai_socktype | SOCK_CLOEXEC, info.ai_protocol);
 			int optval = 1;
 			socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval));
+			if (send_buffer_size >= 0) {
+				socket.setsockopt(SOL_SOCKET, SO_SNDBUF, &send_buffer_size, static_cast<socklen_t>(sizeof send_buffer_size));
+			}
 			socket.connect(info.ai_addr, info.ai_addrlen);
 			if (elog.debug_enabled()) {
 				if (info.ai_family == AF_INET) {
@@ -52,14 +55,14 @@ Socket connect(const char host[], uint16_t port) {
 	throw std::system_error(errno, std::system_category(), "connect");
 }
 
-Socket connect_with_retry(const char host[], uint16_t port) {
+Socket connect_with_retry(const char host[], uint16_t port, int send_buffer_size) {
 	static const std::chrono::steady_clock::duration
 			min_delay = std::chrono::milliseconds(500),
 			max_delay = std::chrono::seconds(15);
 	auto reconnect_delay = min_delay;
 	for (;;) {
 		try {
-			return connect(host, port);
+			return connect(host, port, send_buffer_size);
 		}
 		/*catch (const std::system_error &) {
 			if (elog.warn_enabled()) {
