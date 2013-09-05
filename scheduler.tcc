@@ -10,11 +10,15 @@ void Scheduler<Clock>::run() {
 		}
 		else {
 			auto &work = queue.top();
-			if (condition.wait_until(lock, work.deadline) == std::cv_status::timeout) {
-				lock.unlock();
-				(*work.task)();
-				lock.lock();
+			if (clock_t::now() < work.deadline) {
+				condition.wait_until(lock, work.deadline);
+			}
+			else {
+				auto task = work.task;
 				queue.pop();
+				lock.unlock();
+				(*task)();
+				lock.lock();
 			}
 		}
 	}
