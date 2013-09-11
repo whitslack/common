@@ -1,3 +1,5 @@
+#pragma once
+
 #include "compiler.h"
 #include "io.h"
 
