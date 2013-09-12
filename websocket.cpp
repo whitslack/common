@@ -14,7 +14,6 @@ template <typename T, size_t N>
 constexpr size_t countof(T (&)[N]) { return N; }
 
 void WebSocketBase::send(WebSocket::Opcode opcode, bool mask, const void *buf, size_t n, bool more) {
-	std::lock_guard<std::mutex> lock(send_mutex);
 	uint8_t header[14], *p = header;
 	*p++ = static_cast<uint8_t>(more ? opcode : 1 << 7 | opcode);
 	if (n <= 125) {
@@ -50,10 +49,12 @@ void WebSocketBase::send(WebSocket::Opcode opcode, bool mask, const void *buf, s
 		for (size_t i = 0; i < n; ++i) {
 			masked[i] = static_cast<const uint8_t *>(buf)[i] ^ static_cast<uint8_t>(mask >> i % 4 * 8);
 		}
+		std::lock_guard<std::mutex> lock(send_mutex);
 		this->send(header, p - header, true);
 		this->send(masked.data(), masked.size(), more);
 	}
 	else {
+		std::lock_guard<std::mutex> lock(send_mutex);
 		this->send(header, p - header, true);
 		this->send(buf, n, more);
 	}
