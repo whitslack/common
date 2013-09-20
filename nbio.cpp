@@ -62,6 +62,12 @@ void FileDescriptor::fstat(struct stat *st) {
 	}
 }
 
+void FileDescriptor::fchmod(mode_t mode) {
+	if (::fchmod(fd, mode) < 0) {
+		throw std::system_error(errno, std::system_category(), "fchmod");
+	}
+}
+
 void FileDescriptor::fallocate(off_t offset, off_t length) {
 	int error;
 	if ((error = ::posix_fallocate(fd, offset, length)) < 0) {
