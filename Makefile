@@ -27,8 +27,8 @@ CPPFLAGS += -fPIE
 LDFLAGS += -pie
 endif
 ifdef DEBUG
-CFLAGS += -O0 -ggdb
-CXXFLAGS += -O0 -ggdb
+CFLAGS += -Og -ggdb
+CXXFLAGS += -Og -ggdb
 else
 CPPFLAGS += -DNDEBUG
 CFLAGS += -O3 -fvisibility=hidden -ffunction-sections -fdata-sections
