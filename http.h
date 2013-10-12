@@ -17,7 +17,7 @@ extern const char
 class HttpHeaders : public std::multimap<std::string, std::string, less_ci> {
 
 public:
-	const_iterator find_token(const std::string &field_name, const std::string &token) const;
+	const_iterator find_token(const std::string &field_name, const std::string &token) const _pure;
 
 };
 
