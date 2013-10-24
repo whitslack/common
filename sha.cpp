@@ -1,29 +1,8 @@
 #include "sha.h"
 
-#include <iostream>
-
-static inline uint32_t rotl(uint32_t v, uint8_t s) {
-	return v << s | v >> 32 - s;
-}
-
-static inline uint32_t rotr(uint32_t v, uint8_t s) {
-	return v >> s | v << 32 - s;
-}
-
-static inline uint64_t rotr(uint64_t v, uint8_t s) {
-	return v >> s | v << 64 - s;
-}
-
-static uint32_t htobe(uint32_t v) {
-	return htobe32(v);
-}
-
-static uint64_t htobe(uint64_t v) {
-	return htobe64(v);
-}
 
 #ifdef __SIZEOF_INT128__
-static unsigned __int128 htobe(unsigned __int128 v) {
+static unsigned __int128 __bswap_128(unsigned __int128 v) {
 	union {
 		uint64_t q[2];
 		unsigned __int128 o;
@@ -68,72 +47,37 @@ static sha512_length_t operator << (const sha512_length_t &operand, size_t shift
 	return ret;
 }
 
-static sha512_length_t htobe(const sha512_length_t &v) {
-	return sha512_length_t{ htobe64(v.high), htobe64(v.low) };
+static sha512_length_t __bswap_128(const sha512_length_t &v) {
+	return sha512_length_t{ __bswap_64(v.high), __bswap_64(v.low) };
 }
 #endif
 
+#if BYTE_ORDER == LITTLE_ENDIAN
+#define htobe128(x) __bswap_128(x)
+#define htole128(x) (x)
+#define be128toh(x) __bswap_128(x)
+#define le128toh(x) (x)
+#else
+#define htobe128(x) (x)
+#define htole128(x) __bswap_128(x)
+#define be128toh(x) (x)
+#define le128toh(x) __bswap_128(x)
+#endif
 
-template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type>
-constexpr size_t SHABase<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type>::block_size;
-template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type>
-constexpr size_t SHABase<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type>::digest_size;
-template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type>
-constexpr size_t SHABase<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type>::state_size;
-
-template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type>
-size_t SHABase<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type>::write(const void *buf, size_t n, bool) {
-	size_t ret = n;
-	const void *block = buf;
-	if (buffer_pos > 0) {
-		size_t r = block_size - buffer_pos;
-		if (n < r) {
-			std::memcpy(buffer + buffer_pos, buf, n);
-			buffer_pos += n;
-			return n;
-		}
-		std::memcpy(buffer + buffer_pos, buf, r);
-		buf = static_cast<const char *>(buf) - buffer_pos, n += buffer_pos;
-		buffer_pos = 0;
-		block = buffer;
-	}
-	while (n >= block_size) {
-		this->update(*static_cast<const uint8_t (*)[block_size]>(block));
-		length += block_size;
-		block = buf = (const char *) buf + block_size;
-		n -= block_size;
-	}
-	if (n > 0) {
-		std::memcpy(buffer, buf, n);
-		buffer_pos = n;
-	}
-	return ret;
+static inline sha512_length_t htobe(sha512_length_t v) {
+	return htobe128(v);
+}
+static inline sha512_length_t htole(sha512_length_t v) {
+	return htole128(v);
 }
 
-template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type>
-const uint8_t (& SHABase<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type>::digest())[digest_size] {
-	length_type length = htobe(this->length + buffer_pos << 3);
-	uint8_t marker = 0x80;
-	this->write(&marker, sizeof marker);
-	if (buffer_pos + sizeof length > block_size) {
-		std::memset(buffer + buffer_pos, 0, block_size - buffer_pos);
-		this->update(buffer);
-		buffer_pos = 0;
-	}
-	std::memset(buffer + buffer_pos, 0, block_size - sizeof length - buffer_pos);
-	std::memcpy(buffer + block_size - sizeof length, &length, sizeof length);
-	this->update(buffer);
-	buffer_pos = 0;
-	for (size_t i = 0; i < digest_size / sizeof(word_type); ++i) {
-		state[i] = htobe(state[i]);
-	}
-	return *reinterpret_cast<const uint8_t (*)[digest_size]>(state);
-}
+
+#include "hash.tcc"
 
 
 static const uint32_t sha1_init[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
 
-SHA1::SHA1() : SHABase(sha1_init) {
+SHA1::SHA1() : Hash(sha1_init) {
 }
 
 void SHA1::update(const uint8_t (&block)[64]) {
@@ -273,11 +217,11 @@ SHA384::SHA384() : SHA512Base(sha384_init) {
 }
 
 
-template class SHABase<64, 20, 20, uint32_t, uint64_t>;
-template class SHABase<64, 32, 32, uint32_t, uint64_t>;
-template class SHABase<64, 32, 28, uint32_t, uint64_t>;
-template class SHABase<128, 64, 64, uint64_t, sha512_length_t>;
-template class SHABase<128, 64, 48, uint64_t, sha512_length_t>;
+template class Hash<64, 20, 20, uint32_t, uint64_t, true>;
+template class Hash<64, 32, 32, uint32_t, uint64_t, true>;
+template class Hash<64, 32, 28, uint32_t, uint64_t, true>;
+template class Hash<128, 64, 64, uint64_t, sha512_length_t, true>;
+template class Hash<128, 64, 48, uint64_t, sha512_length_t, true>;
 
 
 #include "hmac.tcc"
