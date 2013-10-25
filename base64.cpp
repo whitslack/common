@@ -2,9 +2,6 @@
 
 #include <cassert>
 #include <ios>
-#include <stdexcept>
-
-#include "codec.h"
 
 
 constexpr size_t Base64Encoder::input_block_size;
@@ -81,28 +78,9 @@ size_t Base64Decoder::process(uint8_t (&out)[3], const uint8_t in[], size_t n) {
 }
 
 
-std::string encode_base64(const void *in, size_t n_in) {
-	std::string out;
-	out.reserve((n_in + 2) / 3 * 4);
-	StringSink ss(&out);
-	CodecSink<Base64Encoder> cs(&ss);
-	cs.write_fully(in, n_in);
-	cs.finish();
-	return out;
-}
-
-void decode_base64(void *out, size_t n_out, const char in[], size_t n_in) {
-	if (n_in != (n_out + 2) / 3 * 4) {
-		throw std::length_error("wrong length");
-	}
-	MemorySource ms(in, n_in);
-	if (CodecSource<Base64Decoder>(&ms).read(out, n_out) != static_cast<ssize_t>(n_out) || ms.avail() != 0) {
-		throw std::length_error("wrong length");
-	}
-}
-
-
 #include "codec.tcc"
 
+template class CodecSource<Base64Encoder>;
 template class CodecSource<Base64Decoder>;
 template class CodecSink<Base64Encoder>;
+template class CodecSink<Base64Decoder>;
