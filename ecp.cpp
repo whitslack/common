@@ -1,102 +1,7 @@
 #include "ecp.h"
+#include "fp.h"
 
 #include <random>
-
-#if __GNU_MP__ < 5
-#include <cstring>
-static void mpn_copyi(mp_limb_t *rp, const mp_limb_t *s1p, mp_size_t n) {
-	std::memcpy(rp, s1p, n * sizeof(mp_limb_t));
-}
-static void mpn_zero(mp_limb_t *rp, mp_size_t n) {
-	std::memset(rp, 0, n * sizeof(mp_limb_t));
-}
-#endif
-
-void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) {
-	while (n > sizeof(mp_limb_t)) {
-		mp_limb_t limb = 0;
-#if GMP_LIMB_BITS >= 64
-		limb |= static_cast<mp_limb_t>(bytes[n - 8]) << 56;
-		limb |= static_cast<mp_limb_t>(bytes[n - 7]) << 48;
-		limb |= static_cast<mp_limb_t>(bytes[n - 6]) << 40;
-		limb |= static_cast<mp_limb_t>(bytes[n - 5]) << 32;
-#endif
-#if GMP_LIMB_BITS >= 32
-		limb |= static_cast<mp_limb_t>(bytes[n - 4]) << 24;
-		limb |= static_cast<mp_limb_t>(bytes[n - 3]) << 16;
-		limb |= static_cast<mp_limb_t>(bytes[n - 2]) << 8;
-		limb |= static_cast<mp_limb_t>(bytes[n - 1]);
-#endif
-		*mpn++ = limb;
-		n -= sizeof(mp_limb_t);
-	}
-	mp_limb_t limb = 0;
-	switch (n) {
-#if GMP_LIMB_BITS >= 64
-		case 8:
-			limb |= static_cast<mp_limb_t>(bytes[n - 8]) << 56;
-		case 7:
-			limb |= static_cast<mp_limb_t>(bytes[n - 7]) << 48;
-		case 6:
-			limb |= static_cast<mp_limb_t>(bytes[n - 6]) << 40;
-		case 5:
-			limb |= static_cast<mp_limb_t>(bytes[n - 5]) << 32;
-#endif
-#if GMP_LIMB_BITS >= 32
-		case 4:
-			limb |= static_cast<mp_limb_t>(bytes[n - 4]) << 24;
-		case 3:
-			limb |= static_cast<mp_limb_t>(bytes[n - 3]) << 16;
-		case 2:
-			limb |= static_cast<mp_limb_t>(bytes[n - 2]) << 8;
-		case 1:
-			limb |= static_cast<mp_limb_t>(bytes[n - 1]);
-#endif
-	}
-	*mpn = limb;
-}
-
-void mpn_to_bytes(uint8_t bytes[], const mp_limb_t mpn[], size_t n) {
-	while (n > sizeof(mp_limb_t)) {
-		mp_limb_t limb = *mpn++;
-#if GMP_LIMB_BITS >= 64
-		bytes[n - 8] = static_cast<uint8_t>(limb >> 56);
-		bytes[n - 7] = static_cast<uint8_t>(limb >> 48);
-		bytes[n - 6] = static_cast<uint8_t>(limb >> 40);
-		bytes[n - 5] = static_cast<uint8_t>(limb >> 32);
-#endif
-#if GMP_LIMB_BITS >= 32
-		bytes[n - 4] = static_cast<uint8_t>(limb >> 24);
-		bytes[n - 3] = static_cast<uint8_t>(limb >> 16);
-		bytes[n - 2] = static_cast<uint8_t>(limb >> 8);
-		bytes[n - 1] = static_cast<uint8_t>(limb);
-#endif
-		n -= sizeof(mp_limb_t);
-	}
-	mp_limb_t limb = *mpn;
-	switch (n) {
-#if GMP_LIMB_BITS >= 64
-		case 8:
-			bytes[n - 8] = static_cast<uint8_t>(limb >> 56);
-		case 7:
-			bytes[n - 7] = static_cast<uint8_t>(limb >> 48);
-		case 6:
-			bytes[n - 6] = static_cast<uint8_t>(limb >> 40);
-		case 5:
-			bytes[n - 5] = static_cast<uint8_t>(limb >> 32);
-#endif
-#if GMP_LIMB_BITS >= 32
-		case 4:
-			bytes[n - 4] = static_cast<uint8_t>(limb >> 24);
-		case 3:
-			bytes[n - 3] = static_cast<uint8_t>(limb >> 16);
-		case 2:
-			bytes[n - 2] = static_cast<uint8_t>(limb >> 8);
-		case 1:
-			bytes[n - 1] = static_cast<uint8_t>(limb);
-#endif
-	}
-}
 
 const mp_limb_t secp224k1_p[MP_NLIMBS(29)] = {
 	MP_LIMB_C(0xFFFFE56D, 0xFFFFFFFE), MP_LIMB_C(0xFFFFFFFF, 0xFFFFFFFF),
@@ -152,119 +57,7 @@ const mp_limb_t secp256k1_n[MP_NLIMBS(32)] = {
 	MP_LIMB_C(0xFFFFFFFE, 0xFFFFFFFF), MP_LIMB_C(0xFFFFFFFF, 0xFFFFFFFF)
 };
 
-static bool mpn_zero_p(const mp_limb_t n[], size_t l) {
-	for (size_t i = 0; i < l; ++i) {
-		if (n[i] != 0) {
-			return false;
-		}
-	}
-	return true;
-}
-
-static bool mpn_one_p(const mp_limb_t n[], size_t l) {
-	return n[0] == 1 && (--l == 0 || mpn_zero_p(n + 1, l));
-}
-
-static bool mpn_even_p(const mp_limb_t n[]) {
-	return (n[0] & 1) == 0;
-}
-
-static mp_limb_t * fp_add(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
-	if (mpn_add_n(r, n1, n2, l) || mpn_cmp(r, p, l) >= 0) {
-		mpn_sub_n(r, r, p, l);
-	}
-	return r;
-}
-
-static mp_limb_t * fp_sub(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
-	if (mpn_sub_n(r, n1, n2, l)) {
-		mpn_add_n(r, r, p, l);
-	}
-	return r;
-}
-
-static mp_limb_t * fp_dbl(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
-	if (mpn_lshift(r, n, l, 1) || mpn_cmp(r, p, l) >= 0) {
-		mpn_sub_n(r, r, p, l);
-	}
-	return r;
-}
-
-static mp_limb_t * fp_mul(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
-	mpn_zero(r, l);
-	bool active = false;
-	for (size_t i = l; i > 0;) {
-		mp_limb_t w = n2[--i];
-		for (size_t j = sizeof(mp_limb_t) * 8; j > 0; --j) {
-			if (active) {
-				fp_dbl(r, r, p, l);
-			}
-			if (static_cast<mp_limb_signed_t>(w) < 0) {
-				fp_add(r, r, n1, p, l);
-				active = true;
-			}
-			w <<= 1;
-		}
-	}
-	return r;
-}
-
-static mp_limb_t * fp_sqr(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
-	return fp_mul(r, n, n, p, l);
-}
-
-static mp_limb_t * fp_inv(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
-	mp_limb_t u[l], v[l], s[l];
-	mpn_copyi(u, n, l), mpn_copyi(v, p, l);
-	mpn_zero(r, l), mpn_zero(s, l);
-	r[0] = 1;
-	for (;;) {
-		if (mpn_one_p(u, l)) {
-			return r;
-		}
-		if (mpn_one_p(v, l)) {
-			mpn_copyi(r, s, l);
-			return r;
-		}
-		while (mpn_even_p(u)) {
-			mpn_rshift(u, u, l, 1);
-			if (mpn_even_p(r)) {
-				mpn_rshift(r, r, l, 1);
-			}
-			else {
-				mp_limb_t c = mpn_add_n(r, r, p, l) << sizeof(mp_limb_t) * 8 - 1;
-				mpn_rshift(r, r, l, 1);
-				r[l - 1] |= c;
-			}
-		}
-		while (mpn_even_p(v)) {
-			mpn_rshift(v, v, l, 1);
-			if (mpn_even_p(s)) {
-				mpn_rshift(s, s, l, 1);
-			}
-			else {
-				mp_limb_t c = mpn_add_n(s, s, p, l) << sizeof(mp_limb_t) * 8 - 1;
-				mpn_rshift(s, s, l, 1);
-				s[l - 1] |= c;
-			}
-		}
-		if (mpn_cmp(u, v, l) >= 0) {
-			mpn_sub_n(u, u, v, l);
-			fp_sub(r, r, s, p, l);
-		}
-		else {
-			mpn_sub_n(v, v, u, l);
-			fp_sub(s, s, r, p, l);
-		}
-	}
-}
-
-static mp_limb_t * ecp_copy(mp_limb_t R[], const mp_limb_t N[], size_t l) {
-	mpn_copyi(&R[0], &N[0], l), mpn_copyi(&R[l], &N[l], l), mpn_copyi(&R[l * 2], &N[l * 2], l);
-	return R;
-}
-
-static mp_limb_t * ecp_dbl(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
+mp_limb_t * ecp_dbl(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *x = &N[0], *y = &N[l], *z = &N[l * 2];
 	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
 	mp_limb_t t0[l], t1[l], t2[l], t3[l];
@@ -308,7 +101,7 @@ static mp_limb_t * ecp_add_aff(mp_limb_t R[], const mp_limb_t N1[], const mp_lim
 	return R;
 }
 
-static mp_limb_t * ecp_add(mp_limb_t R[], const mp_limb_t N1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
+mp_limb_t * ecp_add(mp_limb_t R[], const mp_limb_t N1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *z2 = &N2[l * 2];
 	if (mpn_one_p(z2, l)) {
 		return ecp_add_aff(R, N1, N2, a, p, l);
@@ -373,11 +166,11 @@ static mp_limb_t * ecp_mul_(mp_limb_t R[], const mp_limb_t n1[], const mp_limb_t
 	return R;
 }
 
-static mp_limb_t * ecp_mul(mp_limb_t R[], const mp_limb_t n1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
-	return ecp_mul_(R, n1, N2, a, p, l, mpn_one_p(&N2[l * 2], l) ? &ecp_add_aff : &ecp_add);
+mp_limb_t * ecp_mul(mp_limb_t R[], const mp_limb_t n1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
+	return ecp_mul_(R, n1, N2, a, p, l, mpn_one_p(&N2[l * 2], l) ? &ecp_add_aff : static_cast<mp_limb_t * (*)(mp_limb_t [], const mp_limb_t [], const mp_limb_t [], const mp_limb_t [], const mp_limb_t [], size_t)>(&ecp_add));
 }
 
-static mp_limb_t * ecp_proj(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t p[], size_t l) {
+mp_limb_t * ecp_proj(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *x = &N[0], *y = &N[l], *z = &N[l * 2];
 	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
 	mp_limb_t t0[l], t1[l], t2[l];
