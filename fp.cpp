@@ -1,5 +1,7 @@
 #include "fp.h"
 
+#include <utility>
+
 mp_limb_t * fp_add(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
 	if (mpn_add_n(r, n1, n2, l) || mpn_cmp(r, p, l) >= 0) {
 		mpn_sub_n(r, r, p, l);
@@ -58,6 +60,46 @@ mp_limb_t * fp_mul_1(mp_limb_t r[], const mp_limb_t n1[], mp_limb_t n2, const mp
 
 mp_limb_t * fp_sqr(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
 	return fp_mul(r, n, n, p, l);
+}
+
+mp_limb_t * fp_pow(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t e[], const mp_limb_t p[], size_t l) {
+	if (mpn_zero_p(e, l)) {
+		mpn_zero(r, l), r[0] = 1;
+		return r;
+	}
+	mp_limb_t *r_ = r;
+	mpn_copyi(r, n, l);
+	mp_limb_t n2_[l], *n2 = n2_;
+	fp_sqr(n2, n, p, l);
+	mp_limb_t t_[l], *t = t_;
+	bool active = false;
+	for (size_t i = l; i > 0;) {
+		mp_limb_t w = e[--i];
+		for (size_t j = sizeof(mp_limb_t) * 8; j > 0; --j) {
+			if (static_cast<mp_limb_signed_t>(w) < 0) {
+				if (active) {
+					fp_mul(t, r, n2, p, l);
+					std::swap(t, r);
+					fp_sqr(t, n2, p, l);
+					std::swap(t, n2);
+				}
+				else {
+					active = true;
+				}
+			}
+			else if (active) {
+				fp_mul(t, n2, r, p, l);
+				std::swap(t, n2);
+				fp_sqr(t, r, p, l);
+				std::swap(t, r);
+			}
+			w <<= 1;
+		}
+	}
+	if (r != r_) {
+		mpn_copyi(r_, r, l);
+	}
+	return r_;
 }
 
 mp_limb_t * fp_inv(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
