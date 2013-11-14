@@ -179,6 +179,15 @@ ssize_t DelimitedSource::read(void *buf, size_t n) {
 }
 
 
+ssize_t Tap::read(void *buf, size_t n) {
+	ssize_t r;
+	if ((r = source->read(buf, n)) > 0) {
+		sink->write_fully(buf, r);
+	}
+	return r;
+}
+
+
 SourceBuf::SourceBuf(Source *source) : source(source) {
 	this->setbuf(&gbuf, 1);
 }

@@ -196,11 +196,27 @@ public:
 };
 
 
+class Tap : public Source {
+
+private:
+	Source * const source;
+	Sink * const sink;
+
+public:
+	Tap(Source *source, Sink *sink) : source(source), sink(sink) { }
+
+public:
+	ssize_t read(void *buf, size_t n) override;
+	size_t avail() { return source->avail(); }
+
+};
+
+
 template <size_t N>
 class Tee : public Sink {
 
 private:
-	std::array<Sink *, N> sinks;
+	const std::array<Sink *, N> sinks;
 
 public:
 	explicit Tee(const std::array<Sink *, N> &sinks) : sinks(sinks) { }
