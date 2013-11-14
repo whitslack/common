@@ -10,12 +10,35 @@
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
+#include <sys/mman.h>
 
 #include "io.h"
 
 
 class FileDescriptor : public Source, public Sink {
 	friend class EPoll;
+
+public:
+	class MemoryMapping {
+		friend FileDescriptor;
+	private:
+		void *addr;
+		size_t length;
+	public:
+		MemoryMapping(const MemoryMapping &) = delete;
+		MemoryMapping(MemoryMapping &&move) : addr(move.addr), length(move.length) { move.addr = MAP_FAILED; }
+		MemoryMapping & operator = (const MemoryMapping &) = delete;
+		MemoryMapping & operator = (MemoryMapping &&move) { addr = move.addr, length = move.length; move.addr = MAP_FAILED; return *this; }
+		~MemoryMapping() { if (addr != MAP_FAILED) this->unmap(); }
+	private:
+		MemoryMapping(void *addr, size_t length) : addr(addr), length(length) { }
+	public:
+		operator void * () const { return addr; }
+		void * data() const { return addr; }
+		size_t size() const { return length; }
+	private:
+		void unmap();
+	};
 
 protected:
 	int fd;
@@ -41,6 +64,8 @@ public:
 	void ftruncate(off_t length);
 	void fsync();
 	void fdatasync();
+	void fadvise(off_t offset, off_t length, int advice);
+	MemoryMapping mmap(off_t offset, size_t length, int prot = PROT_READ, int flags = MAP_SHARED);
 
 	template <typename... Args>
 	int fcntl(int cmd, Args&&... args) {

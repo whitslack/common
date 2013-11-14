@@ -10,6 +10,13 @@
 #include <sys/stat.h>
 
 
+void FileDescriptor::MemoryMapping::unmap() {
+	if (::munmap(addr, length) < 0) {
+		throw std::system_error(errno, std::system_category(), "munmap");
+	}
+}
+
+
 void FileDescriptor::open(const char pathname[], int flags, mode_t mode) {
 	if (fd >= 0) {
 		this->close();
@@ -91,6 +98,21 @@ void FileDescriptor::fdatasync() {
 	if (::fdatasync(fd) < 0) {
 		throw std::system_error(errno, std::system_category(), "fdatasync");
 	}
+}
+
+void FileDescriptor::fadvise(off_t offset, off_t length, int advice) {
+	int error;
+	if ((error = ::posix_fadvise(fd, offset, length, advice)) < 0) {
+		throw std::system_error(error, std::system_category(), "posix_fadvise");
+	}
+}
+
+FileDescriptor::MemoryMapping FileDescriptor::mmap(off_t offset, size_t length, int prot, int flags) {
+	void *addr;
+	if ((addr = ::mmap(nullptr, length, prot, flags, fd, offset)) == MAP_FAILED) {
+		throw std::system_error(errno, std::system_category(), "mmap");
+	}
+	return { addr, length };
 }
 
 
