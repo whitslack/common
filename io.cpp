@@ -140,6 +140,29 @@ size_t StringSink::write(const void *buf, size_t n, bool) {
 }
 
 
+ssize_t VectorSource::read(void *buf, size_t n) {
+	if (n == 0) {
+		return 0;
+	}
+	ptrdiff_t r;
+	if ((r = vector->end() - vector_itr) <= 0) {
+		return -1;
+	}
+	if (n > static_cast<size_t>(r)) {
+		n = r;
+	}
+	std::memcpy(buf, &*vector_itr, n);
+	vector_itr += n;
+	return n;
+}
+
+
+size_t VectorSink::write(const void *buf, size_t n, bool) {
+	vector->insert(vector->end(), static_cast<const uint8_t *>(buf), static_cast<const uint8_t *>(buf) + n);
+	return n;
+}
+
+
 ssize_t LimitedSource::read(void *buf, size_t n) {
 	if (n == 0) {
 		return 0;

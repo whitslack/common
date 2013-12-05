@@ -3,6 +3,7 @@
 #include <array>
 #include <cstring>
 #include <streambuf>
+#include <vector>
 
 #include "compiler.h"
 
@@ -154,6 +155,36 @@ private:
 
 public:
 	explicit StringSink(std::string *string) : string(string) { }
+
+public:
+	size_t write(const void *buf, size_t n, bool more = false) override;
+
+};
+
+
+class VectorSource : public Source {
+
+private:
+	const std::vector<uint8_t> *vector;
+	std::vector<uint8_t>::const_iterator vector_itr;
+
+public:
+	explicit VectorSource(const std::vector<uint8_t> *vector) : vector(vector), vector_itr(vector->begin()) { }
+
+public:
+	ssize_t read(void *buf, size_t n) override;
+	size_t avail() override _pure { return vector->end() - vector_itr; }
+
+};
+
+
+class VectorSink : public Sink {
+
+private:
+	std::vector<uint8_t> *vector;
+
+public:
+	explicit VectorSink(std::vector<uint8_t> *vector) : vector(vector) { }
 
 public:
 	size_t write(const void *buf, size_t n, bool more = false) override;
