@@ -67,7 +67,7 @@ static inline size_t transcode(void *out, size_t n_out, const std::string &in, A
 template <typename Codec, typename... Args>
 void transcode(std::string &out, const void *in, size_t n_in, Args&&... args) {
 	out.resize((n_in + Codec::input_block_size - 1) / Codec::input_block_size * Codec::output_block_size);
-	out.resize(transcode<Codec, Args...>(&out.front(), out.size(), in, n_in, std::forward<Args>(args)...));
+	out.resize(::transcode<Codec, Args...>(&out.front(), out.size(), in, n_in, std::forward<Args>(args)...));
 }
 
 template <typename Codec, typename... Args>
