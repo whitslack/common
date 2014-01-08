@@ -1,7 +1,9 @@
 #include "ecp.h"
-#include "fp.h"
 
+#include <cassert>
 #include <random>
+
+#include "fp.h"
 
 const mp_limb_t secp224k1_p[MP_NLIMBS(29)] = {
 	MP_LIMB_C(0xFFFFE56D, 0xFFFFFFFE), MP_LIMB_C(0xFFFFFFFF, 0xFFFFFFFF),
@@ -60,6 +62,10 @@ const mp_limb_t secp256k1_n[MP_NLIMBS(32)] = {
 mp_limb_t * ecp_dbl(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *x = &N[0], *y = &N[l], *z = &N[l * 2];
 	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
+	if (mpn_zero_p(z, l)) {
+		mpn_zero(xr, l), mpn_zero(yr, l), mpn_zero(zr, l);
+		return R;
+	}
 	mp_limb_t t0[l], t1[l], t2[l], t3[l];
 	fp_add(t0, t0, fp_dbl(t1, fp_sqr(t0, x, p, l), p, l), p, l);
 	if (!mpn_zero_p(a, l)) {
@@ -76,6 +82,7 @@ mp_limb_t * ecp_dbl(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t a[], con
 
 static mp_limb_t * ecp_add_aff(mp_limb_t R[], const mp_limb_t N1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *x1 = &N1[0], *y1 = &N1[l], *z1 = &N1[l * 2], *x2 = &N2[0], *y2 = &N2[l];
+	assert(mpn_one_p(&N2[l * 2], l));
 	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
 	mp_limb_t t0[l], t1[l], t2[l], t3[l], t4[l];
 	fp_sqr(t0, z1, p, l);
@@ -102,12 +109,21 @@ static mp_limb_t * ecp_add_aff(mp_limb_t R[], const mp_limb_t N1[], const mp_lim
 }
 
 mp_limb_t * ecp_add(mp_limb_t R[], const mp_limb_t N1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
-	const mp_limb_t *z2 = &N2[l * 2];
+	const mp_limb_t *x1 = &N1[0], *y1 = &N1[l], *z1 = &N1[l * 2], *x2 = &N2[0], *y2 = &N2[l], *z2 = &N2[l * 2];
+	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
+	if (mpn_zero_p(z1, l)) {
+		if (mpn_zero_p(z2, l)) {
+			mpn_zero(xr, l), mpn_zero(yr, l), mpn_zero(zr, l);
+			return R;
+		}
+		return ecp_copy(R, N2, l);
+	}
+	if (mpn_zero_p(z2, l)) {
+		return ecp_copy(R, N1, l);
+	}
 	if (mpn_one_p(z2, l)) {
 		return ecp_add_aff(R, N1, N2, a, p, l);
 	}
-	const mp_limb_t *x1 = &N1[0], *y1 = &N1[l], *z1 = &N1[l * 2], *x2 = &N2[0], *y2 = &N2[l];
-	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
 	mp_limb_t t0[l], t1[l], t2[l], t3[l], t4[l], t5[l], t6[l];
 	fp_sqr(t0, z1, p, l);
 	fp_mul(t1, x2, t0, p, l);
@@ -214,12 +230,19 @@ void ecp_sign(mp_limb_t r[], mp_limb_t s[], const mp_limb_t p[], const mp_limb_t
 }
 
 bool ecp_verify(const mp_limb_t p[], const mp_limb_t a[], const mp_limb_t G[], const mp_limb_t n[], const mp_limb_t Q[], const mp_limb_t z[], const mp_limb_t r[], const mp_limb_t s[], size_t l) {
+	if (mpn_zero_p(r, l) || mpn_zero_p(s, l) || mpn_cmp(r, n, l) >= 0 || mpn_cmp(s, n, l) >= 0) {
+		return false;
+	}
 	mp_limb_t w[l];
 	fp_inv(w, s, n, l);
 	mp_limb_t u1[l], u2[l];
 	fp_mul(u1, z, w, n, l), fp_mul(u2, r, w, n, l);
 	mp_limb_t Rp[3][l], T0[3][l], T1[3][l], T2[3][l];
-	ecp_proj(*Rp, ecp_add(*T2, ecp_mul(*T0, u1, G, a, p, l), ecp_mul(*T1, u2, Q, a, p, l), a, p, l), p, l);
+	ecp_add(*T2, ecp_mul(*T0, u1, G, a, p, l), ecp_mul(*T1, u2, Q, a, p, l), a, p, l);
+	if (mpn_zero_p(T2[2], l)) {
+		return false;
+	}
+	ecp_proj(*Rp, *T2, p, l);
 	if (mpn_cmp(Rp[0], n, l) >= 0) {
 		mpn_sub_n(Rp[0], Rp[0], n, l);
 	}
