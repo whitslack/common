@@ -49,9 +49,9 @@ static inline bool mpn_zero_p(const mp_limb_t n[], size_t l) {
 }
 
 static inline bool mpn_one_p(const mp_limb_t n[], size_t l) {
-	return n[0] == 1 && (--l == 0 || mpn_zero_p(n + 1, l));
+	return l > 0 && n[0] == 1 && mpn_zero_p(n + 1, l - 1);
 }
 
-static inline bool mpn_even_p(const mp_limb_t n[]) {
-	return (n[0] & 1) == 0;
+static inline bool mpn_even_p(const mp_limb_t n[], size_t l) {
+	return l == 0 || (n[0] & 1) == 0;
 }

@@ -1,5 +1,6 @@
 #include "fp.h"
 
+#include <stdexcept>
 #include <utility>
 
 mp_limb_t * fp_add(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
@@ -103,6 +104,9 @@ mp_limb_t * fp_pow(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t e[], cons
 }
 
 mp_limb_t * fp_inv(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
+	if (mpn_zero_p(n, l)) {
+		throw std::domain_error("not invertible");
+	}
 	mp_limb_t u[l], v[l], s[l];
 	mpn_copyi(u, n, l), mpn_copyi(v, p, l);
 	mpn_zero(r, l), mpn_zero(s, l);
@@ -115,9 +119,9 @@ mp_limb_t * fp_inv(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size
 			mpn_copyi(r, s, l);
 			return r;
 		}
-		while (mpn_even_p(u)) {
+		while (mpn_even_p(u, l)) {
 			mpn_rshift(u, u, l, 1);
-			if (mpn_even_p(r)) {
+			if (mpn_even_p(r, l)) {
 				mpn_rshift(r, r, l, 1);
 			}
 			else {
@@ -126,9 +130,9 @@ mp_limb_t * fp_inv(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size
 				r[l - 1] |= c;
 			}
 		}
-		while (mpn_even_p(v)) {
+		while (mpn_even_p(v, l)) {
 			mpn_rshift(v, v, l, 1);
-			if (mpn_even_p(s)) {
+			if (mpn_even_p(s, l)) {
 				mpn_rshift(s, s, l, 1);
 			}
 			else {

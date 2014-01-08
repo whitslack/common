@@ -1,6 +1,9 @@
 #include "mpn.h"
 
 void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) {
+	if (n == 0) {
+		return;
+	}
 	while (n > sizeof(mp_limb_t)) {
 		mp_limb_t limb = 0;
 #if GMP_LIMB_BITS >= 64
@@ -45,6 +48,9 @@ void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) {
 }
 
 void mpn_to_bytes(uint8_t bytes[], const mp_limb_t mpn[], size_t n) {
+	if (n == 0) {
+		return;
+	}
 	while (n > sizeof(mp_limb_t)) {
 		mp_limb_t limb = *mpn++;
 #if GMP_LIMB_BITS >= 64
