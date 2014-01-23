@@ -41,6 +41,10 @@ protected:
 		}
 	}
 
+	void prepare_response_headers(const HttpRequestHeaders &request_headers, HttpResponseHeaders &response_headers) override {
+		server.prepare_response_headers(request_headers, response_headers);
+	}
+
 	void connected(const HttpRequestHeaders &, const HttpResponseHeaders &) override {
 		server.client_attached(std::move(*static_cast<Socket6 *>(&socket)), epoll);
 	}

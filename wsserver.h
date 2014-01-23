@@ -1,4 +1,5 @@
 #include "compiler.h"
+#include "http.h"
 #include "nbio.h"
 
 namespace {
@@ -14,6 +15,7 @@ protected:
 protected:
 	operator int () const override _pure;
 	void ready(EPoll &epoll, uint32_t events) override;
+	virtual void prepare_response_headers(const HttpRequestHeaders &, HttpResponseHeaders &) { }
 	virtual void client_attached(Socket6 &&socket, EPoll &epoll) = 0;
 
 };
