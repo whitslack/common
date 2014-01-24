@@ -203,7 +203,7 @@ Socket Socket::accept(sockaddr *addr, socklen_t *addrlen, int flags) {
 	if ((s = ::accept4(fd, addr, addrlen, flags)) < 0) {
 		throw std::system_error(errno, std::system_category(), "accept4");
 	}
-	return Socket(s, nullptr);
+	return Socket(s);
 }
 
 void Socket::listen(int backlog) {

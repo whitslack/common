@@ -123,7 +123,7 @@ public:
 	Socket(int domain, int type, int protocol = 0) { this->open(domain, type, protocol); }
 
 protected:
-	Socket(int fd, std::nullptr_t) : FileDescriptor(fd) { }
+	explicit Socket(int fd) : FileDescriptor(fd) { }
 
 public:
 	void open(int domain, int type, int protocol = 0);
@@ -156,7 +156,7 @@ class SocketBase : public Socket {
 
 protected:
 	SocketBase() { }
-	SocketBase(int fd) : Socket(fd, nullptr) { }
+	explicit SocketBase(int fd) : Socket(fd) { }
 
 public:
 	void getsockname(A &addr) const;
@@ -174,7 +174,7 @@ class Socket4 : public SocketBase<Socket4, sockaddr_in> {
 
 public:
 	Socket4() { }
-	Socket4(int type, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { this->open(type, protocol, flags); }
+	explicit Socket4(int type, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { this->open(type, protocol, flags); }
 
 protected:
 	Socket4(int fd, std::nullptr_t) : SocketBase<Socket4, sockaddr_in>(fd) { }
@@ -190,7 +190,7 @@ class Socket6 : public SocketBase<Socket6, sockaddr_in6> {
 
 public:
 	Socket6() { }
-	Socket6(int type, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { this->open(type, protocol, flags); }
+	explicit Socket6(int type, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { this->open(type, protocol, flags); }
 
 protected:
 	Socket6(int fd, std::nullptr_t) : SocketBase<Socket6, sockaddr_in6>(fd) { }
