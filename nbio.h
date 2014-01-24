@@ -25,13 +25,13 @@ public:
 		void *addr;
 		size_t length;
 	public:
-		MemoryMapping(const MemoryMapping &) = delete;
 		MemoryMapping(MemoryMapping &&move) : addr(move.addr), length(move.length) { move.addr = MAP_FAILED; }
-		MemoryMapping & operator = (const MemoryMapping &) = delete;
-		MemoryMapping & operator = (MemoryMapping &&move) { addr = move.addr, length = move.length; move.addr = MAP_FAILED; return *this; }
+		MemoryMapping & operator = (MemoryMapping &&move) { std::swap(addr, move.addr); std::swap(length, move.length); return *this; }
 		~MemoryMapping() { if (addr != MAP_FAILED) this->unmap(); }
 	private:
 		MemoryMapping(void *addr, size_t length) : addr(addr), length(length) { }
+		MemoryMapping(const MemoryMapping &) = delete;
+		MemoryMapping & operator = (const MemoryMapping &) = delete;
 	public:
 		operator void * () const { return addr; }
 		void * data() const { return addr; }
