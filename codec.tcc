@@ -1,92 +1,49 @@
 #include "codec.h"
 
+#include <cassert>
 #include <cstring>
 
 
-template <typename Codec>
-ssize_t CodecSource<Codec>::read(void *buf, size_t n) {
-	ssize_t ret = 0;
-	bool more = true;
-	for (;;) {
-		size_t r;
-		if ((r = osize - opos) > 0) {
-			if (n < r) {
-				r = n;
-			}
-			std::memcpy(buf, obuf + opos, r), opos += r;
-			buf = static_cast<uint8_t *>(buf) + r, n -= r, ret += r;
-			if (n == 0) {
-				return ret;
-			}
-		}
-		while ((r = sizeof ibuf - ipos) > 0) {
-			ssize_t s = source->read(ibuf + ipos, r);
-			if (s == 0) {
-				return ret;
-			}
-			if (s < 0) {
-				if (!more) {
-					return ret == 0 ? -1 : ret;
-				}
-				more = false;
-				break;
-			}
-			ipos += s;
-		}
-		if (n < sizeof obuf) {
-			osize = codec.process(obuf, ibuf, ipos), opos = ipos = 0;
-		}
-		else {
-			r = codec.process(*static_cast<uint8_t (*)[sizeof obuf]>(buf), ibuf, ipos), ipos = 0;
-			buf = static_cast<uint8_t *>(buf) + r, n -= r, ret += r;
+template <typename Codec, size_t BufferSize>
+ssize_t CodecSource<Codec, BufferSize>::read(void *buf, size_t n) {
+	uint8_t *obuf_ptr = static_cast<uint8_t *>(buf), *obuf_eptr = obuf_ptr + n;
+	ssize_t s = source->read(ibuf_eptr, std::end(ibuf) - ibuf_eptr);
+	if (s > 0) {
+		ibuf_eptr += s;
+	}
+	if (codec.process(obuf_ptr, n, const_cast<const uint8_t *&>(ibuf_ptr), ibuf_eptr - ibuf_ptr)) {
+		assert(ibuf_ptr == ibuf_eptr);
+		ibuf_eptr = ibuf_ptr = ibuf;
+		if (s < 0) {
+			bool finished = codec.finish(obuf_eptr, obuf_eptr - obuf_ptr);
+			s = obuf_ptr - static_cast<uint8_t *>(buf);
+			return s == 0 ? finished ? -1 : 0 : s;
 		}
 	}
-}
-
-template <typename Codec>
-size_t CodecSource<Codec>::avail() {
-	return osize - opos;
+	return obuf_ptr - static_cast<uint8_t *>(buf);
 }
 
 
-template <typename Codec>
-size_t CodecSink<Codec>::write(const void *buf, size_t n, bool more) {
-	size_t ret = 0;
-	for (;;) {
-		for (size_t r; (r = osize - opos) > 0; opos += r) {
-			if ((r = sink->write(obuf + opos, r, more || n > 0)) == 0) {
-				return ret;
-			}
-		}
-		if (ipos > 0 || n < sizeof ibuf) {
-			size_t r = sizeof ibuf - ipos;
-			if (n < r) {
-				r = n;
-			}
-			std::memcpy(ibuf + ipos, buf, r), ipos += r;
-			buf = static_cast<const uint8_t *>(buf) + r, n -= r, ret += r;
-			if (n == 0) {
-				if (more) {
-					return ret;
-				}
-				more = true;
-			}
-			osize = codec.process(obuf, ibuf, ipos), opos = ipos = 0;
-		}
-		else {
-			osize = codec.process(obuf, static_cast<const uint8_t *>(buf), sizeof ibuf), opos = 0;
-			buf = static_cast<const uint8_t *>(buf) + sizeof ibuf, n -= sizeof ibuf, ret += sizeof ibuf;
-		}
+template <typename Codec, size_t BufferSize>
+size_t CodecSink<Codec, BufferSize>::write(const void *buf, size_t n, bool more) {
+	const uint8_t *ibuf_ptr = static_cast<const uint8_t *>(buf), *ibuf_eptr = ibuf_ptr + n;
+	codec.process(obuf_eptr, std::end(obuf) - obuf_eptr, ibuf_ptr, n);
+	if ((obuf_ptr += sink->write(obuf_ptr, obuf_eptr - obuf_ptr, more || ibuf_ptr < ibuf_eptr)) == obuf_eptr) {
+		obuf_eptr = obuf_ptr = obuf;
 	}
+	return ibuf_ptr - static_cast<const uint8_t *>(buf);
 }
 
-template <typename Codec>
-bool CodecSink<Codec>::finish() {
-	if (opos < osize) {
-		this->write(nullptr, 0, false);
-		if (opos < osize) {
+template <typename Codec, size_t BufferSize>
+bool CodecSink<Codec, BufferSize>::finish() {
+	for (;;) {
+		bool finished = codec.finish(obuf_eptr, std::end(obuf) - obuf_eptr);
+		if ((obuf_ptr += sink->write(obuf_ptr, obuf_eptr - obuf_ptr, !finished)) < obuf_eptr) {
 			return false;
 		}
+		obuf_eptr = obuf_ptr = obuf;
+		if (finished) {
+			return sink->finish();
+		}
 	}
-	return sink->finish();
 }

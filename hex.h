@@ -4,21 +4,31 @@
 
 class HexEncoder {
 
-public:
-	static constexpr size_t input_block_size = 1, output_block_size = 2;
+private:
+	uint8_t buf;
+	bool buf_full;
 
 public:
-	size_t process(uint8_t (&out)[2], const uint8_t in[], size_t n);
+	HexEncoder() : buf_full() { }
+
+public:
+	bool process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in);
+	bool finish(uint8_t *&out, size_t n_out);
 
 };
 
 
 class HexDecoder {
 
-public:
-	static constexpr size_t input_block_size = 2, output_block_size = 1;
+private:
+	uint8_t buf;
+	bool buf_full;
 
 public:
-	size_t process(uint8_t (&out)[1], const uint8_t in[], size_t n);
+	HexDecoder() : buf_full() { }
+
+public:
+	bool process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in);
+	bool finish(uint8_t *&out, size_t n_out);
 
 };

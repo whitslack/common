@@ -173,13 +173,10 @@ void WebSocket::ready(EPoll &epoll, uint32_t events) {
 
 static std::string make_accept_field_value(const std::string &key) {
 	SHA1 sha1;
-	SinkBuf sink(&sha1);
-	std::ostream(&sink) << key << "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+	sha1.write_fully(key.data(), key.size());
+	sha1.write_fully("258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
 	auto &hash = sha1.digest();
-	std::string str;
-	StringSink ss(&str);
-	CodecSink<Base64Encoder>(&ss).write(hash, sizeof hash);
-	return str;
+	return transcode<Base64Encoder>(hash, sizeof hash);
 }
 
 bool WebSocketServerHandshake::ready() {
@@ -283,8 +280,7 @@ void WebSocketClientHandshake::start(const char host[], uint16_t port, const cha
 		for (size_t i = 0; i < countof(key); ++i) {
 			key[i] = static_cast<uint32_t>(::mrand48());
 		}
-		StringSink ss(&this->key);
-		CodecSink<Base64Encoder>(&ss).write(key, sizeof key);
+		transcode<Base64Encoder>(this->key, key, sizeof key);
 		request_headers.emplace_hint(request_headers.end(), "Sec-WebSocket-Key", this->key);
 	}
 	request_headers.emplace_hint(request_headers.end(), "Sec-WebSocket-Version", "13");

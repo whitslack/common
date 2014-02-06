@@ -4,21 +4,31 @@
 
 class Base64Encoder {
 
-public:
-	static constexpr size_t input_block_size = 3, output_block_size = 4;
+private:
+	uint8_t buf;
+	uint8_t buf_state;
 
 public:
-	size_t process(uint8_t (&out)[4], const uint8_t in[], size_t n);
+	Base64Encoder() : buf_state() { }
+
+public:
+	bool process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in);
+	bool finish(uint8_t *&out, size_t n_out);
 
 };
 
 
 class Base64Decoder {
 
-public:
-	static constexpr size_t input_block_size = 4, output_block_size = 3;
+private:
+	uint8_t buf;
+	uint8_t buf_state;
 
 public:
-	size_t process(uint8_t (&out)[3], const uint8_t in[], size_t n);
+	Base64Decoder() : buf_state() { }
+
+public:
+	bool process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in);
+	bool finish(uint8_t *&out, size_t n_out);
 
 };
