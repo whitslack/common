@@ -56,7 +56,7 @@ Socket connect(const char host[], uint16_t port, int send_buffer_size) {
 }
 
 Socket connect_with_retry(const char host[], uint16_t port, int send_buffer_size) {
-	static const std::chrono::steady_clock::duration
+	static constexpr std::chrono::steady_clock::duration
 			min_delay = std::chrono::milliseconds(500),
 			max_delay = std::chrono::seconds(15);
 	auto reconnect_delay = min_delay;
@@ -64,11 +64,6 @@ Socket connect_with_retry(const char host[], uint16_t port, int send_buffer_size
 		try {
 			return connect(host, port, send_buffer_size);
 		}
-		/*catch (const std::system_error &) {
-			if (elog.warn_enabled()) {
-				elog.warn() << "failed to connect to " << host << "; will retry" << std::endl;
-			}
-		}*/
 		catch (const std::exception &e) {
 			if (elog.warn_enabled()) {
 				elog.warn() << "failed to connect to " << host << ": " << e.what() << "; will retry" << std::endl;
