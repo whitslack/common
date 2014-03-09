@@ -10,6 +10,19 @@
 #include <sys/stat.h>
 
 
+void FileDescriptor::MemoryMapping::msync(size_t offset, size_t length, int flags) {
+	if (::msync(static_cast<uint8_t *>(addr) + offset, length, flags) < 0) {
+		throw std::system_error(errno, std::system_category(), "msync");
+	}
+}
+
+void FileDescriptor::MemoryMapping::madvise(size_t offset, size_t length, int advice) {
+	int error;
+	if ((error = ::posix_madvise(static_cast<uint8_t *>(addr) + offset, length, advice)) < 0) {
+		throw std::system_error(error, std::system_category(), "posix_madvise");
+	}
+}
+
 void FileDescriptor::MemoryMapping::unmap() {
 	if (::munmap(addr, length) < 0) {
 		throw std::system_error(errno, std::system_category(), "munmap");

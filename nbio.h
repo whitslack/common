@@ -36,6 +36,8 @@ public:
 		operator void * () const { return addr; }
 		void * data() const { return addr; }
 		size_t size() const { return length; }
+		void msync(size_t offset, size_t length, int flags = MS_ASYNC);
+		void madvise(size_t offset, size_t length, int advice);
 	private:
 		void unmap();
 	};
