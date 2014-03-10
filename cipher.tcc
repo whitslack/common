@@ -12,13 +12,27 @@ template <typename Cipher>
 constexpr size_t CTR<Cipher>::output_block_size;
 
 template <typename Cipher>
-size_t CTR<Cipher>::process(uint8_t (&out)[CTR<Cipher>::output_block_size], const uint8_t in[], size_t n) {
-	assert(n <= input_block_size);
-	size_t r _unused = cipher.process(out, iv, sizeof iv);
-	assert(r == output_block_size);
-	for (size_t i = 0; i < n; ++i) {
-		out[i] ^= in[i];
+bool CTR<Cipher>::process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in) {
+	while (n_in > 0) {
+		if (n_out == 0) {
+			return false;
+		}
+		if (pos == 0) {
+			cipher.process(mask, iv, sizeof iv);
+			for (size_t i = input_block_size; i > 0 && ++iv[--i] != 0;);
+		}
+		*out++ = *in++ ^ mask[pos], --n_in, --n_out;
+		if (++pos == sizeof mask) {
+			pos = 0;
+		}
 	}
-	for (size_t i = input_block_size; i > 0 && ++iv[--i] != 0;);
-	return n;
+	return true;
+}
+
+template <typename Cipher>
+bool CTR<Cipher>::finish(uint8_t *&, size_t) {
+	if (pos != 0) {
+		throw std::logic_error("incomplete block");
+	}
+	return true;
 }
