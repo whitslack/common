@@ -58,7 +58,7 @@ public:
 class AES128Decrypter : public AESDecrypterBase<16> {
 
 public:
-	explicit AES128Decrypter(const uint8_t (&key)[16]);
+	explicit AES128Decrypter(const uint8_t (&key)[16]) : AESDecrypterBase<16>(AES128Encrypter(key)) { }
 	explicit AES128Decrypter(const AES128Encrypter &encrypter) : AESDecrypterBase<16>(encrypter) { }
 
 };
@@ -75,7 +75,7 @@ public:
 class AES192Decrypter : public AESDecrypterBase<24> {
 
 public:
-	explicit AES192Decrypter(const uint8_t (&key)[24]);
+	explicit AES192Decrypter(const uint8_t (&key)[24]) : AESDecrypterBase<24>(AES192Encrypter(key)) { }
 	explicit AES192Decrypter(const AES192Encrypter &encrypter) : AESDecrypterBase<24>(encrypter) { }
 
 };
@@ -92,7 +92,7 @@ public:
 class AES256Decrypter : public AESDecrypterBase<32> {
 
 public:
-	explicit AES256Decrypter(const uint8_t (&key)[32]);
+	explicit AES256Decrypter(const uint8_t (&key)[32]) : AESDecrypterBase<32>(AES256Encrypter(key)) { }
 	explicit AES256Decrypter(const AES256Encrypter &encrypter) : AESDecrypterBase<32>(encrypter) { }
 
 };
