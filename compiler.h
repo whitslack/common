@@ -9,6 +9,8 @@
 #define _unused __attribute__ ((__unused__))
 #define _wur __attribute__ ((__warn_usused_result__))
 
+#define _restrict __restrict
+
 #else
 
 #define _const
@@ -17,5 +19,7 @@
 #define _pure
 #define _unused
 #define _wur
+
+#define _restrict
 
 #endif
