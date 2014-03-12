@@ -2,6 +2,7 @@
 
 #include "http.h"
 #include "nbio.h"
+#include "optional.h"
 
 #ifdef HTTP_GZIP
 #include "gzip.h"
@@ -21,7 +22,7 @@ private:
 	ChunkedSource chunked_source;
 	ChunkedSink chunked_sink;
 #ifdef HTTP_GZIP
-	std::unique_ptr<GZipSource> gzip_source; // [C++14] std::optional
+	optional<GZipSource> gzip_source; // [C++14] std::optional
 #endif
 	Source *read_source;
 	Sink *write_sink;

@@ -53,8 +53,8 @@ const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 		}
 #ifdef HTTP_GZIP
 		if (response_headers.find_token("Content-Encoding", "gzip") != response_headers.end()) {
-			gzip_source.reset(new GZipSource(read_source));
-			read_source = gzip_source.get();
+			gzip_source.emplace(read_source);
+			read_source = &*gzip_source;
 		}
 #endif
 		response_headers_read = true;
