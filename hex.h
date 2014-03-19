@@ -5,8 +5,8 @@
 class HexEncoder {
 
 private:
-	uint8_t buf;
 	bool buf_full;
+	uint8_t buf;
 
 public:
 	HexEncoder() : buf_full() { }
@@ -21,8 +21,8 @@ public:
 class HexDecoder {
 
 private:
-	uint8_t buf;
 	bool buf_full;
+	uint8_t buf;
 
 public:
 	HexDecoder() : buf_full() { }

@@ -5,11 +5,10 @@
 class Base64Encoder {
 
 private:
-	uint8_t buf;
-	uint8_t buf_state;
+	uint8_t state, buf;
 
 public:
-	Base64Encoder() : buf_state() { }
+	Base64Encoder() : state() { }
 
 public:
 	bool process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in);
@@ -21,11 +20,10 @@ public:
 class Base64Decoder {
 
 private:
-	uint8_t buf;
-	uint8_t buf_state;
+	uint8_t state, buf;
 
 public:
-	Base64Decoder() : buf_state() { }
+	Base64Decoder() : state() { }
 
 public:
 	bool process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in);
