@@ -3,7 +3,7 @@
 #include <ios>
 
 
-bool HexEncoder::process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in) {
+bool HexEncoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
 	static constexpr char encode[16] = {
 		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
 	};
@@ -38,7 +38,7 @@ bool HexEncoder::finish(uint8_t *&out, size_t n_out) {
 }
 
 
-bool HexDecoder::process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in) {
+bool HexDecoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
 	static constexpr int8_t decode[55] = {
 		0,  1,  2,  3,  4,  5,  6,  7,  8,  9, -1, -1, -1, -1, -1, -1,
 		-1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1,

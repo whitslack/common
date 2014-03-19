@@ -1,6 +1,8 @@
 #include <cstddef>
 #include <cstdint>
 
+#include "compiler.h"
+
 
 class Base64Encoder {
 
@@ -11,7 +13,7 @@ public:
 	Base64Encoder() : state() { }
 
 public:
-	bool process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in);
+	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);
 	bool finish(uint8_t *&out, size_t n_out);
 
 };
@@ -26,7 +28,7 @@ public:
 	Base64Decoder() : state() { }
 
 public:
-	bool process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in);
+	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);
 	bool finish(uint8_t *&out, size_t n_out);
 
 };

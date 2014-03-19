@@ -59,7 +59,7 @@ const mp_limb_t secp256k1_n[MP_NLIMBS(32)] = {
 	MP_LIMB_C(0xFFFFFFFE, 0xFFFFFFFF), MP_LIMB_C(0xFFFFFFFF, 0xFFFFFFFF)
 };
 
-mp_limb_t * ecp_dbl(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
+mp_limb_t * ecp_dbl(mp_limb_t * _restrict R, const mp_limb_t N[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *x = &N[0], *y = &N[l], *z = &N[l * 2];
 	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
 	if (mpn_zero_p(z, l)) {
@@ -80,7 +80,7 @@ mp_limb_t * ecp_dbl(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t a[], con
 	return R;
 }
 
-static mp_limb_t * ecp_add_aff(mp_limb_t R[], const mp_limb_t N1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
+static mp_limb_t * ecp_add_aff(mp_limb_t * _restrict R, const mp_limb_t N1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *x1 = &N1[0], *y1 = &N1[l], *z1 = &N1[l * 2], *x2 = &N2[0], *y2 = &N2[l];
 	assert(mpn_one_p(&N2[l * 2], l));
 	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
@@ -108,7 +108,7 @@ static mp_limb_t * ecp_add_aff(mp_limb_t R[], const mp_limb_t N1[], const mp_lim
 	return R;
 }
 
-mp_limb_t * ecp_add(mp_limb_t R[], const mp_limb_t N1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
+mp_limb_t * ecp_add(mp_limb_t * _restrict R, const mp_limb_t N1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *x1 = &N1[0], *y1 = &N1[l], *z1 = &N1[l * 2], *x2 = &N2[0], *y2 = &N2[l], *z2 = &N2[l * 2];
 	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
 	if (mpn_zero_p(z1, l)) {
@@ -152,7 +152,7 @@ mp_limb_t * ecp_add(mp_limb_t R[], const mp_limb_t N1[], const mp_limb_t N2[], c
 	return R;
 }
 
-static mp_limb_t * ecp_mul_(mp_limb_t R[], const mp_limb_t n1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l, mp_limb_t * (*add)(mp_limb_t [], const mp_limb_t [], const mp_limb_t [], const mp_limb_t [], const mp_limb_t [], size_t)) {
+static mp_limb_t * ecp_mul_(mp_limb_t * _restrict R, const mp_limb_t n1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l, mp_limb_t * (*add)(mp_limb_t [], const mp_limb_t [], const mp_limb_t [], const mp_limb_t [], const mp_limb_t [], size_t)) {
 	bool active = false;
 	size_t swaps = 0;
 	mp_limb_t Ss[l * 3], *S = Ss, *T;
@@ -182,11 +182,11 @@ static mp_limb_t * ecp_mul_(mp_limb_t R[], const mp_limb_t n1[], const mp_limb_t
 	return R;
 }
 
-mp_limb_t * ecp_mul(mp_limb_t R[], const mp_limb_t n1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
+mp_limb_t * ecp_mul(mp_limb_t * _restrict R, const mp_limb_t n1[], const mp_limb_t N2[], const mp_limb_t a[], const mp_limb_t p[], size_t l) {
 	return ecp_mul_(R, n1, N2, a, p, l, mpn_one_p(&N2[l * 2], l) ? &ecp_add_aff : static_cast<mp_limb_t * (*)(mp_limb_t [], const mp_limb_t [], const mp_limb_t [], const mp_limb_t [], const mp_limb_t [], size_t)>(&ecp_add));
 }
 
-mp_limb_t * ecp_proj(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t p[], size_t l) {
+mp_limb_t * ecp_proj(mp_limb_t * _restrict R, const mp_limb_t N[], const mp_limb_t p[], size_t l) {
 	const mp_limb_t *x = &N[0], *y = &N[l], *z = &N[l * 2];
 	mp_limb_t *xr = &R[0], *yr = &R[l], *zr = &R[l * 2];
 	mp_limb_t t0[l], t1[l], t2[l];
@@ -197,12 +197,12 @@ mp_limb_t * ecp_proj(mp_limb_t R[], const mp_limb_t N[], const mp_limb_t p[], si
 	return R;
 }
 
-void ecp_pubkey(mp_limb_t Q[], const mp_limb_t p[], const mp_limb_t a[], const mp_limb_t G[], const mp_limb_t d[], size_t l) {
+void ecp_pubkey(mp_limb_t * _restrict Q, const mp_limb_t p[], const mp_limb_t a[], const mp_limb_t G[], const mp_limb_t d[], size_t l) {
 	mp_limb_t R[3][l];
 	ecp_proj(Q, ecp_mul(*R, d, G, a, p, l), p, l);
 }
 
-void ecp_sign(mp_limb_t r[], mp_limb_t s[], const mp_limb_t p[], const mp_limb_t a[], const mp_limb_t G[], const mp_limb_t n[], const mp_limb_t d[], const mp_limb_t z[], size_t l) {
+void ecp_sign(mp_limb_t * _restrict r, mp_limb_t * _restrict s, const mp_limb_t p[], const mp_limb_t a[], const mp_limb_t G[], const mp_limb_t n[], const mp_limb_t d[], const mp_limb_t z[], size_t l) {
 	std::random_device random;
 	for (;;) {
 		mp_limb_t k[l];

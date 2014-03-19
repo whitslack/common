@@ -56,7 +56,7 @@ public:
 
 
 template <typename Codec, typename... Args>
-size_t transcode(void *out, size_t n_out, const void *in, size_t n_in, Args&&... args) {
+size_t transcode(void * _restrict out, size_t n_out, const void *in, size_t n_in, Args&&... args) {
 	Codec codec(std::forward<Args>(args)...);
 	uint8_t *obuf_ptr = static_cast<uint8_t *>(out), *obuf_eptr = obuf_ptr + n_out;
 	const uint8_t *ibuf_ptr = static_cast<const uint8_t *>(in);
@@ -67,7 +67,7 @@ size_t transcode(void *out, size_t n_out, const void *in, size_t n_in, Args&&...
 }
 
 template <typename Codec, typename... Args>
-static inline size_t transcode(void *out, size_t n_out, const std::string &in, Args&&... args) {
+static inline size_t transcode(void * _restrict out, size_t n_out, const std::string &in, Args&&... args) {
 	return ::transcode<Codec, Args...>(out, n_out, in.data(), in.size(), std::forward<Args>(args)...);
 }
 

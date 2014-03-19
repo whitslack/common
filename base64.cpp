@@ -11,7 +11,7 @@ static constexpr char encode[64] = {
 	'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
 };
 
-bool Base64Encoder::process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in) {
+bool Base64Encoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
 	uint b0, b1;
 	switch (state) {
 		case 0:
@@ -116,7 +116,7 @@ state5:
 }
 
 
-bool Base64Decoder::process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in) {
+bool Base64Decoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
 	static constexpr int8_t decode[80] = {
 		62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1,
 		-1, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17,

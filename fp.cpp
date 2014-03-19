@@ -24,7 +24,7 @@ mp_limb_t * fp_dbl(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size
 	return r;
 }
 
-mp_limb_t * fp_mul(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_mul(mp_limb_t * _restrict r, const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
 	mpn_zero(r, l);
 	bool active = false;
 	for (size_t i = l; i > 0;) {
@@ -43,7 +43,7 @@ mp_limb_t * fp_mul(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], co
 	return r;
 }
 
-mp_limb_t * fp_mul_1(mp_limb_t r[], const mp_limb_t n1[], mp_limb_t n2, const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_mul_1(mp_limb_t * _restrict r, const mp_limb_t n1[], mp_limb_t n2, const mp_limb_t p[], size_t l) {
 	mpn_zero(r, l);
 	bool active = false;
 	for (size_t j = sizeof(mp_limb_t) * 8; j > 0; --j) {
@@ -59,20 +59,20 @@ mp_limb_t * fp_mul_1(mp_limb_t r[], const mp_limb_t n1[], mp_limb_t n2, const mp
 	return r;
 }
 
-mp_limb_t * fp_sqr(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_sqr(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t p[], size_t l) {
 	return fp_mul(r, n, n, p, l);
 }
 
-mp_limb_t * fp_pow(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t e[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_pow(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t e[], const mp_limb_t p[], size_t l) {
 	if (mpn_zero_p(e, l)) {
 		mpn_zero(r, l), r[0] = 1;
 		return r;
 	}
 	mp_limb_t *r_ = r;
 	mpn_copyi(r, n, l);
-	mp_limb_t n2_[l], *n2 = n2_;
+	mp_limb_t n2_[l], * _restrict n2 = n2_;
 	fp_sqr(n2, n, p, l);
-	mp_limb_t t_[l], *t = t_;
+	mp_limb_t t_[l], * _restrict t = t_;
 	bool active = false;
 	for (size_t i = l; i > 0;) {
 		mp_limb_t w = e[--i];
@@ -103,7 +103,7 @@ mp_limb_t * fp_pow(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t e[], cons
 	return r_;
 }
 
-mp_limb_t * fp_inv(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_inv(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t p[], size_t l) {
 	if (mpn_zero_p(n, l)) {
 		throw std::domain_error("not invertible");
 	}

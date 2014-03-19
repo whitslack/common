@@ -12,7 +12,7 @@ template <typename Cipher>
 constexpr size_t CTR<Cipher>::output_block_size;
 
 template <typename Cipher>
-bool CTR<Cipher>::process(uint8_t *&out, size_t n_out, const uint8_t *&in, size_t n_in) {
+bool CTR<Cipher>::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
 	while (n_in > 0) {
 		if (n_out == 0) {
 			return false;
