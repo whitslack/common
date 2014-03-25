@@ -16,12 +16,22 @@ private:
 
 public:
 	TokenBucket(rep_t initial_fill = Max) : ref(Clock::now().time_since_epoch() - tokens_t(initial_fill)) { }
+
 	rep_t take(rep_t take) {
 		ticks_t now = Clock::now().time_since_epoch();
 		ticks_t avail = std::min(now - ref, ticks_t(tokens_t(Max)));
+		if (avail <= ticks_t::zero()) {
+			return 0;
+		}
 		ticks_t taken = std::min(ticks_t(tokens_t(take)), avail);
 		ref = now - avail + taken;
 		return std::chrono::duration_cast<tokens_t>(taken).count();
+	}
+
+	void overdraw(rep_t take) {
+		ticks_t now = Clock::now().time_since_epoch();
+		ticks_t avail = std::min(now - ref, ticks_t(tokens_t(Max)));
+		ref = now - avail + tokens_t(take);
 	}
 
 };
