@@ -35,12 +35,12 @@ public:
 		if (queue.empty() || deadline < queue.top().deadline) {
 			condition.notify_one();
 		}
-		queue.push({ deadline, std::make_shared<std::function<void (void)>>(std::move(task)) });
+		queue.push({ deadline, std::make_shared<std::function<void (void)>>(std::forward<T>(task)) });
 	}
 
 	template <typename T>
 	void call_after(duration_t delay, T &&task) {
-		this->call_at(Clock::now() + delay, std::move(task));
+		this->call_at(Clock::now() + delay, std::forward<T>(task));
 	}
 
 };
