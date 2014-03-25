@@ -210,6 +210,7 @@ state4:
 	if (*in != '=') {
 		throw std::ios_base::failure("invalid base64");
 	}
+	++in, --n_in;
 state5:
 	if (n_in == 0) {
 		state = 5;
