@@ -8,12 +8,12 @@
 class GZipSource : public Source {
 
 private:
-	Source *source;
+	Source &source;
 	z_stream stream;
 	uint8_t ibuf[1 << 12];
 
 public:
-	explicit GZipSource(Source *source);
+	explicit GZipSource(Source &source);
 	~GZipSource();
 
 private:
@@ -29,12 +29,12 @@ public:
 class GZipSink : public Sink {
 
 private:
-	Sink *sink;
+	Sink &sink;
 	z_stream stream;
 	uint8_t obuf[1 << 12];
 
 public:
-	explicit GZipSink(Sink *sink, int level = Z_DEFAULT_COMPRESSION);
+	explicit GZipSink(Sink &sink, int level = Z_DEFAULT_COMPRESSION);
 	~GZipSink();
 
 private:
@@ -42,8 +42,8 @@ private:
 	GZipSink & operator = (const GZipSink &) = delete;
 
 public:
-	size_t write(const void *buf, size_t n, bool more = false) override;
-	bool finish() override;
+	size_t write(const void *buf, size_t n) override;
+	bool flush() override;
 
 private:
 	int write(const void *buf, size_t &n, int flush);

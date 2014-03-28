@@ -7,7 +7,7 @@
 template <typename Codec, size_t BufferSize>
 ssize_t CodecSource<Codec, BufferSize>::read(void *buf, size_t n) {
 	uint8_t *obuf_ptr = static_cast<uint8_t *>(buf), *obuf_eptr = obuf_ptr + n;
-	ssize_t s = source->read(ibuf_eptr, std::end(ibuf) - ibuf_eptr);
+	ssize_t s = source.read(ibuf_eptr, std::end(ibuf) - ibuf_eptr);
 	if (s > 0) {
 		ibuf_eptr += s;
 	}
@@ -25,25 +25,25 @@ ssize_t CodecSource<Codec, BufferSize>::read(void *buf, size_t n) {
 
 
 template <typename Codec, size_t BufferSize>
-size_t CodecSink<Codec, BufferSize>::write(const void *buf, size_t n, bool more) {
-	const uint8_t *ibuf_ptr = static_cast<const uint8_t *>(buf), *ibuf_eptr = ibuf_ptr + n;
+size_t CodecSink<Codec, BufferSize>::write(const void *buf, size_t n) {
+	const uint8_t *ibuf_ptr = static_cast<const uint8_t *>(buf);
 	codec.process(obuf_eptr, std::end(obuf) - obuf_eptr, ibuf_ptr, n);
-	if ((obuf_ptr += sink->write(obuf_ptr, obuf_eptr - obuf_ptr, more || ibuf_ptr < ibuf_eptr)) == obuf_eptr) {
+	if ((obuf_ptr += sink.write(obuf_ptr, obuf_eptr - obuf_ptr)) == obuf_eptr) {
 		obuf_eptr = obuf_ptr = obuf;
 	}
 	return ibuf_ptr - static_cast<const uint8_t *>(buf);
 }
 
 template <typename Codec, size_t BufferSize>
-bool CodecSink<Codec, BufferSize>::finish() {
+bool CodecSink<Codec, BufferSize>::flush() {
 	for (;;) {
 		bool finished = codec.finish(obuf_eptr, std::end(obuf) - obuf_eptr);
-		if ((obuf_ptr += sink->write(obuf_ptr, obuf_eptr - obuf_ptr, !finished)) < obuf_eptr) {
+		if ((obuf_ptr += sink.write(obuf_ptr, obuf_eptr - obuf_ptr)) < obuf_eptr) {
 			return false;
 		}
 		obuf_eptr = obuf_ptr = obuf;
 		if (finished) {
-			return sink->finish();
+			return sink.flush();
 		}
 	}
 }

@@ -2,6 +2,8 @@
 
 #include <iostream>
 
+#include "dns.h"
+
 
 static bool skip_crlf(std::istream &is) {
 	if (is.peek() == '\r') {
@@ -26,14 +28,14 @@ void HttpConnectionBase::request(HttpRequestHeaders &request_headers) {
 	std::ostream os(&sb);
 	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 	os << request_headers << std::flush;
-	write_sink = request_headers.find("Content-Length") == request_headers.end() ? &chunked_sink : sink;
+	write_sink = request_headers.find("Content-Length") == request_headers.end() ? &chunked_sink : &sink;
 	response_headers_read = false;
 }
 
 const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 	if (!response_headers_read) {
 		DelimitedSource ds(source, "\r\n\r\n");
-		SourceBuf sb(&ds);
+		SourceBuf sb(ds);
 		char buf[1500];
 		sb.pubsetbuf(buf, sizeof buf);
 		std::istream(&sb) >> response_headers;
@@ -44,7 +46,7 @@ const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 		else {
 			auto content_length_itr = response_headers.find("Content-Length");
 			if (content_length_itr == response_headers.end()) {
-				read_source = source;
+				read_source = &source;
 			}
 			else {
 				limited_source.remaining = std::stoul(content_length_itr->second);
@@ -53,7 +55,7 @@ const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 		}
 #ifdef HTTP_GZIP
 		if (response_headers.find_token("Content-Encoding", "gzip") != response_headers.end()) {
-			gzip_source.emplace(read_source);
+			gzip_source.emplace(*read_source);
 			read_source = &*gzip_source;
 		}
 #endif
@@ -80,16 +82,16 @@ ssize_t HttpConnectionBase::read(void *buf, size_t n) {
 	return r;
 }
 
-size_t HttpConnectionBase::write(const void *buf, size_t n, bool more) {
-	return write_sink->write(buf, n, more);
+size_t HttpConnectionBase::write(const void *buf, size_t n) {
+	return write_sink->write(buf, n);
 }
 
-bool HttpConnectionBase::finish() {
-	return write_sink->finish();
+bool HttpConnectionBase::flush() {
+	return write_sink->flush();
 }
 
 
-HttpConnection::HttpConnection(const std::string &host, uint16_t port) : HttpConnectionBase(&buffered_source, &buffered_sink), buffered_source(&socket), buffered_sink(&socket) {
+HttpConnection::HttpConnection(const std::string &host, uint16_t port) : HttpConnectionBase(buffered_source, buffered_sink), buffered_source(socket), buffered_sink(socket) {
 	for (auto &info : getaddrinfo(host.c_str())) {
 		if (info.ai_family == AF_INET) {
 			reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port = htobe16(port);
@@ -117,7 +119,7 @@ HttpConnection::HttpConnection(const std::string &host, uint16_t port) : HttpCon
 
 #ifdef HTTP_TLS
 
-HttpsConnection::HttpsConnection(const std::string &host, uint16_t port, const char ca_file[]) : HttpConnectionBase(&tls, &tls) {
+HttpsConnection::HttpsConnection(const std::string &host, uint16_t port, const char ca_file[]) : HttpConnectionBase(tls, tls) {
 	for (auto &info : getaddrinfo(host.c_str())) {
 		if (info.ai_family == AF_INET) {
 			reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port = htobe16(port);

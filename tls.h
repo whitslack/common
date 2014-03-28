@@ -223,7 +223,8 @@ public:
 	unsigned int verify_peers(const char hostname[] = nullptr);
 	bool handshake();
 	ssize_t read(void *buf, size_t n) override;
-	size_t write(const void *buf, size_t n, bool more = false) override;
+	size_t write(const void *buf, size_t n) override;
+	bool flush() override;
 	bool bye(gnutls_close_request_t how = GNUTLS_SHUT_RDWR);
 
 protected:

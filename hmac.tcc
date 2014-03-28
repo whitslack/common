@@ -20,7 +20,7 @@ HMAC<Hash_Type>::HMAC(const void *key, size_t n) {
 	for (size_t i = 0; i < sizeof secret; ++i) {
 		secret[i] ^= 0x36;
 	}
-	hash.write(secret, sizeof secret, true);
+	hash.write(secret, sizeof secret);
 }
 
 template <typename Hash_Type>
@@ -31,7 +31,7 @@ const uint8_t (& HMAC<Hash_Type>::digest())[digest_size] {
 	for (size_t i = 0; i < sizeof secret; ++i) {
 		secret[i] ^= 0x36 ^ 0x5c;
 	}
-	hash.write(secret, sizeof secret, true);
-	hash.write(ihash, sizeof ihash, false);
+	hash.write(secret, sizeof secret);
+	hash.write(ihash, sizeof ihash);
 	return hash.digest();
 }

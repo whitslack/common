@@ -288,7 +288,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 		switch (state) {
 			case Size:
 				for (;;) {
-					if ((r = source->read(&c, 1)) <= 0) {
+					if ((r = source.read(&c, 1)) <= 0) {
 						goto Exit;
 					}
 					if (c == ';') {
@@ -307,7 +307,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				}
 				break;
 			case Size_CR:
-				if ((r = source->read(&c, 1)) <= 0) {
+				if ((r = source.read(&c, 1)) <= 0) {
 					goto Exit;
 				}
 				if (c != '\n') {
@@ -317,7 +317,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				break;
 			case Extensions:
 				for (;;) {
-					if ((r = source->read(&c, 1)) <= 0) {
+					if ((r = source.read(&c, 1)) <= 0) {
 						goto Exit;
 					}
 					if (c == '\r') {
@@ -327,7 +327,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				}
 				break;
 			case Extensions_CR:
-				if ((r = source->read(&c, 1)) <= 0) {
+				if ((r = source.read(&c, 1)) <= 0) {
 					goto Exit;
 				}
 				if (c != '\n') {
@@ -339,7 +339,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				state = chunk_rem ? Data : End;
 				break;
 			case Data:
-				if ((r = source->read(buf, std::min(n, chunk_rem))) <= 0) {
+				if ((r = source.read(buf, std::min(n, chunk_rem))) <= 0) {
 					goto Exit;
 				}
 				if ((chunk_rem -= r) == 0) {
@@ -347,7 +347,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				}
 				return r;
 			case Data_End:
-				if ((r = source->read(&c, 1)) <= 0) {
+				if ((r = source.read(&c, 1)) <= 0) {
 					goto Exit;
 				}
 				if (c != '\r') {
@@ -356,7 +356,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				state = Data_CR;
 				// fall through
 			case Data_CR:
-				if ((r = source->read(&c, 1)) <= 0) {
+				if ((r = source.read(&c, 1)) <= 0) {
 					goto Exit;
 				}
 				if (c != '\n') {
@@ -376,18 +376,22 @@ Exit:
 }
 
 size_t ChunkedSource::avail() {
-	return std::min(source->avail(), chunk_rem);
+	return std::min(source.avail(), chunk_rem);
 }
 
 
-size_t ChunkedSink::write(const void *buf, size_t n, bool more) {
+size_t ChunkedSink::write(const void *buf, size_t n) {
+	return this->write(buf, n, false);
+}
+
+size_t ChunkedSink::write(const void *buf, size_t n, bool flush) {
 	static const char HEX[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 	size_t ret = 0, mask;
 	char c;
 	for (;;) {
 		switch (state) {
 			case Idle:
-				if (n == 0 && more) {
+				if (n == 0 && !flush) {
 					return ret;
 				}
 				write_size = n;
@@ -457,7 +461,7 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool more) {
 					else {
 						c = HEX[mask = write_size & BITS(4, 0)];
 					}
-					if (sink->write(&c, 1, true) == 0) {
+					if (sink.write(&c, 1) == 0) {
 						return ret;
 					}
 					if ((write_size ^= mask) == 0) {
@@ -468,20 +472,20 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool more) {
 				// fall through
 			case Size_CR:
 				c = '\r';
-				if (sink->write(&c, 1, true) == 0) {
+				if (sink.write(&c, 1) == 0) {
 					return ret;
 				}
 				state = Size_LF;
 				// fall through
 			case Size_LF:
 				c = '\n';
-				if (sink->write(&c, 1, n) == 0) {
+				if (sink.write(&c, 1) == 0) {
 					return ret;
 				}
 				state = n ? Data : End;
 				break;
 			case Data:
-				if ((ret = sink->write(buf, n, true)) < n) {
+				if ((ret = sink.write(buf, n)) < n) {
 					return ret;
 				}
 				buf = nullptr;
@@ -490,14 +494,14 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool more) {
 				// fall through
 			case Data_CR:
 				c = '\r';
-				if (sink->write(&c, 1, true) == 0) {
+				if (sink.write(&c, 1) == 0) {
 					return ret;
 				}
 				state = Data_LF;
 				// fall through
 			case Data_LF:
 				c = '\n';
-				if (sink->write(&c, 1, true) == 0) {
+				if (sink.write(&c, 1) == 0) {
 					return ret;
 				}
 				state = Idle;
@@ -511,12 +515,12 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool more) {
 	}
 }
 
-bool ChunkedSink::finish() {
+bool ChunkedSink::flush() {
 	if (state != End) {
-		this->write(nullptr, 0, false);
+		this->write(nullptr, 0, true);
 		if (state != End) {
 			return false;
 		}
 	}
-	return sink->finish();
+	return sink.flush();
 }

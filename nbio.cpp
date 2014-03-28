@@ -1,12 +1,9 @@
 #include "nbio.h"
 
 #include <cassert>
-#include <cstddef>
-#include <cstring>
-#include <iostream>
 
-#include <netdb.h>
 #include <unistd.h>
+#include <netinet/tcp.h>
 #include <sys/stat.h>
 
 
@@ -57,7 +54,7 @@ ssize_t FileDescriptor::read(void *buf, size_t n) {
 	return r == 0 ? n == 0 ? 0 : -1 : r;
 }
 
-size_t FileDescriptor::write(const void *buf, size_t n, bool) {
+size_t FileDescriptor::write(const void *buf, size_t n) {
 	ssize_t w;
 	if ((w = ::write(fd, buf, n)) < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
@@ -253,12 +250,13 @@ size_t Socket::avail() {
 	return n;
 }
 
-size_t Socket::write(const void *buf, size_t n, bool more) {
-	return this->send(buf, n, more ? MSG_MORE | MSG_NOSIGNAL : MSG_NOSIGNAL);
+size_t Socket::write(const void *buf, size_t n) {
+	return this->send(buf, n, MSG_MORE | MSG_NOSIGNAL);
 }
 
-bool Socket::finish() {
-	this->write(nullptr, 0, false);
+bool Socket::flush() {
+	int optval = 0;
+	this->setsockopt(IPPROTO_TCP, TCP_CORK, &optval, static_cast<socklen_t>(sizeof optval));
 	return true;
 }
 
@@ -299,62 +297,3 @@ T SocketBase<T, A>::accept(A *addr, int flags) {
 
 template class SocketBase<Socket4, sockaddr_in>;
 template class SocketBase<Socket6, sockaddr_in6>;
-
-
-const char * GAICategory::name() const noexcept {
-	return "GAI";
-}
-
-std::string GAICategory::message(int condition) const noexcept {
-	return ::gai_strerror(condition);
-}
-
-
-GAIResults getaddrinfo(const char host[], const char service[], int family, int type, int protocol, int flags) {
-	addrinfo hints;
-	std::memset(&hints, 0, sizeof hints);
-	hints.ai_family = family;
-	hints.ai_socktype = type;
-	hints.ai_protocol = protocol;
-	hints.ai_flags = flags;
-	addrinfo *res;
-	int error;
-	if ((error = ::getaddrinfo(host, service, &hints, &res)) != 0) {
-		if (error == EAI_SYSTEM) {
-			throw std::system_error(errno, std::system_category(), "getaddrinfo");
-		}
-		else {
-			throw std::system_error(error, GAICategory(), "getaddrinfo");
-		}
-	}
-	return GAIResults(res);
-}
-
-
-std::ostream & operator << (std::ostream &os, const sockaddr_in &addr) {
-	char host[NI_MAXHOST], serv[NI_MAXSERV];
-	int error;
-	if ((error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV)) != 0) {
-		if (error == EAI_SYSTEM) {
-			throw std::system_error(errno, std::system_category(), "getnameinfo");
-		}
-		else {
-			throw std::system_error(error, GAICategory(), "getnameinfo");
-		}
-	}
-	return os << host << ':' << serv;
-}
-
-std::ostream & operator << (std::ostream &os, const sockaddr_in6 &addr) {
-	char host[NI_MAXHOST], serv[NI_MAXSERV];
-	int error;
-	if ((error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV)) != 0) {
-		if (error == EAI_SYSTEM) {
-			throw std::system_error(errno, std::system_category(), "getnameinfo");
-		}
-		else {
-			throw std::system_error(error, GAICategory(), "getnameinfo");
-		}
-	}
-	return os << '[' << host << "]:" << serv;
-}

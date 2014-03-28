@@ -1,12 +1,8 @@
 #pragma once
 
-#include <cstdint>
-#include <streambuf>
 #include <system_error>
-#include <utility>
 
 #include <fcntl.h>
-#include <netdb.h>
 #include <netinet/in.h>
 #include <sys/epoll.h>
 #include <sys/ioctl.h>
@@ -58,7 +54,7 @@ public:
 	void open(const char pathname[], int flags = O_RDONLY | O_CLOEXEC, mode_t mode = 0666);
 	void close();
 	ssize_t read(void *buf, size_t n) override;
-	size_t write(const void *buf, size_t n, bool more = false) override;
+	size_t write(const void *buf, size_t n) override;
 	off_t lseek(off_t offset, int whence = SEEK_SET);
 	void fstat(struct stat *st);
 	void fchmod(mode_t mode);
@@ -147,8 +143,8 @@ public:
 	size_t send(const void *buf, size_t n, int flags = MSG_NOSIGNAL);
 
 	size_t avail() override;
-	size_t write(const void *buf, size_t n, bool more = false) override;
-	bool finish() override;
+	size_t write(const void *buf, size_t n) override;
+	bool flush() override;
 
 };
 
@@ -201,61 +197,3 @@ public:
 	void open(int type = SOCK_STREAM, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { this->SocketBase::open(AF_INET6, type | flags, protocol); }
 
 };
-
-
-class GAICategory : public std::error_category {
-
-public:
-	const char * name() const noexcept override _const;
-	std::string message(int condition) const noexcept override _const;
-
-};
-
-
-class GAIResults {
-	friend GAIResults getaddrinfo(const char [], const char [], int, int, int, int);
-
-public:
-	class Iterator : public std::forward_iterator_tag {
-		friend class GAIResults;
-	private:
-		addrinfo *ptr;
-	public:
-		Iterator() : ptr() { }
-		operator addrinfo * () const { return ptr; }
-		addrinfo * operator -> () const { return ptr; }
-		Iterator & operator ++ () {
-			ptr = ptr->ai_next;
-			return *this;
-		}
-		Iterator operator ++ (int) {
-			Iterator copy(*this);
-			ptr = ptr->ai_next;
-			return copy;
-		}
-	private:
-		explicit Iterator(addrinfo *ptr) : ptr(ptr) { }
-	};
-
-private:
-	addrinfo *res;
-
-public:
-	GAIResults(GAIResults &&move) : res(move.res) { move.res = nullptr; }
-	~GAIResults() { ::freeaddrinfo(res); }
-
-	Iterator begin() const { return Iterator(res); }
-	Iterator end() const { return Iterator(); }
-
-private:
-	explicit GAIResults(addrinfo *res) : res(res) { }
-	GAIResults(const GAIResults &) = delete;
-	GAIResults & operator = (const GAIResults &) = delete;
-
-};
-
-GAIResults getaddrinfo(const char host[], const char service[] = nullptr, int family = AF_UNSPEC, int type = SOCK_STREAM, int protocol = 0, int flags = AI_V4MAPPED | AI_ADDRCONFIG);
-
-
-std::ostream & operator << (std::ostream &os, const sockaddr_in &addr);
-std::ostream & operator << (std::ostream &os, const sockaddr_in6 &addr);

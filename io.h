@@ -3,7 +3,6 @@
 #include <array>
 #include <cstring>
 #include <streambuf>
-#include <vector>
 
 #include "compiler.h"
 
@@ -28,59 +27,158 @@ public:
 	virtual ~Sink() { }
 
 public:
-	virtual size_t write(const void *buf, size_t n, bool more = false) = 0;
-	virtual bool finish() { return true; }
+	virtual size_t write(const void *buf, size_t n) = 0;
+	virtual bool flush() { return true; }
 
-	void write_fully(const void *buf, size_t n, bool more = false);
+	void write_fully(const void *buf, size_t n);
+	void flush_fully();
 
 };
 
 
-class MemorySource : public Source {
+template <typename Itr, typename E = typename std::iterator_traits<Itr>::value_type>
+class IteratorSource : public Source {
 
 public:
-	const void *buffer;
+	Itr itr;
+
+public:
+	explicit IteratorSource(Itr itr) : itr(itr) { }
+
+public:
+	ssize_t read(void *buf, size_t n) override {
+		auto out_ptr = static_cast<E *>(buf), out_eptr = out_ptr + n / sizeof(E);
+		while (out_ptr < out_eptr) {
+			*out_ptr++ = *itr++;
+		}
+		return reinterpret_cast<uint8_t *>(out_ptr) - static_cast<uint8_t *>(buf);
+	}
+
+};
+
+
+template <typename Itr, typename E = typename std::iterator_traits<Itr>::value_type>
+class IteratorSink : public Sink {
+
+public:
+	Itr itr;
+
+public:
+	explicit IteratorSink(Itr itr) : itr(itr) { }
+
+public:
+	size_t write(const void *buf, size_t n) override {
+		auto in_ptr = static_cast<const E *>(buf), in_eptr = in_ptr + n / sizeof(E);
+		while (in_ptr < in_eptr) {
+			*itr++ = *in_ptr++;
+		}
+		return reinterpret_cast<const uint8_t *>(in_ptr) - static_cast<const uint8_t *>(buf);
+	}
+
+};
+
+
+class LimitedSource : public Source {
+
+public:
 	size_t remaining;
 
+private:
+	Source &source;
+
 public:
-	MemorySource(const void *buffer, size_t remaining) : buffer(buffer), remaining(remaining) { }
+	LimitedSource(Source &source, size_t remaining) : remaining(remaining), source(source) { }
 
 public:
 	ssize_t read(void *buf, size_t n) override;
-	size_t avail() override _pure { return remaining; }
+	size_t avail() override { return remaining; }
 
 };
 
 
-class MemorySink : public Sink {
+class LimitedSink : public Sink {
 
 public:
-	void *buffer;
 	size_t remaining;
 
-public:
-	MemorySink(void *buffer, size_t remaining) : buffer(buffer), remaining(remaining) { }
+private:
+	Sink &sink;
 
 public:
-	size_t write(const void *buf, size_t n, bool more = false) override;
+	LimitedSink(Sink &sink, size_t remaining) : remaining(remaining), sink(sink) { }
+
+public:
+	size_t write(const void *buf, size_t n) override;
+	size_t avail() { return remaining; }
 
 };
+
+
+class MemorySource : public LimitedSource {
+
+private:
+	IteratorSource<const uint8_t *> source;
+
+public:
+	MemorySource(const void *buf, size_t n) : LimitedSource(source, n), source(static_cast<const uint8_t *>(buf)) { }
+
+public:
+	const void * data() const { return source.itr; }
+
+};
+
+
+class MemorySink : public LimitedSink {
+
+private:
+	IteratorSink<uint8_t *> sink;
+
+public:
+	MemorySink(void *buf, size_t n) : LimitedSink(sink, n), sink(static_cast<uint8_t *>(buf)) { }
+
+public:
+	void * data() const { return sink.itr; }
+
+};
+
+
+template <typename C, typename E = typename C::value_type>
+class ContainerSource : public LimitedSource {
+
+private:
+	IteratorSource<typename C::const_iterator, E> source;
+
+public:
+	explicit ContainerSource(const C &c) : LimitedSource(source, c.size()), source(c.begin()) { }
+
+};
+
+
+template <typename C, typename E = typename C::value_type>
+class ContainerSink : public IteratorSink<std::back_insert_iterator<C>, E> {
+
+public:
+	explicit ContainerSink(C &c) : IteratorSink<std::back_insert_iterator<C>, E>(std::back_inserter(c)) { }
+
+};
+
+
+typedef ContainerSource<std::string> StringSource;
+typedef ContainerSink<std::string> StringSink;
 
 
 class BufferedSourceBase : public Source {
 
 private:
-	Source * const source;
-	uint8_t *buffer_ptr, *buffer_end;
+	Source &source;
+	uint8_t * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
 
 protected:
-	explicit BufferedSourceBase(Source *source) : source(source), buffer_ptr(), buffer_end() { }
+	BufferedSourceBase(Source &source, uint8_t *buf_bptr, uint8_t *buf_eptr) : source(source), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
 
 public:
-	size_t avail() override { return buffer_end - buffer_ptr; }
-
-protected:
-	ssize_t read(void *buf, size_t n, uint8_t buffer[], size_t buffer_size);
+	ssize_t read(void *buf, size_t n) override;
+	size_t avail() override { return buf_pptr - buf_gptr; }
 
 };
 
@@ -88,15 +186,15 @@ protected:
 class BufferedSinkBase : public Sink {
 
 private:
-	Sink * const sink;
-	uint8_t *buffer_ptr, *buffer_end;
+	Sink &sink;
+	uint8_t * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
 
 protected:
-	BufferedSinkBase(Sink *sink, uint8_t buffer[]) : sink(sink), buffer_ptr(buffer), buffer_end(buffer) { }
+	BufferedSinkBase(Sink &sink, uint8_t *buf_bptr, uint8_t *buf_eptr) : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
 
-protected:
-	size_t write(const void *buf, size_t n, bool more, uint8_t buffer[], size_t buffer_size);
-	bool finish(uint8_t buffer[], size_t buffer_size);
+public:
+	size_t write(const void *buf, size_t n) override;
+	bool flush() override;
 
 };
 
@@ -108,10 +206,7 @@ private:
 	std::array<uint8_t, Buffer_Size> buffer;
 
 public:
-	explicit BufferedSource(Source *source) : BufferedSourceBase(source) { }
-
-public:
-	ssize_t read(void *buf, size_t n) override { return this->BufferedSourceBase::read(buf, n, buffer.data(), buffer.size()); }
+	explicit BufferedSource(Source &source) : BufferedSourceBase(source, &*buffer.begin(), &*buffer.end()) { }
 
 };
 
@@ -123,88 +218,7 @@ private:
 	std::array<uint8_t, Buffer_Size> buffer;
 
 public:
-	explicit BufferedSink(Sink *sink) : BufferedSinkBase(sink, buffer.data()) { }
-
-public:
-	size_t write(const void *buf, size_t n, bool more = false) override { return this->BufferedSinkBase::write(buf, n, more, buffer.data(), buffer.size()); }
-	bool finish() override { return this->BufferedSinkBase::finish(buffer.data(), buffer.size()); }
-
-};
-
-
-class StringSource : public Source {
-
-private:
-	const std::string *string;
-	std::string::const_iterator string_itr;
-
-public:
-	explicit StringSource(const std::string *string) : string(string), string_itr(string->begin()) { }
-
-public:
-	ssize_t read(void *buf, size_t n) override;
-	size_t avail() override _pure { return string->end() - string_itr; }
-
-};
-
-
-class StringSink : public Sink {
-
-private:
-	std::string *string;
-
-public:
-	explicit StringSink(std::string *string) : string(string) { }
-
-public:
-	size_t write(const void *buf, size_t n, bool more = false) override;
-
-};
-
-
-class VectorSource : public Source {
-
-private:
-	const std::vector<uint8_t> *vector;
-	std::vector<uint8_t>::const_iterator vector_itr;
-
-public:
-	explicit VectorSource(const std::vector<uint8_t> *vector) : vector(vector), vector_itr(vector->begin()) { }
-
-public:
-	ssize_t read(void *buf, size_t n) override;
-	size_t avail() override _pure { return vector->end() - vector_itr; }
-
-};
-
-
-class VectorSink : public Sink {
-
-private:
-	std::vector<uint8_t> *vector;
-
-public:
-	explicit VectorSink(std::vector<uint8_t> *vector) : vector(vector) { }
-
-public:
-	size_t write(const void *buf, size_t n, bool more = false) override;
-
-};
-
-
-class LimitedSource : public Source {
-
-public:
-	size_t remaining;
-
-private:
-	Source * const source;
-
-public:
-	LimitedSource(Source *source, size_t remaining) : remaining(remaining), source(source) { }
-
-public:
-	ssize_t read(void *buf, size_t n) override;
+	explicit BufferedSink(Sink &sink) : BufferedSinkBase(sink, &*buffer.begin(), &*buffer.end()) { }
 
 };
 
@@ -212,13 +226,13 @@ public:
 class DelimitedSource : public Source {
 
 private:
-	Source * const source;
+	Source &source;
 	const char * const delim_begin, * const delim_end;
 	const char *delim_ptr;
 
 public:
-	DelimitedSource(Source *source, const char delimiter[], const char *delim_end) : source(source), delim_begin(delimiter), delim_end(delim_end), delim_ptr(delimiter) { }
-	DelimitedSource(Source *source, const char delimiter[]) : DelimitedSource(source, delimiter, delimiter + std::strlen(delimiter)) { }
+	DelimitedSource(Source &source, const char delimiter[], const char *delim_end) : source(source), delim_begin(delimiter), delim_end(delim_end), delim_ptr(delimiter) { }
+	DelimitedSource(Source &source, const char delimiter[]) : DelimitedSource(source, delimiter, delimiter + std::strlen(delimiter)) { }
 
 public:
 	void reset() { delim_ptr = delim_begin; }
@@ -230,15 +244,15 @@ public:
 class Tap : public Source {
 
 private:
-	Source * const source;
-	Sink * const sink;
+	Source &source;
+	Sink &sink;
 
 public:
-	Tap(Source *source, Sink *sink) : source(source), sink(sink) { }
+	Tap(Source &source, Sink &sink) : source(source), sink(sink) { }
 
 public:
 	ssize_t read(void *buf, size_t n) override;
-	size_t avail() { return source->avail(); }
+	size_t avail() { return source.avail(); }
 
 };
 
@@ -256,17 +270,17 @@ public:
 	explicit Tee(Args&&... args) : sinks({ args... }) { }
 
 public:
-	size_t write(const void *buf, size_t n, bool more = false) override {
+	size_t write(const void *buf, size_t n) override {
 		for (auto sink : sinks) {
-			sink->write_fully(buf, n, more);
+			sink->write_fully(buf, n);
 		}
 		return n;
 	}
 
-	bool finish() override {
+	bool flush() override {
 		bool ret = true;
 		for (auto sink : sinks) {
-			ret &= sink->finish();
+			ret &= sink->flush();
 		}
 		return ret;
 	}
@@ -277,13 +291,13 @@ public:
 class SourceBuf : public virtual std::streambuf {
 
 protected:
-	Source *source;
+	Source &source;
 
 private:
 	char_type gbuf;
 
 public:
-	explicit SourceBuf(Source *source);
+	explicit SourceBuf(Source &source);
 	SourceBuf(const SourceBuf &) = delete;
 	SourceBuf & operator = (const SourceBuf &) = delete;
 	SourceBuf(SourceBuf &&) = default;
@@ -301,10 +315,10 @@ protected:
 class SinkBuf : public virtual std::streambuf {
 
 protected:
-	Sink *sink;
+	Sink &sink;
 
 public:
-	explicit SinkBuf(Sink *sink) : sink(sink) { }
+	explicit SinkBuf(Sink &sink) : sink(sink) { }
 	SinkBuf(const SinkBuf &) = delete;
 	SinkBuf & operator = (const SinkBuf &) = delete;
 	SinkBuf(SinkBuf &&) = default;
@@ -326,9 +340,9 @@ class SourceSinkBuf : public SourceBuf, public SinkBuf {
 
 public:
 	template <typename T>
-	explicit SourceSinkBuf(T *source_sink) : SourceBuf(source_sink), SinkBuf(source_sink) { }
+	explicit SourceSinkBuf(T &source_sink) : SourceBuf(source_sink), SinkBuf(source_sink) { }
 
-	SourceSinkBuf(Source *source, Sink *sink) : SourceBuf(source), SinkBuf(sink) { }
+	SourceSinkBuf(Source &source, Sink &sink) : SourceBuf(source), SinkBuf(sink) { }
 
 protected:
 	std::streambuf * setbuf(char_type s[], std::streamsize n) override;

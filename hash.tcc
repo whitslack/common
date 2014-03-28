@@ -40,7 +40,7 @@ template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Wor
 constexpr bool Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::big_endian;
 
 template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type, bool Big_Endian>
-size_t Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::write(const void *buf, size_t n, bool) {
+size_t Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::write(const void *buf, size_t n) {
 	size_t ret = n;
 	const void *block = buf;
 	if (buffer_pos > 0) {

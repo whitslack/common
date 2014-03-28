@@ -62,12 +62,12 @@ std::string rfc2822_date(struct tm &tm, bool is_utc);
 class ChunkedSource : public Source {
 
 private:
-	Source * const source;
+	Source &source;
 	size_t chunk_rem;
 	enum { Size, Size_CR, Extensions, Extensions_CR, Data, Data_End, Data_CR, End } state;
 
 public:
-	explicit ChunkedSource(Source *source) : source(source), chunk_rem(), state() { }
+	explicit ChunkedSource(Source &source) : source(source), chunk_rem(), state() { }
 
 public:
 	void reset() { chunk_rem = 0, state = Size; }
@@ -80,16 +80,19 @@ public:
 class ChunkedSink : public Sink {
 
 private:
-	Sink * const sink;
+	Sink &sink;
 	size_t write_size;
 	enum { Idle, Size, Size_CR, Size_LF, Data, Data_CR, Data_LF, End } state;
 
 public:
-	explicit ChunkedSink(Sink *sink) : sink(sink), write_size(), state() { }
+	explicit ChunkedSink(Sink &sink) : sink(sink), write_size(), state() { }
 
 public:
 	void reset() { write_size = 0, state = Idle; }
-	size_t write(const void *buf, size_t n, bool more = false) override;
-	bool finish() override;
+	size_t write(const void *buf, size_t n) override;
+	bool flush() override;
+
+private:
+	size_t write(const void *buf, size_t n, bool flush);
 
 };

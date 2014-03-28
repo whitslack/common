@@ -35,7 +35,7 @@ protected:
 	}
 
 public:
-	size_t write(const void *buf, size_t n, bool more = false) override;
+	size_t write(const void *buf, size_t n) override;
 	const uint8_t (& digest())[digest_size];
 
 protected:

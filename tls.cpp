@@ -281,10 +281,8 @@ ssize_t TLSSession::read(void *buf, size_t n) {
 	return r == 0 ? n == 0 ? 0 : -1 : r;
 }
 
-size_t TLSSession::write(const void *buf, size_t n, bool more) {
-	if (more) {
-		::gnutls_record_cork(session);
-	}
+size_t TLSSession::write(const void *buf, size_t n) {
+	::gnutls_record_cork(session);
 	ssize_t s;
 	if ((s = ::gnutls_record_send(session, buf, n)) < 0) {
 		if (s == GNUTLS_E_AGAIN || s == GNUTLS_E_INTERRUPTED) {
@@ -292,11 +290,17 @@ size_t TLSSession::write(const void *buf, size_t n, bool more) {
 		}
 		throw TLSError(static_cast<int>(s), "gnutls_record_send");
 	}
-	if (!more) {
-		::gnutls_record_uncork(session, 0);
-	}
 	return s;
 }
+
+bool TLSSession::flush() {
+	int error;
+	if ((error = ::gnutls_record_uncork(session, 0)) < 0) {
+		throw TLSError(error, "gnutls_record_uncork");
+	}
+	return true;
+}
+
 
 bool TLSSession::bye(gnutls_close_request_t how) {
 	int error;

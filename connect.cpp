@@ -3,6 +3,7 @@
 #include <chrono>
 #include <thread>
 
+#include "dns.h"
 #include "log.h"
 
 extern Log elog;

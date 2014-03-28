@@ -9,7 +9,7 @@ template <typename Func>
 void prf(const void *key, size_t key_len, const void *msg, size_t msg_len, void *out, size_t out_len _unused) {
 	assert(out_len == Func::digest_size);
 	Func func(key, key_len);
-	func.write(msg, msg_len, false);
+	func.write(msg, msg_len);
 	std::memcpy(out, func.digest(), Func::digest_size);
 }
 

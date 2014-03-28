@@ -114,7 +114,10 @@ void WebSocket::send(const char text[], size_t n) {
 }
 
 void WebSocket::send(const void *buf, size_t n, bool more) {
-	socket.write_fully(buf, n, more);
+	socket.write_fully(buf, n);
+	if (!more) {
+		socket.flush();
+	}
 }
 
 size_t WebSocket::recv(void *buf, size_t n) {
@@ -204,7 +207,7 @@ bool WebSocketServerHandshake::ready() {
 					HttpResponseHeaders response_headers("HTTP/1.1", 426, HTTP_REASON_PHRASE_426);
 					response_headers.emplace_hint(response_headers.end(), "Connection", "close");
 					response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Version", "13");
-					SinkBuf sb(&socket);
+					SinkBuf sb(socket);
 					char buf[1024];
 					sb.pubsetbuf(buf, sizeof buf);
 					std::ostream(&sb) << response_headers << std::flush;
@@ -215,7 +218,7 @@ bool WebSocketServerHandshake::ready() {
 				response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Accept", make_accept_field_value(key_itr->second));
 				response_headers.emplace_hint(response_headers.end(), "Upgrade", "websocket");
 				this->prepare_response_headers(request_headers, response_headers);
-				SinkBuf sb(&socket);
+				SinkBuf sb(socket);
 				char buf[1024];
 				sb.pubsetbuf(buf, sizeof buf);
 				std::ostream os(&sb);
@@ -255,7 +258,7 @@ void WebSocketServerHandshake::send_error(int status_code, const char reason_phr
 	HttpResponseHeaders response_headers("HTTP/1.1", status_code, reason_phrase);
 	response_headers.emplace_hint(response_headers.end(), "Connection", "close");
 	response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Version", "13");
-	SinkBuf sb(&socket);
+	SinkBuf sb(socket);
 	char buf[1024];
 	sb.pubsetbuf(buf, sizeof buf);
 	std::ostream os(&sb);
@@ -286,7 +289,7 @@ void WebSocketClientHandshake::start(const char host[], uint16_t port, const cha
 	request_headers.emplace_hint(request_headers.end(), "Sec-WebSocket-Version", "13");
 	request_headers.emplace_hint(request_headers.end(), "Upgrade", "websocket");
 	this->prepare_request_headers(request_headers);
-	SinkBuf sb(&socket);
+	SinkBuf sb(socket);
 	char buf[1024];
 	sb.pubsetbuf(buf, sizeof buf);
 	std::ostream os(&sb);

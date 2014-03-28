@@ -22,9 +22,9 @@ void Source::read_fully(void *buf, size_t n) {
 }
 
 
-void Sink::write_fully(const void *buf, size_t n, bool more) {
+void Sink::write_fully(const void *buf, size_t n) {
 	while (n > 0) {
-		size_t w = this->write(buf, n, more);
+		size_t w = this->write(buf, n);
 		if (w > 0) {
 			buf = static_cast<const uint8_t *>(buf) + w, n -= w;
 		}
@@ -34,132 +34,10 @@ void Sink::write_fully(const void *buf, size_t n, bool more) {
 	}
 }
 
-
-ssize_t MemorySource::read(void *buf, size_t n) {
-	if (n == 0) {
-		return 0;
+void Sink::flush_fully() {
+	if (!this->flush()) {
+		throw std::logic_error("non-blocking write in blocking context");
 	}
-	if (remaining == 0) {
-		return -1;
-	}
-	size_t r = std::min(n, remaining);
-	std::memcpy(buf, buffer, r);
-	buffer = static_cast<const uint8_t *>(buffer) + r, remaining -= r;
-	return r;
-}
-
-
-size_t MemorySink::write(const void *buf, size_t n, bool) {
-	size_t r = std::min(n, remaining);
-	if (r != 0) {
-		std::memcpy(buffer, buf, r);
-		buffer = static_cast<uint8_t *>(buffer) + r, remaining -= r;
-	}
-	return r;
-}
-
-
-ssize_t BufferedSourceBase::read(void *buf, size_t n, uint8_t buffer[], size_t buffer_size) {
-	if (n == 0) {
-		return 0;
-	}
-	ptrdiff_t r;
-	if ((r = buffer_end - buffer_ptr) <= 0) {
-		if ((r = source->read(buffer, buffer_size)) <= 0) {
-			return r;
-		}
-		buffer_end = (buffer_ptr = buffer) + r;
-	}
-	if (n > static_cast<size_t>(r)) {
-		n = r;
-	}
-	std::memcpy(buf, buffer_ptr, n);
-	buffer_ptr += n;
-	return n;
-}
-
-
-size_t BufferedSinkBase::write(const void *buf, size_t n, bool more, uint8_t buffer[], size_t buffer_size) {
-	size_t ret = 0;
-	do {
-		if (n >= buffer_size && buffer_end == buffer) {
-			return ret + sink->write(buf, n, more);
-		}
-		ptrdiff_t r;
-		if ((r = buffer + buffer_size - buffer_end) > 0) {
-			size_t w = std::min(n, static_cast<size_t>(r));
-			std::memcpy(buffer_end, buf, w);
-			buffer_end += w, ret += w;
-			if ((r -= w) > 0 && more) {
-				return ret;
-			}
-			buf = static_cast<const uint8_t *>(buf) + w, n -= w;
-		}
-		if ((r = buffer_end - buffer_ptr) > 0) {
-			size_t w = sink->write(buffer_ptr, r, more || n > 0);
-			if ((buffer_ptr += w) < buffer_end) {
-				return ret;
-			}
-			buffer_end = buffer_ptr = buffer;
-		}
-	} while (n > 0);
-	return ret;
-}
-
-bool BufferedSinkBase::finish(uint8_t buffer[], size_t buffer_size) {
-	if (buffer_ptr < buffer_end) {
-		this->write(nullptr, 0, false, buffer, buffer_size);
-		if (buffer_ptr < buffer_end) {
-			return false;
-		}
-	}
-	return sink->finish();
-}
-
-
-ssize_t StringSource::read(void *buf, size_t n) {
-	if (n == 0) {
-		return 0;
-	}
-	ptrdiff_t r;
-	if ((r = string->end() - string_itr) <= 0) {
-		return -1;
-	}
-	if (n > static_cast<size_t>(r)) {
-		n = r;
-	}
-	std::memcpy(buf, &*string_itr, n);
-	string_itr += n;
-	return n;
-}
-
-
-size_t StringSink::write(const void *buf, size_t n, bool) {
-	string->append(static_cast<const char *>(buf), n);
-	return n;
-}
-
-
-ssize_t VectorSource::read(void *buf, size_t n) {
-	if (n == 0) {
-		return 0;
-	}
-	ptrdiff_t r;
-	if ((r = vector->end() - vector_itr) <= 0) {
-		return -1;
-	}
-	if (n > static_cast<size_t>(r)) {
-		n = r;
-	}
-	std::memcpy(buf, &*vector_itr, n);
-	vector_itr += n;
-	return n;
-}
-
-
-size_t VectorSink::write(const void *buf, size_t n, bool) {
-	vector->insert(vector->end(), static_cast<const uint8_t *>(buf), static_cast<const uint8_t *>(buf) + n);
-	return n;
 }
 
 
@@ -173,11 +51,86 @@ ssize_t LimitedSource::read(void *buf, size_t n) {
 		}
 		n = remaining;
 	}
-	ssize_t r = source->read(buf, n);
+	ssize_t r = source.read(buf, n);
 	if (r > 0) {
 		remaining -= r;
 	}
 	return r;
+}
+
+
+size_t LimitedSink::write(const void *buf, size_t n) {
+	if (n > remaining) {
+		n = remaining;
+	}
+	if (n == 0) {
+		return 0;
+	}
+	size_t w = sink.write(buf, n);
+	remaining -= w;
+	return w;
+}
+
+
+ssize_t BufferedSourceBase::read(void *buf, size_t n) {
+	if (n == 0) {
+		return 0;
+	}
+	size_t b = buf_pptr - buf_gptr;
+	if (b > 0) {
+		if (n <= b) {
+			std::memcpy(buf, buf_gptr, n), buf_gptr += n;
+			return n;
+		}
+		std::memcpy(buf, buf_gptr, b), buf_gptr += b;
+		buf = static_cast<uint8_t *>(buf) + b, n -= b;
+	}
+	ssize_t r = buf_eptr - buf_bptr;
+	if (n >= static_cast<size_t>(r)) {
+		r = source.read(buf, n);
+		return r >= 0 ? b + r : b == 0 ? r : b;
+	}
+	if ((r = source.read(buf_gptr = buf_bptr, r)) <= 0) {
+		buf_pptr = buf_bptr;
+		return b == 0 ? r : b;
+	}
+	buf_pptr = buf_bptr + r;
+	if (n <= static_cast<size_t>(r)) {
+		std::memcpy(buf, buf_gptr, n), buf_gptr += n;
+		return b + n;
+	}
+	std::memcpy(buf, buf_gptr, r), buf_gptr += r;
+	return b + r;
+}
+
+
+size_t BufferedSinkBase::write(const void *buf, size_t n) {
+	if (n == 0) {
+		return 0;
+	}
+	size_t r = buf_eptr - buf_pptr;
+	if (r > 0) {
+		if (n < r) {
+			std::memcpy(buf_pptr, buf, n), buf_pptr += n;
+			return n;
+		}
+		std::memcpy(buf_pptr, buf, r), buf_pptr += r;
+		buf = static_cast<const uint8_t *>(buf) + r, n -= r;
+	}
+	size_t b = buf_eptr - buf_gptr;
+	if (b > 0 && (buf_gptr += sink.write(buf_gptr, b)) < buf_eptr) {
+		return r;
+	}
+	if (n >= static_cast<size_t>(buf_eptr - buf_bptr)) {
+		return r + sink.write(buf, n);
+	}
+	std::memcpy(buf_gptr = buf_bptr, buf, n), buf_pptr = buf_bptr + n;
+	return r + n;
+}
+
+bool BufferedSinkBase::flush() {
+	size_t b = buf_pptr - buf_gptr;
+	return (b == 0 || (buf_gptr += sink.write(buf_gptr, b)) == buf_pptr) && sink.flush();
 }
 
 
@@ -189,7 +142,7 @@ ssize_t DelimitedSource::read(void *buf, size_t n) {
 			return r == 0 ? -1 : r;
 		}
 		ssize_t s;
-		if ((s = source->read(buf, std::min(static_cast<size_t>(d), n))) <= 0) {
+		if ((s = source.read(buf, std::min(static_cast<size_t>(d), n))) <= 0) {
 			return r == 0 ? s : r;
 		}
 		for (ssize_t i = 0; i < s; ++i) {
@@ -204,14 +157,14 @@ ssize_t DelimitedSource::read(void *buf, size_t n) {
 
 ssize_t Tap::read(void *buf, size_t n) {
 	ssize_t r;
-	if ((r = source->read(buf, n)) > 0) {
-		sink->write_fully(buf, r);
+	if ((r = source.read(buf, n)) > 0) {
+		sink.write_fully(buf, r);
 	}
 	return r;
 }
 
 
-SourceBuf::SourceBuf(Source *source) : source(source) {
+SourceBuf::SourceBuf(Source &source) : source(source) {
 	this->setbuf(&gbuf, 1);
 }
 
@@ -225,14 +178,14 @@ std::streambuf * SourceBuf::setbuf(char_type s[], std::streamsize n) {
 }
 
 std::streamsize SourceBuf::showmanyc() {
-	return source->avail();
+	return source.avail();
 }
 
 std::streambuf::int_type SourceBuf::underflow() {
 	char_type *gptr = this->gptr();
 	if (gptr == this->egptr()) {
 		char_type *eback = this->eback();
-		ssize_t n = source->read(eback, this->pbase() - eback);
+		ssize_t n = source.read(eback, this->pbase() - eback);
 		if (n <= 0) {
 			this->setg(eback, eback, eback);
 			return traits_type::eof();
@@ -251,7 +204,7 @@ std::streamsize SourceBuf::xsgetn(char_type s[], std::streamsize n) {
 		s += r, n -= r;
 	}
 	if (n > 0) {
-		r += std::max(source->read(s, n), ssize_t());
+		r += std::max(source.read(s, n), ssize_t());
 	}
 	return r;
 }
@@ -294,18 +247,18 @@ std::streamsize SinkBuf::xsputn(const char_type s[], std::streamsize n) {
 		this->pbump(static_cast<int>(n));
 		return n;
 	}
-	return pptr > this->pbase() && this->sync(true) ? 0 : sink->write(s, n, true);
+	return pptr > this->pbase() && this->sync(true) ? 0 : sink.write(s, n);
 }
 
 int SinkBuf::sync(bool more) {
 	char_type *pbase = this->pbase();
 	ptrdiff_t r = this->pptr() - pbase;
 	if (r > 0) {
-		sink->write_fully(pbase, r, more);
+		sink.write_fully(pbase, r);
 		this->setp(pbase, this->epptr());
 	}
-	else if (!more) {
-		sink->write(nullptr, 0, false);
+	if (!more) {
+		sink.flush_fully();
 	}
 	return 0;
 }
