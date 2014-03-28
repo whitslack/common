@@ -1,8 +1,8 @@
 #include <memory>
 
 #include "http.h"
-#include "nbio.h"
 #include "optional.h"
+#include "socket.h"
 
 #ifdef HTTP_GZIP
 #include "gzip.h"

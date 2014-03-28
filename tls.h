@@ -4,7 +4,7 @@
 #include <gnutls/gnutls.h>
 
 #include "compiler.h"
-#include "nbio.h"
+#include "socket.h"
 
 
 class TLSCategory : public std::error_category {

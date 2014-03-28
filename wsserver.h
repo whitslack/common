@@ -1,6 +1,7 @@
 #include "compiler.h"
+#include "epoll.h"
 #include "http.h"
-#include "nbio.h"
+#include "socket.h"
 
 namespace {
 class Handshake;
