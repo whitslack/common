@@ -78,7 +78,7 @@ public:
 				ptr->~T(), ptr = nullptr;
 			}
 		}
-		else if (other.engaged) {
+		else if (other.ptr) {
 			ptr = new (data) T(std::move(*other.ptr));
 		}
 		return *this;
