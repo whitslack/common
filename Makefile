@@ -19,9 +19,9 @@ LIB_PREFIX := lib
 LIB_SUFFIX := .so
 
 CPPFLAGS += -pthread
-CFLAGS += -std=c99
-CXXFLAGS += -std=c++11
-LDFLAGS += -Wl,--as-needed
+CFLAGS += -std=c99 -ffunction-sections -fdata-sections
+CXXFLAGS += -std=c++11 -ffunction-sections -fdata-sections
+LDFLAGS += -Wl,--as-needed,--gc-sections
 ifdef DEBUG
 CFLAGS += -Og -ggdb
 CXXFLAGS += -Og -ggdb
@@ -31,9 +31,9 @@ CPPFLAGS += -fPIE
 LDFLAGS += -pie
 endif
 CPPFLAGS += -DNDEBUG
-CFLAGS += -O3 -fvisibility=hidden -ffunction-sections -fdata-sections
-CXXFLAGS += -O3 -fvisibility=hidden -ffunction-sections -fdata-sections
-LDFLAGS += -Wl,-O1,--gc-sections,--strip-all,-z,now,-z,relro
+CFLAGS += -O3 -fvisibility=hidden
+CXXFLAGS += -O3 -fvisibility=hidden
+LDFLAGS += -Wl,-O1,--strip-all,-z,now,-z,relro
 endif
 WFLAGS += -Wall -Wextra -Wcast-qual -Wconversion -Wdisabled-optimization -Wdouble-promotion -Wmissing-declarations -Wpacked -Wno-parentheses -Wredundant-decls -Wno-sign-conversion -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wno-vla
 CFLAGS += $(WFLAGS)
