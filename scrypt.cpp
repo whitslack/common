@@ -102,7 +102,9 @@ void scrypt(void *out, size_t out_len, const void *pass, size_t pass_len, const 
 			}
 		}
 		for (auto &future : futures) {
-			future.wait();
+			if (future.valid()) {
+				future.wait();
+			}
 		}
 	}
 	else {
