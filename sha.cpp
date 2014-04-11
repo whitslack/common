@@ -8,8 +8,8 @@ static unsigned __int128 __bswap_128(unsigned __int128 v) {
 		unsigned __int128 o;
 	} u;
 	u.o = v;
-	uint64_t t = htobe64(u.q[0]);
-	u.q[0] = htobe64(u.q[1]);
+	uint64_t t = __bswap_64(u.q[0]);
+	u.q[0] = __bswap_64(u.q[1]);
 	u.q[1] = t;
 	return u.o;
 }
@@ -57,7 +57,7 @@ static sha512_length_t __bswap_128(const sha512_length_t &v) {
 #define htole128(x) (x)
 #define be128toh(x) __bswap_128(x)
 #define le128toh(x) (x)
-#else
+#elif BYTE_ORDER == BIG_ENDIAN
 #define htobe128(x) (x)
 #define htole128(x) __bswap_128(x)
 #define be128toh(x) (x)
@@ -69,6 +69,12 @@ static inline sha512_length_t htobe(sha512_length_t v) {
 }
 static inline sha512_length_t htole(sha512_length_t v) {
 	return htole128(v);
+}
+static inline sha512_length_t betoh(sha512_length_t v) {
+	return be128toh(v);
+}
+static inline sha512_length_t letoh(sha512_length_t v) {
+	return le128toh(v);
 }
 
 
