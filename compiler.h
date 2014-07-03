@@ -10,6 +10,7 @@
 #define _noreturn __attribute__ ((__noreturn__))
 #define _pure __attribute__ ((__pure__))
 #define _unused __attribute__ ((__unused__))
+#define _weak __attribute__ ((__weak__))
 #define _wur __attribute__ ((__warn_usused_result__))
 
 #define _restrict __restrict
