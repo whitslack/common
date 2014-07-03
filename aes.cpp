@@ -118,10 +118,6 @@ static const uint8_t round_constants[10] = {
 	0x01, 0x02, 0x04, 0x08, 0x10, 0x20, 0x40, 0x80, 0x1B, 0x36
 };
 
-static inline uint32_t rotr(uint32_t v, uint8_t s) {
-	return v >> s | v << 32 - s;
-}
-
 
 template <size_t Key_Size>
 constexpr size_t AESBase<Key_Size>::input_block_size;

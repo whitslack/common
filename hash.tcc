@@ -1,35 +1,6 @@
 #include "hash.h"
 
 
-static inline uint32_t rotl(uint32_t v, uint8_t s) {
-	return v << s | v >> 32 - s;
-}
-
-static inline uint32_t rotr(uint32_t v, uint8_t s) {
-	return v >> s | v << 32 - s;
-}
-
-static inline uint64_t rotr(uint64_t v, uint8_t s) {
-	return v >> s | v << 64 - s;
-}
-
-static inline uint32_t htobe(uint32_t v) {
-	return htobe32(v);
-}
-
-static inline uint64_t htobe(uint64_t v) {
-	return htobe64(v);
-}
-
-static inline uint32_t htole(uint32_t v) {
-	return htole32(v);
-}
-
-static inline uint64_t htole(uint64_t v) {
-	return htole64(v);
-}
-
-
 template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type, bool Big_Endian>
 constexpr size_t Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::block_size;
 template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type, bool Big_Endian>

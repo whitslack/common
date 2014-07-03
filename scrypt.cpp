@@ -7,17 +7,6 @@
 #include "pbkdf2.h"
 #include "sha.h"
 
-static inline uint32_t rotl(uint32_t v, uint8_t s) {
-	return v << s | v >> 32 - s;
-}
-
-static inline uint32_t letoh(uint32_t v) {
-	return le32toh(v);
-}
-
-static inline uint64_t letoh(uint64_t v) {
-	return le64toh(v);
-}
 
 static void salsa20_8_core(void * _restrict out, const void * _restrict in) {
 	auto outw = reinterpret_cast<uint32_t *>(out);

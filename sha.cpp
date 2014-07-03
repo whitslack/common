@@ -1,19 +1,8 @@
 #include "sha.h"
 
 
-#ifdef __SIZEOF_INT128__
-static unsigned __int128 __bswap_128(unsigned __int128 v) {
-	union {
-		uint64_t q[2];
-		unsigned __int128 o;
-	} u;
-	u.o = v;
-	uint64_t t = __bswap_64(u.q[0]);
-	u.q[0] = __bswap_64(u.q[1]);
-	u.q[1] = t;
-	return u.o;
-}
-#else
+#ifndef __SIZEOF_INT128__
+
 static sha512_length_t & operator += (sha512_length_t &augend, uint64_t addend) {
 	uint64_t nlow = augend.low + addend;
 	if (nlow < augend.low) {
@@ -41,41 +30,26 @@ static sha512_length_t & operator <<= (sha512_length_t &operand, size_t shift) {
 	return operand;
 }
 
-static sha512_length_t operator << (const sha512_length_t &operand, size_t shift) {
-	sha512_length_t ret = operand;
-	ret <<= shift;
-	return ret;
+static inline sha512_length_t operator << (sha512_length_t operand, size_t shift) {
+	return operand <<= shift;
 }
 
-static sha512_length_t __bswap_128(const sha512_length_t &v) {
-	return sha512_length_t{ __bswap_64(v.high), __bswap_64(v.low) };
+static sha512_length_t bswap(const sha512_length_t &v) {
+	return sha512_length_t{ bswap(v.high), bswap(v.low) };
 }
+
+#if BYTE_ORDER == BIG_ENDIAN
+static inline sha512_length_t htobe(const sha512_length_t &v) { return v; }
+static inline sha512_length_t betoh(const sha512_length_t &v) { return v; }
+static inline sha512_length_t htole(const sha512_length_t &v) { return bswap(v); }
+static inline sha512_length_t letoh(const sha512_length_t &v) { return bswap(v); }
+#elif BYTE_ORDER == LITTLE_ENDIAN
+static inline sha512_length_t htobe(const sha512_length_t &v) { return bswap(v); }
+static inline sha512_length_t betoh(const sha512_length_t &v) { return bswap(v); }
+static inline sha512_length_t htole(const sha512_length_t &v) { return v; }
+static inline sha512_length_t letoh(const sha512_length_t &v) { return v; }
 #endif
-
-#if BYTE_ORDER == LITTLE_ENDIAN
-#define htobe128(x) __bswap_128(x)
-#define htole128(x) (x)
-#define be128toh(x) __bswap_128(x)
-#define le128toh(x) (x)
-#elif BYTE_ORDER == BIG_ENDIAN
-#define htobe128(x) (x)
-#define htole128(x) __bswap_128(x)
-#define be128toh(x) (x)
-#define le128toh(x) __bswap_128(x)
 #endif
-
-static inline sha512_length_t htobe(sha512_length_t v) {
-	return htobe128(v);
-}
-static inline sha512_length_t htole(sha512_length_t v) {
-	return htole128(v);
-}
-static inline sha512_length_t betoh(sha512_length_t v) {
-	return be128toh(v);
-}
-static inline sha512_length_t letoh(sha512_length_t v) {
-	return le128toh(v);
-}
 
 
 #include "hash.tcc"
