@@ -3,6 +3,7 @@
 #include <array>
 #include <cstring>
 #include <streambuf>
+#include <vector>
 
 #include "compiler.h"
 
@@ -171,6 +172,9 @@ public:
 
 typedef ContainerSource<std::string> StringSource;
 typedef ContainerSink<std::string> StringSink;
+
+typedef ContainerSource<std::vector<uint8_t>> VectorSource;
+typedef ContainerSink<std::vector<uint8_t>> VectorSink;
 
 
 class BufferedSourceBase : public Source {
