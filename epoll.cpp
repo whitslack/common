@@ -1,5 +1,7 @@
 #include "epoll.h"
 
+#include <system_error>
+
 
 EPoll::EPoll() : FileDescriptor(::epoll_create1(EPOLL_CLOEXEC)) {
 	if (fd < 0) {

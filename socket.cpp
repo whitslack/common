@@ -1,57 +1,38 @@
 #include "socket.h"
 
 #include <cassert>
+#include <system_error>
 
 #include <netinet/tcp.h>
+#include <sys/ioctl.h>
 
 
-void Socket::open(int domain, int type, int protocol) {
-	if (fd >= 0) {
-		this->close();
+namespace posix {
+
+int accept(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len) {
+	int ret;
+	if ((ret = ::accept(socket, address, address_len)) < 0) {
+		throw std::system_error(errno, std::system_category(), "accept");
 	}
-	if ((fd = ::socket(domain, type, protocol)) < 0) {
-		throw std::system_error(errno, std::system_category(), "socket");
-	}
+	return ret;
 }
 
-void Socket::shutdown(int how) {
-	if (::shutdown(fd, how) < 0) {
-		throw std::system_error(errno, std::system_category(), "shutdown");
+int accept(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags) {
+	int ret;
+	if ((ret = ::accept4(socket, address, address_len, flags)) < 0) {
+		throw std::system_error(errno, std::system_category(), "accept4");
 	}
+	return ret;
 }
 
-void Socket::getsockopt(int level, int optname, void *optval, socklen_t *optlen) const {
-	if (::getsockopt(fd, level, optname, optval, optlen) < 0) {
-		throw std::system_error(errno, std::system_category(), "getsockopt");
-	}
-}
-
-void Socket::setsockopt(int level, int optname, const void *optval, socklen_t optlen) {
-	if (::setsockopt(fd, level, optname, optval, optlen) < 0) {
-		throw std::system_error(errno, std::system_category(), "setsockopt");
-	}
-}
-
-void Socket::getsockname(sockaddr *addr, socklen_t *addrlen) const {
-	if (::getsockname(fd, addr, addrlen) < 0) {
-		throw std::system_error(errno, std::system_category(), "getsockname");
-	}
-}
-
-void Socket::bind(const sockaddr *addr, socklen_t addrlen) {
-	if (::bind(fd, addr, addrlen) < 0) {
+void bind(int socket, const struct sockaddr *address, socklen_t address_len) {
+	if (::bind(socket, address, address_len) < 0) {
 		throw std::system_error(errno, std::system_category(), "bind");
 	}
 }
 
-void Socket::getpeername(sockaddr *addr, socklen_t *addrlen) const {
-	if (::getpeername(fd, addr, addrlen) < 0) {
-		throw std::system_error(errno, std::system_category(), "getpeername");
-	}
-}
-
-bool Socket::connect(const sockaddr *addr, socklen_t addrlen) {
-	if (::connect(fd, addr, addrlen) < 0) {
+bool connect(int socket, const struct sockaddr *address, socklen_t address_len) {
+	if (::connect(socket, address, address_len) < 0) {
 		if (errno == EINPROGRESS) {
 			return false;
 		}
@@ -60,41 +41,132 @@ bool Socket::connect(const sockaddr *addr, socklen_t addrlen) {
 	return true;
 }
 
-Socket Socket::accept(sockaddr *addr, socklen_t *addrlen, int flags) {
-	int s;
-	if ((s = ::accept4(fd, addr, addrlen, flags)) < 0) {
-		throw std::system_error(errno, std::system_category(), "accept4");
+void getpeername(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len) {
+	if (::getpeername(socket, address, address_len) < 0) {
+		throw std::system_error(errno, std::system_category(), "getpeername");
 	}
-	return Socket(s);
 }
 
-void Socket::listen(int backlog) {
-	if (::listen(fd, backlog) < 0) {
+void getsockname(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len) {
+	if (::getsockname(socket, address, address_len) < 0) {
+		throw std::system_error(errno, std::system_category(), "getsockname");
+	}
+}
+
+void getsockopt(int socket, int level, int option_name, void * _restrict option_value, socklen_t * _restrict option_len) {
+	if (::getsockopt(socket, level, option_name, option_value, option_len) < 0) {
+		throw std::system_error(errno, std::system_category(), "getsockopt");
+	}
+}
+
+void listen(int socket, int backlog) {
+	if (::listen(socket, backlog) < 0) {
 		throw std::system_error(errno, std::system_category(), "listen");
 	}
 }
 
-ssize_t Socket::recv(void *buf, size_t n, int flags) {
-	ssize_t r;
-	if ((r = ::recv(fd, buf, n, flags)) < 0) {
+ssize_t recv(int socket, void *buffer, size_t length, int flags) {
+	ssize_t ret;
+	if ((ret = ::recv(socket, buffer, length, flags)) < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 			return 0;
 		}
 		throw std::system_error(errno, std::system_category(), "recv");
 	}
-	return r == 0 ? n == 0 ? 0 : -1 : r;
+	return ret == 0 && length > 0 ? -1 : ret;
 }
 
-size_t Socket::send(const void *buf, size_t n, int flags) {
-	ssize_t s;
-	if ((s = ::send(fd, buf, n, flags)) < 0) {
+ssize_t recvfrom(int socket, void * _restrict buffer, size_t length, int flags, struct sockaddr * _restrict address, socklen_t * _restrict address_len) {
+	ssize_t ret;
+	if ((ret = ::recvfrom(socket, buffer, length, flags, address, address_len)) < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "recvfrom");
+	}
+	return ret == 0 && length > 0 ? -1 : ret;
+}
+
+ssize_t recvmsg(int socket, struct msghdr *message, int flags) {
+	ssize_t ret;
+	if ((ret = ::recvmsg(socket, message, flags)) < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "recvmsg");
+	}
+	return ret == 0 ? -1 : ret;
+}
+
+size_t send(int socket, const void *buffer, size_t length, int flags) {
+	ssize_t ret;
+	if ((ret = ::send(socket, buffer, length, flags)) < 0) {
 		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
 			return 0;
 		}
 		throw std::system_error(errno, std::system_category(), "send");
 	}
-	return s;
+	return static_cast<size_t>(ret);
 }
+
+size_t sendmsg(int socket, const struct msghdr *message, int flags) {
+	ssize_t ret;
+	if ((ret = ::sendmsg(socket, message, flags)) < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "sendmsg");
+	}
+	return static_cast<size_t>(ret);
+}
+
+size_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len) {
+	ssize_t ret;
+	if ((ret = ::sendto(socket, message, length, flags, dest_addr, dest_len)) < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "sendto");
+	}
+	return static_cast<size_t>(ret);
+}
+
+void setsockopt(int socket, int level, int option_name, const void *option_value, socklen_t option_len) {
+	if (::setsockopt(socket, level, option_name, option_value, option_len) < 0) {
+		throw std::system_error(errno, std::system_category(), "setsockopt");
+	}
+}
+
+void shutdown(int socket, int how) {
+	if (::shutdown(socket, how) < 0) {
+		throw std::system_error(errno, std::system_category(), "shutdown");
+	}
+}
+
+bool sockatmark(int s) {
+	int ret;
+	if ((ret = ::sockatmark(s)) < 0) {
+		throw std::system_error(errno, std::system_category(), "sockatmark");
+	}
+	return ret != 0;
+}
+
+int socket(int domain, int type, int protocol) {
+	int ret;
+	if ((ret = ::socket(domain, type, protocol)) < 0) {
+		throw std::system_error(errno, std::system_category(), "socket");
+	}
+	return ret;
+}
+
+void socketpair(int domain, int type, int protocol, int socket_vector[2]) {
+	if (::socketpair(domain, type, protocol, socket_vector) < 0) {
+		throw std::system_error(errno, std::system_category(), "socketpair");
+	}
+}
+
+} // namespace posix
+
 
 size_t Socket::avail() {
 	int n;
@@ -140,11 +212,7 @@ bool SocketBase<T, A>::connect(const A &addr) {
 template <typename T, typename A>
 T SocketBase<T, A>::accept(A *addr, int flags) {
 	socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
-	int fd;
-	if ((fd = ::accept4(this->fd, reinterpret_cast<sockaddr *>(addr), addr ? &addrlen : nullptr, flags)) < 0) {
-		throw std::system_error(errno, std::system_category(), "accept4");
-	}
-	return T(fd, nullptr);
+	return T(posix::accept(fd, reinterpret_cast<sockaddr *>(addr), addr ? &addrlen : nullptr, flags), nullptr);
 }
 
 template class SocketBase<Socket4, sockaddr_in>;
