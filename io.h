@@ -121,6 +121,8 @@ private:
 
 public:
 	MemorySource(const void *buf, size_t n) : LimitedSource(source, n), source(static_cast<const uint8_t *>(buf)) { }
+	MemorySource(const MemorySource &copy) : LimitedSource(source, copy.remaining), source(copy.source) { }
+	MemorySource(MemorySource &&move) : LimitedSource(source, move.remaining), source(std::move(move.source)) { }
 
 public:
 	const void * data() const { return source.itr; }
@@ -135,6 +137,8 @@ private:
 
 public:
 	MemorySink(void *buf, size_t n) : LimitedSink(sink, n), sink(static_cast<uint8_t *>(buf)) { }
+	MemorySink(const MemorySink &copy) : LimitedSink(sink, copy.remaining), sink(copy.sink) { }
+	MemorySink(MemorySink &&move) : LimitedSink(sink, move.remaining), sink(std::move(move.sink)) { }
 
 public:
 	void * data() const { return sink.itr; }
@@ -150,6 +154,8 @@ private:
 
 public:
 	explicit ContainerSource(const C &c) : LimitedSource(source, c.size()), source(c.begin()) { }
+	ContainerSource(const ContainerSource &copy) : LimitedSource(source, copy.remaining), source(copy.source) { }
+	ContainerSource(ContainerSource &&move) : LimitedSource(source, move.remaining), source(std::move(move.source)) { }
 
 };
 
