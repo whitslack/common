@@ -189,16 +189,16 @@ static inline std::string & transcode(std::string &out, const std::string &in, A
 	return ::transcode<Codec, Args...>(out, in.data(), in.size(), std::forward<Args>(args)...);
 }
 
-template <typename Codec>
+template <typename Codec, size_t OBufSize = 512>
 static inline std::string transcode(const void *in, size_t n_in) {
 	std::string ret;
-	::transcode<Codec>(ret, in, n_in);
+	::transcode<Codec, OBufSize>(ret, in, n_in);
 	return ret;
 }
 
-template <typename Codec>
+template <typename Codec, size_t OBufSize = 512>
 static inline std::string transcode(const std::string &in) {
 	std::string ret;
-	::transcode<Codec>(ret, in.data(), in.size());
+	::transcode<Codec, OBufSize>(ret, in.data(), in.size());
 	return ret;
 }
