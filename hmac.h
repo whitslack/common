@@ -19,6 +19,6 @@ public:
 public:
 	size_t write(const void *buf, size_t n) override { return hash.write(buf, n); }
 	bool flush() override { return hash.flush(); }
-	const uint8_t (& digest())[digest_size];
+	const std::array<uint8_t, digest_size> & digest();
 
 };
