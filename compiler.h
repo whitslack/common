@@ -1,5 +1,6 @@
 #pragma once
 
+#include <climits>
 #include <cstdint>
 #include <type_traits>
 
@@ -39,12 +40,28 @@ static inline uint64_t rotl(uint64_t v, uint8_t s) { return v << s | v >> 64 - s
 static inline uint32_t rotr(uint32_t v, uint8_t s) { return v >> s | v << 32 - s; }
 static inline uint64_t rotr(uint64_t v, uint8_t s) { return v >> s | v << 64 - s; }
 
+#if ULONG_MAX == UINT32_MAX && UINT32_MAX == UINT_MAX
+static inline long rotl(long v, uint8_t s) { return v << s | v >> 32 - s; }
+static inline unsigned long rotr(unsigned long v, uint8_t s) { return v >> s | v << 32 - s; }
+#elif ULONG_LONG_MAX == UINT64_MAX && UINT64_MAX == ULONG_MAX
+static inline long long rotl(long long v, uint8_t s) { return v << s | v >> 64 - s; }
+static inline unsigned long long rotr(unsigned long long v, uint8_t s) { return v >> s | v << 64 - s; }
+#endif
+
 static inline int16_t bswap(int16_t v) { return __builtin_bswap16(v); }
 static inline uint16_t bswap(uint16_t v) { return __builtin_bswap16(v); }
 static inline int32_t bswap(int32_t v) { return __builtin_bswap32(v); }
 static inline uint32_t bswap(uint32_t v) { return __builtin_bswap32(v); }
 static inline int64_t bswap(int64_t v) { return __builtin_bswap64(v); }
 static inline uint64_t bswap(uint64_t v) { return __builtin_bswap64(v); }
+
+#if ULONG_MAX == UINT32_MAX && UINT32_MAX == UINT_MAX
+static inline long bswap(long v) { return __builtin_bswap32(v); }
+static inline unsigned long bswap(unsigned long v) { return __builtin_bswap32(v); }
+#elif ULONG_LONG_MAX == UINT64_MAX && UINT64_MAX == ULONG_MAX
+static inline long long bswap(long long v) { return __builtin_bswap64(v); }
+static inline unsigned long long bswap(unsigned long long v) { return __builtin_bswap64(v); }
+#endif
 
 #if BYTE_ORDER == BIG_ENDIAN
 template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type htobe(T v) { return v; }
