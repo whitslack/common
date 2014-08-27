@@ -179,7 +179,7 @@ static std::string make_accept_field_value(const std::string &key) {
 	sha1.write_fully(key.data(), key.size());
 	sha1.write_fully("258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);
 	auto &hash = sha1.digest();
-	return transcode<Base64Encoder>(hash, sizeof hash);
+	return transcode<Base64Encoder>(hash.data(), hash.size());
 }
 
 bool WebSocketServerHandshake::ready() {
