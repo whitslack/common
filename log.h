@@ -1,19 +1,22 @@
 #include <iostream>
-#include <memory>
-#include <sstream>
+
+#include "io.h"
+
 
 class Log;
 
-class LogStream : public std::stringstream {
+class LogStream : public std::ostream {
 	friend class Log;
 
 private:
-	std::ostream * const stream_ptr;
+	std::string str;
+	StringSink ss;
+	SinkBuf sb;
+	std::ostream *stream_ptr;
 
 public:
-	// [C++11] LogStream(LogStream &&move) : std::stringstream(std::move(move)), stream_ptr(move.stream_ptr) { }
-	LogStream(LogStream &&move) : stream_ptr(move.stream_ptr) {
-		this->str(move.str());
+	LogStream(LogStream &&move) : std::ostream(&sb), str(std::move(move.str)), ss(str), sb(ss), stream_ptr(move.stream_ptr) {
+		move.stream_ptr = nullptr;
 	}
 	~LogStream();
 
@@ -50,7 +53,7 @@ private:
 	static const char fatal_label[];
 
 public:
-	Log(Level level) : trace_stream_ptr(level < TRACE ? nullptr : &std::clog), debug_stream_ptr(level < DEBUG ? nullptr : &std::clog), info_stream_ptr(level < INFO ? nullptr : &std::clog), warn_stream_ptr(level < WARN ? nullptr : &std::clog), error_stream_ptr(level < ERROR ? nullptr : &std::clog), fatal_stream_ptr(level < FATAL ? nullptr : &std::clog) { }
+	Log(Level level) : Log(level < TRACE ? nullptr : &std::clog, level < DEBUG ? nullptr : &std::clog, level < INFO ? nullptr : &std::clog, level < WARN ? nullptr : &std::clog, level < ERROR ? nullptr : &std::clog, level < FATAL ? nullptr : &std::clog) { }
 	Log(std::ostream *trace_stream_ptr, std::ostream *debug_stream_ptr, std::ostream *info_stream_ptr, std::ostream *warn_stream_ptr, std::ostream *error_stream_ptr, std::ostream *fatal_stream_ptr) : trace_stream_ptr(trace_stream_ptr), debug_stream_ptr(debug_stream_ptr), info_stream_ptr(info_stream_ptr), warn_stream_ptr(warn_stream_ptr), error_stream_ptr(error_stream_ptr), fatal_stream_ptr(fatal_stream_ptr) { }
 	bool trace_enabled() const { return trace_stream_ptr; }
 	bool debug_enabled() const { return debug_stream_ptr; }
