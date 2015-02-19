@@ -91,12 +91,12 @@ static inline typename std::enable_if<std::is_integral<T>::value, _varint<const 
 }
 
 template <typename T>
-static inline _varint<typename std::underlying_type<T>::type> varenum(T &ref) {
+static inline _varint<typename std::underlying_type<T>::type &> varenum(T &ref) {
 	return varint(reinterpret_cast<typename std::underlying_type<T>::type &>(ref));
 }
 
 template <typename T>
-static inline _varint<typename std::underlying_type<T>::type> varenum(const T &ref) {
+static inline _varint<const typename std::underlying_type<T>::type> varenum(const T &ref) {
 	return varint(reinterpret_cast<const typename std::underlying_type<T>::type &>(ref));
 }
 
