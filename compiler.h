@@ -19,34 +19,34 @@
 static inline int _ffs(int v) { return __builtin_ffs(v); }
 static inline int _ffs(long v) { return __builtin_ffsl(v); }
 static inline int _ffs(long long v) { return __builtin_ffsll(v); }
+
 static inline int _clz(unsigned v) { return __builtin_clz(v); }
 static inline int _clz(unsigned long v) { return __builtin_clzl(v); }
 static inline int _clz(unsigned long long v) { return __builtin_clzll(v); }
+
 static inline int _ctz(unsigned v) { return __builtin_ctz(v); }
 static inline int _ctz(unsigned long v) { return __builtin_ctzl(v); }
 static inline int _ctz(unsigned long long v) { return __builtin_ctzll(v); }
+
 static inline int _clrsb(int v) { return __builtin_clrsb(v); }
 static inline int _clrsb(long v) { return __builtin_clrsbl(v); }
 static inline int _clrsb(long long v) { return __builtin_clrsbll(v); }
+
 static inline int _popcount(unsigned v) { return __builtin_popcount(v); }
 static inline int _popcount(unsigned long v) { return __builtin_popcountl(v); }
 static inline int _popcount(unsigned long long v) { return __builtin_popcountll(v); }
+
 static inline int _parity(unsigned v) { return __builtin_parity(v); }
 static inline int _parity(unsigned long v) { return __builtin_parityl(v); }
 static inline int _parity(unsigned long long v) { return __builtin_parityll(v); }
 
-static inline uint32_t rotl(uint32_t v, uint8_t s) { return v << s | v >> 32 - s; }
-static inline uint64_t rotl(uint64_t v, uint8_t s) { return v << s | v >> 64 - s; }
-static inline uint32_t rotr(uint32_t v, uint8_t s) { return v >> s | v << 32 - s; }
-static inline uint64_t rotr(uint64_t v, uint8_t s) { return v >> s | v << 64 - s; }
+static inline unsigned rotl(unsigned v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
+static inline unsigned long rotl(unsigned long v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
+static inline unsigned long long rotl(unsigned long long v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
 
-#if ULONG_MAX == UINT32_MAX && UINT32_MAX == UINT_MAX
-static inline long rotl(long v, uint8_t s) { return v << s | v >> 32 - s; }
-static inline unsigned long rotr(unsigned long v, uint8_t s) { return v >> s | v << 32 - s; }
-#elif ULONG_LONG_MAX == UINT64_MAX && UINT64_MAX == ULONG_MAX
-static inline long long rotl(long long v, uint8_t s) { return v << s | v >> 64 - s; }
-static inline unsigned long long rotr(unsigned long long v, uint8_t s) { return v >> s | v << 64 - s; }
-#endif
+static inline unsigned rotr(unsigned v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
+static inline unsigned long rotr(unsigned long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
+static inline unsigned long long rotr(unsigned long long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
 
 static inline int16_t bswap(int16_t v) { return __builtin_bswap16(v); }
 static inline uint16_t bswap(uint16_t v) { return __builtin_bswap16(v); }
