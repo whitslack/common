@@ -43,9 +43,8 @@ public:
 #ifdef __SIZEOF_INT128__
 typedef unsigned __int128 sha512_length_t;
 #else
-struct sha512_length_t {
-	uint64_t low, high;
-};
+#include "bigint.h"
+typedef uint128_t sha512_length_t;
 #endif
 
 template <size_t Digest_Size>

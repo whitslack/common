@@ -1,57 +1,6 @@
 #include "sha.h"
 
 
-#ifndef __SIZEOF_INT128__
-
-static sha512_length_t & operator += (sha512_length_t &augend, uint64_t addend) {
-	uint64_t nlow = augend.low + addend;
-	if (nlow < augend.low) {
-		++augend.high;
-	}
-	augend.low = nlow;
-	return augend;
-}
-
-static sha512_length_t operator + (const sha512_length_t &augend, uint64_t addend) {
-	sha512_length_t sum = augend;
-	sum += addend;
-	return sum;
-}
-
-static sha512_length_t & operator <<= (sha512_length_t &operand, size_t shift) {
-	while (shift > 0) {
-		operand.high <<= 1;
-		if (static_cast<int64_t>(operand.low) < 0) {
-			operand.high |= 1;
-		}
-		operand.low <<= 1;
-		--shift;
-	}
-	return operand;
-}
-
-static inline sha512_length_t operator << (sha512_length_t operand, size_t shift) {
-	return operand <<= shift;
-}
-
-static sha512_length_t bswap(const sha512_length_t &v) {
-	return sha512_length_t{ bswap(v.high), bswap(v.low) };
-}
-
-#if BYTE_ORDER == BIG_ENDIAN
-static inline sha512_length_t htobe(const sha512_length_t &v) { return v; }
-static inline sha512_length_t betoh(const sha512_length_t &v) { return v; }
-static inline sha512_length_t htole(const sha512_length_t &v) { return bswap(v); }
-static inline sha512_length_t letoh(const sha512_length_t &v) { return bswap(v); }
-#elif BYTE_ORDER == LITTLE_ENDIAN
-static inline sha512_length_t htobe(const sha512_length_t &v) { return bswap(v); }
-static inline sha512_length_t betoh(const sha512_length_t &v) { return bswap(v); }
-static inline sha512_length_t htole(const sha512_length_t &v) { return v; }
-static inline sha512_length_t letoh(const sha512_length_t &v) { return v; }
-#endif
-#endif
-
-
 #include "hash.tcc"
 
 
