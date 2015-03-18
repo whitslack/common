@@ -122,3 +122,9 @@ static inline unsigned __int128 letoh(unsigned __int128 v) { return v; }
 #define _restrict
 
 #endif
+
+template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type bswap(T v) { return static_cast<T>(bswap(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type htobe(T v) { return static_cast<T>(htobe(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type betoh(T v) { return static_cast<T>(betoh(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type htole(T v) { return static_cast<T>(htole(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type letoh(T v) { return static_cast<T>(letoh(static_cast<typename std::underlying_type<T>::type>(v))); }

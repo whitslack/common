@@ -9,12 +9,12 @@ struct _be {
 };
 
 template <typename T>
-static inline typename std::enable_if<std::is_integral<T>::value, _be<T &>>::type be(T &x) {
+static inline typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, _be<T &>>::type be(T &x) {
 	return { x };
 }
 
 template <typename T>
-static inline typename std::enable_if<std::is_integral<T>::value, _be<const T>>::type be(const T &x) {
+static inline typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, _be<const T>>::type be(const T &x) {
 	return { x };
 }
 
@@ -39,12 +39,12 @@ struct _le {
 };
 
 template <typename T>
-static inline typename std::enable_if<std::is_integral<T>::value, _le<T &>>::type le(T &x) {
+static inline typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, _le<T &>>::type le(T &x) {
 	return { x };
 }
 
 template <typename T>
-static inline typename std::enable_if<std::is_integral<T>::value, _le<const T>>::type le(const T &x) {
+static inline typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, _le<const T>>::type le(const T &x) {
 	return { x };
 }
 
