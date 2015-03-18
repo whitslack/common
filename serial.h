@@ -240,7 +240,7 @@ static inline typename std::enable_if<I == sizeof...(Types), Sink>::type & write
 }
 
 template <typename... Types>
-static inline Sink & operator >> (Sink &sink, const std::tuple<Types...> &tuple) {
+static inline Sink & operator << (Sink &sink, const std::tuple<Types...> &tuple) {
 	return write_tuple<0>(sink, tuple);
 }
 
