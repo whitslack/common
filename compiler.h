@@ -7,10 +7,12 @@
 #ifdef __GNUC__
 
 #define _const __attribute__ ((__const__))
+#define _hidden __attribute__ ((__visibility__ ("hidden")))
 #define _nonnull(...) __attribute__ ((__nonnull__ (__VA_ARGS__)))
 #define _noreturn __attribute__ ((__noreturn__))
 #define _pure __attribute__ ((__pure__))
 #define _unused __attribute__ ((__unused__))
+#define _visible __attribute__ ((__visibility__ ("default")))
 #define _weak __attribute__ ((__weak__))
 #define _wur __attribute__ ((__warn_usused_result__))
 
@@ -113,10 +115,12 @@ static inline unsigned __int128 letoh(unsigned __int128 v) { return v; }
 #else
 
 #define _const
+#define _hidden
 #define _nonnull(...)
 #define _noreturn
 #define _pure
 #define _unused
+#define _visible
 #define _wur
 
 #define _restrict
