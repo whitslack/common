@@ -19,26 +19,26 @@ public:
 
 private:
 	T *ptr;
-	uint8_t data[sizeof(T)];
+	typename std::aligned_storage<sizeof(T), alignof(T)>::type data;
 
 public:
 	constexpr optional() noexcept : ptr() { }
 
 	constexpr optional(nullopt_t) noexcept : ptr() { }
 
-	constexpr optional(const optional &other) noexcept(std::is_nothrow_copy_constructible<T>::value) : ptr(other.ptr ? new (data) T(*other.ptr) : nullptr) { }
+	constexpr optional(const optional &other) noexcept(std::is_nothrow_copy_constructible<T>::value) : ptr(other.ptr ? new (&data) T(*other.ptr) : nullptr) { }
 
-	constexpr optional(optional &&other) noexcept(std::is_nothrow_move_constructible<T>::value) : ptr(other.ptr ? new (data) T(std::move(*other.ptr)) : nullptr) { }
+	constexpr optional(optional &&other) noexcept(std::is_nothrow_move_constructible<T>::value) : ptr(other.ptr ? new (&data) T(std::move(*other.ptr)) : nullptr) { }
 
-	constexpr optional(const T &value) noexcept(std::is_nothrow_copy_constructible<T>::value) : ptr(new (data) T(value)) { }
+	constexpr optional(const T &value) noexcept(std::is_nothrow_copy_constructible<T>::value) : ptr(new (&data) T(value)) { }
 
-	constexpr optional(T &&value) noexcept(std::is_nothrow_move_constructible<T>::value) : ptr(new (data) T(std::move(value))) { }
+	constexpr optional(T &&value) noexcept(std::is_nothrow_move_constructible<T>::value) : ptr(new (&data) T(std::move(value))) { }
 
 	template <typename... Args>
-	constexpr explicit optional(in_place_t, Args&&... args) noexcept(std::is_nothrow_constructible<T, Args&&...>::value) : ptr(new (data) T(std::forward<Args>(args)...)) { }
+	constexpr explicit optional(in_place_t, Args&&... args) noexcept(std::is_nothrow_constructible<T, Args&&...>::value) : ptr(new (&data) T(std::forward<Args>(args)...)) { }
 
 	template <typename U, typename... Args>
-	constexpr explicit optional(typename std::enable_if<std::is_constructible<T, std::initializer_list<U> &, Args&&...>::value, in_place_t>::type, std::initializer_list<U> ilist, Args&&... args) noexcept(std::is_nothrow_constructible<T, std::initializer_list<U> &, Args&&...>::value) : ptr(new (data) T(ilist, std::forward<Args>(args)...)) { }
+	constexpr explicit optional(typename std::enable_if<std::is_constructible<T, std::initializer_list<U> &, Args&&...>::value, in_place_t>::type, std::initializer_list<U> ilist, Args&&... args) noexcept(std::is_nothrow_constructible<T, std::initializer_list<U> &, Args&&...>::value) : ptr(new (&data) T(ilist, std::forward<Args>(args)...)) { }
 	
 	~optional() {
 		if (ptr) {
@@ -64,7 +64,7 @@ public:
 			}
 		}
 		else if (other.ptr) {
-			ptr = new (data) T(*other.ptr);
+			ptr = new (&data) T(*other.ptr);
 		}
 		return *this;
 	}
@@ -79,7 +79,7 @@ public:
 			}
 		}
 		else if (other.ptr) {
-			ptr = new (data) T(std::move(*other.ptr));
+			ptr = new (&data) T(std::move(*other.ptr));
 		}
 		return *this;
 	}
@@ -90,7 +90,7 @@ public:
 			*ptr = std::forward<U>(value);
 		}
 		else {
-			ptr = new (data) T(std::forward<U>(value));
+			ptr = new (&data) T(std::forward<U>(value));
 		}
 		return *this;
 	}
@@ -146,12 +146,12 @@ public:
 				swap(**this, *other);
 			}
 			else {
-				other.ptr = new (other.data) T(std::move(*ptr));
+				other.ptr = new (&other.data) T(std::move(*ptr));
 				ptr->~T(), ptr = nullptr;
 			}
 		}
 		else if (other.ptr) {
-			ptr = new (data) T(std::move(*other.ptr));
+			ptr = new (&data) T(std::move(*other.ptr));
 			other.ptr->~T(), other.ptr = nullptr;
 		}
 	}
@@ -161,7 +161,7 @@ public:
 		if (ptr) {
 			ptr->~T(), ptr = nullptr;
 		}
-		ptr = new (data) T(std::forward<Args>(args)...);
+		ptr = new (&data) T(std::forward<Args>(args)...);
 	}
 
 	template <typename U, typename... Args>
@@ -169,7 +169,7 @@ public:
 		if (ptr) {
 			ptr->~T(), ptr = nullptr;
 		}
-		ptr = new (data) T(ilist, std::forward<Args>(args)...);
+		ptr = new (&data) T(ilist, std::forward<Args>(args)...);
 	}
 
 };
