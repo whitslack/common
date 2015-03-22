@@ -7,8 +7,8 @@ CXX := $(CHOST)-$(CXX)
 LD := $(CHOST)-$(LD)
 SYSROOT := /usr/$(CHOST)
 PKG_CONFIG_SYSROOT_DIR := $(SYSROOT)
-PKG_CONFIG_PATH := $(PKG_CONFIG_SYSROOT_DIR)/usr/lib/pkgconfig
-PKG_CONFIG := PKG_CONFIG_SYSROOT_DIR=$(PKG_CONFIG_SYSROOT_DIR) PKG_CONFIG_PATH=$(PKG_CONFIG_PATH) pkg-config
+PKG_CONFIG_LIBDIR := $(PKG_CONFIG_SYSROOT_DIR)/usr/lib/pkgconfig:$(PKG_CONFIG_SYSROOT_DIR)/usr/share/pkgconfig
+PKG_CONFIG := PKG_CONFIG_SYSROOT_DIR='$(PKG_CONFIG_SYSROOT_DIR)' PKG_CONFIG_LIBDIR='$(PKG_CONFIG_LIBDIR)' pkg-config
 endif
 
 OUTDIR := out/$(CHOST)
@@ -18,7 +18,6 @@ BINDIR := $(OUTDIR)
 LIB_PREFIX := lib
 LIB_SUFFIX := .so
 
-CPPFLAGS += -pthread
 CFLAGS += -std=c99 -ffunction-sections -fdata-sections
 CXXFLAGS += -std=c++11 -ffunction-sections -fdata-sections
 LDFLAGS += -Wl,--as-needed,--gc-sections
