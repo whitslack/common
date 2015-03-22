@@ -1,6 +1,7 @@
 #pragma once
 
 #include <fcntl.h>
+#include <poll.h>
 #include <sys/mman.h>
 
 #include "io.h"
@@ -57,6 +58,7 @@ void munmap(void *addr, size_t len);
 int open(const char *path, int oflag, mode_t mode = 0666);
 int openat(int fd, const char *path, int oflag, mode_t mode = 0666);
 void pipe(int fildes[2]);
+int poll(struct pollfd fds[], nfds_t nfds, int timeout = -1);
 ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
 size_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
 ssize_t read(int fildes, void *buf, size_t nbyte);
@@ -77,7 +79,6 @@ size_t write(int fildes, const void *buf, size_t nbyte);
 
 
 class FileDescriptor : public Source, public Sink {
-	friend class EPoll;
 
 public:
 	class MemoryMapping {
@@ -119,6 +120,7 @@ private:
 
 public:
 	operator int () const { return fd; }
+
 	void creat(const char *path, mode_t mode = 0666) { *this = FileDescriptor(posix::creat(path, mode)); }
 	void open(const char *path, int oflag = O_RDONLY | O_CLOEXEC, mode_t mode = 0666) { *this = FileDescriptor(path, oflag, mode); }
 	void close() { posix::close(fd), fd = -1; }

@@ -1,4 +1,5 @@
 #include <memory>
+#include <system_error>
 #include <vector>
 
 #include <gnutls/gnutls.h>

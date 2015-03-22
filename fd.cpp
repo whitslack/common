@@ -336,6 +336,17 @@ void pipe(int fildes[2]) {
 	}
 }
 
+int poll(struct pollfd fds[], nfds_t nfds, int timeout) {
+	int ret;
+	if ((ret = ::poll(fds, nfds, timeout)) < 0) {
+		if (errno == EAGAIN || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "poll");
+	}
+	return ret;
+}
+
 ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset) {
 	ssize_t ret;
 	if ((ret = ::pread(fildes, buf, nbyte, offset)) < 0) {

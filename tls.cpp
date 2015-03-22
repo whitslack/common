@@ -387,11 +387,7 @@ ssize_t TLSSocket::pull(void *buf, size_t n) {
 
 bool TLSSocket::pull_timeout(unsigned int ms) {
 	struct pollfd pfd = { socket, POLLIN, 0 };
-	int ret;
-	if ((ret = ::poll(&pfd, 1, ms)) < 0) {
-		throw std::system_error(errno, std::system_category(), "poll");
-	}
-	return ret > 0;
+	return posix::poll(&pfd, 1, ms) > 0;
 }
 
 size_t TLSSocket::push(const void *buf, size_t n) {
