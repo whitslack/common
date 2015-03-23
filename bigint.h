@@ -536,6 +536,126 @@ __IMPL(uint64_t, "q")
 __IMPL(uint32_t, "l")
 #undef __IMPL
 
+#elif defined(__GNUC__) && defined(__arm__)
+
+#define LIMB_T uint32_t
+
+template <size_t L>
+static inline void __adc(uint32_t sum[], const uint32_t augend[]) {
+	__asm__ ("adcs %[sum], %[augend], #0" : [sum] "=r" (sum[0]) : [augend] "r" (augend[0]), "X" (sum[-1]) : "cc");
+	__adc<L - 1>(sum + 1, augend + 1);
+}
+
+template <>
+inline void __adc<0>(uint32_t *, const uint32_t *) {
+}
+
+template <size_t L>
+static inline void __adc(uint32_t sum[], const uint32_t augend[], const uint32_t addend[]) {
+	__asm__ ("adcs %[sum], %[augend], %[addend]" : [sum] "=r" (sum[0]) : [augend] "r" (augend[0]), [addend] "Ir" (addend[0]), "X" (sum[-1]) : "cc");
+	__adc<L - 1>(sum + 1, augend + 1, addend + 1);
+}
+
+template <>
+inline void __adc<0>(uint32_t *, const uint32_t *, const uint32_t *) {
+}
+
+template <size_t L>
+static inline void __add(uint32_t sum[], const uint32_t augend[], uint32_t addend) {
+	__asm__ ("adds %[sum], %[augend], %[addend]" : [sum] "=r" (sum[0]) : [augend] "r" (augend[0]), [addend] "Ir" (addend) : "cc");
+	__adc<L - 1>(sum + 1, augend + 1);
+}
+
+template <size_t L>
+static inline void __add(uint32_t sum[], const uint32_t augend[], const uint32_t addend[]) {
+	__asm__ ("adds %[sum], %[augend], %[addend]" : [sum] "=r" (sum[0]) : [augend] "r" (augend[0]), [addend] "Ir" (addend[0]) : "cc");
+	__adc<L - 1>(sum + 1, augend + 1, addend + 1);
+}
+
+template <size_t L>
+static inline std::array<uint32_t, L> & operator += (std::array<uint32_t, L> &augend, uint32_t addend) {
+	__add<L>(augend.data(), augend.data(), addend);
+	return augend;
+}
+
+template <size_t L>
+static inline std::array<uint32_t, L> & operator += (std::array<uint32_t, L> &augend, const std::array<uint32_t, L> &addend) {
+	__add<L>(augend.data(), augend.data(), addend.data());
+	return augend;
+}
+
+template <size_t L>
+static inline std::array<uint32_t, L> _pure operator + (const std::array<uint32_t, L> &augend, uint32_t addend) {
+	std::array<uint32_t, L> sum;
+	__add<L>(sum.data(), augend.data(), addend);
+	return sum;
+}
+
+template <size_t L>
+static inline std::array<uint32_t, L> _pure operator + (const std::array<uint32_t, L> &augend, const std::array<uint32_t, L> &addend) {
+	std::array<uint32_t, L> sum;
+	__add<L>(sum.data(), augend.data(), addend.data());
+	return sum;
+}
+
+template <size_t L>
+static inline void __sbc(uint32_t difference[], const uint32_t minuend[]) {
+	__asm__ ("sbcs %[difference], %[minuend], #0" : [difference] "=r" (difference[0]) : [minuend] "r" (minuend[0]), "X" (difference[-1]) : "cc");
+	__sbc<L - 1>(difference + 1, minuend + 1);
+}
+
+template <>
+inline void __sbc<0>(uint32_t *, const uint32_t *) {
+}
+
+template <size_t L>
+static inline void __sbc(uint32_t difference[], const uint32_t minuend[], const uint32_t subtrahend[]) {
+	__asm__ ("sbcs %[difference], %[minuend], %[subtrahend]" : [difference] "=r" (difference[0]) : [minuend] "r" (minuend[0]), [subtrahend] "Ir" (subtrahend[0]), "X" (difference[-1]) : "cc");
+	__sbc<L - 1>(difference + 1, minuend + 1, subtrahend + 1);
+}
+
+template <>
+inline void __sbc<0>(uint32_t *, const uint32_t *, const uint32_t *) {
+}
+
+template <size_t L>
+static inline void __sub(uint32_t difference[], const uint32_t minuend[], uint32_t subtrahend) {
+	__asm__ ("subs %[difference], %[minuend], %[subtrahend]" : [difference] "=r" (difference[0]) : [minuend] "r" (minuend[0]), [subtrahend] "Ir" (subtrahend) : "cc");
+	__sbc<L - 1>(difference + 1, minuend + 1);
+}
+
+template <size_t L>
+static inline void __sub(uint32_t difference[], const uint32_t minuend[], const uint32_t subtrahend[]) {
+	__asm__ ("subs %[difference], %[minuend], %[subtrahend]" : [difference] "=r" (difference[0]) : [minuend] "r" (minuend[0]), [subtrahend] "Ir" (subtrahend[0]) : "cc");
+	__sbc<L - 1>(difference + 1, minuend + 1, subtrahend + 1);
+}
+
+template <size_t L>
+static inline std::array<uint32_t, L> & operator -= (std::array<uint32_t, L> &minuend, uint32_t subtrahend) {
+	__sub<L>(minuend.data(), minuend.data(), subtrahend);
+	return minuend;
+}
+
+template <size_t L>
+static inline std::array<uint32_t, L> & operator -= (std::array<uint32_t, L> &minuend, const std::array<uint32_t, L> &subtrahend) {
+	__sub<L>(minuend.data(), minuend.data(), subtrahend.data());
+	return minuend;
+}
+
+template <size_t L>
+static inline std::array<uint32_t, L> _pure operator - (const std::array<uint32_t, L> &minuend, uint32_t subtrahend) {
+	std::array<uint32_t, L> difference;
+	__sub<L>(difference.data(), minuend.data(), subtrahend);
+	return difference;
+}
+
+template <size_t L>
+static inline std::array<uint32_t, L> _pure operator - (const std::array<uint32_t, L> &minuend, const std::array<uint32_t, L> &subtrahend) {
+	std::array<uint32_t, L> difference;
+	__sub<L>(difference.data(), minuend.data(), subtrahend.data());
+	return difference;
+}
+
 #else
 
 #if SIZE_MAX >= UINT64_MAX
