@@ -1,35 +1,41 @@
 #include <iostream>
+#include <sstream>
 
-#include "io.h"
 
+class LogBuf : public std::stringbuf {
+	friend class LogStream;
 
-class Log;
+private:
+	std::ostream *stream_ptr;
+
+public:
+	LogBuf(const LogBuf &copy) : std::stringbuf(copy.str()), stream_ptr(copy.stream_ptr) { }
+
+private:
+	LogBuf(std::ostream *stream_ptr) : stream_ptr(stream_ptr) { }
+
+protected:
+	int sync() override;
+
+};
+
 
 class LogStream : public std::ostream {
 	friend class Log;
 
 private:
-	std::string str;
-	StringSink ss;
-	SinkBuf sb;
-	std::ostream *stream_ptr;
+	LogBuf buf;
 
 public:
-	LogStream(LogStream &&move) : std::ostream(&sb), str(std::move(move.str)), ss(str), sb(ss), stream_ptr(move.stream_ptr) {
-		move.stream_ptr = nullptr;
-	}
-	~LogStream();
+	LogStream(const LogStream &copy) : std::ios(), std::ostream(&buf), buf(copy.buf) { }
 
 private:
 	LogStream(std::ostream *stream_ptr, const char label[]);
-	LogStream(const LogStream &) = delete;
-	LogStream & operator = (const LogStream &) = delete;
 
 };
 
 
 class Log {
-	friend class LogStream;
 
 public:
 	enum Level {
