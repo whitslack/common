@@ -266,11 +266,14 @@ static inline std::array<WORD_T, W> _pure operator ^ (const std::array<WORD_T, W
 }
 
 template <typename WORD_T, size_t W>
-static inline typename std::make_signed<WORD_T>::type _pure __cmp(const std::array<WORD_T, W> &lhs, const std::array<WORD_T, W> &rhs) {
+static inline int _pure __cmp(const std::array<WORD_T, W> &lhs, const std::array<WORD_T, W> &rhs) {
 	for (size_t i = W; i-- > 0;) {
-		auto c = lhs[WORD(W, i)] - rhs[WORD(W, i)];
-		if (c != 0) {
-			return c;
+		auto lw = lhs[WORD(W, i)], rw = rhs[WORD(W, i)];
+		if (lw < rw) {
+			return -1;
+		}
+		if (lw > rw) {
+			return 1;
 		}
 	}
 	return 0;
