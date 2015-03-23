@@ -1,4 +1,5 @@
 #include "http.h"
+#include "regex.h"
 
 #include <iomanip>
 #include <sstream>
@@ -263,20 +264,245 @@ std::ostream & operator << (std::ostream &os, const HttpResponseHeaders &headers
 }
 
 
-std::string rfc2822_date(struct tm &tm, bool is_utc) {
+std::string rfc2822_date(const struct std::tm &tm) {
 	static const char *weekday_name[7] = { "Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat" };
 	static const char *month_name[12] = { "Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec" };
 	std::ostringstream oss;
-	oss << weekday_name[tm.tm_wday] << ',' << ' ' << tm.tm_mday << ' ' << month_name[tm.tm_mon] << ' ' << 1900 + tm.tm_year << ' ' << std::setfill('0') << std::setw(2) << tm.tm_hour << ':' << std::setw(2) << tm.tm_min << ':' << std::setw(2) << tm.tm_sec << ' ';
-	if (is_utc) {
-		oss << "UTC";
-	}
-	else {
-		char buf[8];
-		std::strftime(buf, sizeof buf, "%z", &tm);
-		oss << buf;
-	}
+	oss << weekday_name[tm.tm_wday] << ',' << ' ' << tm.tm_mday << ' ' << month_name[tm.tm_mon] << ' ' << 1900 + tm.tm_year << ' ' << std::setfill('0') << std::setw(2) << tm.tm_hour << ':' << std::setw(2) << tm.tm_min << ':' << std::setw(2) << tm.tm_sec << ' ' << std::showpos << std::internal << std::setw(3) << tm.tm_gmtoff / 3600 << std::noshowpos << std::setw(2) << std::abs(tm.tm_gmtoff) / 60 % 60;
 	return oss.str();
+}
+
+static int _pure digits_to_int(const char * begin, const char * end) {
+	int ret = 0;
+	while (begin < end) {
+		ret = ret * 10 + (*begin++ - '0');
+	}
+	return ret;
+}
+
+static int _pure str_to_wday(const char str[]) {
+	switch (str[0]) {
+		case 'F':
+			if (str[1] == 'r' && str[2] == 'i') { // Fri
+				return 5;
+			}
+			break;
+		case 'M':
+			if (str[1] == 'o' && str[2] == 'n') { // Mon
+				return 1;
+			}
+			break;
+		case 'T':
+			switch (str[1]) {
+				case 'h': // Th
+					if (str[2] == 'u') { // Thu
+						return 4;
+					}
+					break;
+				case 'u': // Tu
+					if (str[2] == 'e') { // Tue
+						return 2;
+					}
+					break;
+			}
+			break;
+		case 'W':
+			if (str[1] == 'e' && str[2] == 'd') { // Wed
+				return 3;
+			}
+			break;
+		case 'S':
+			switch (str[1]) {
+				case 'a': // Sa
+					if (str[2] == 't') { // Sat
+						return 6;
+					}
+					break;
+				case 'u': // Su
+					if (str[2] == 'n') { // Sun
+						return 0;
+					}
+					break;
+			}
+			break;
+	}
+	return -1;
+}
+
+static int _pure str_to_month(const char str[]) {
+	switch (str[0]) {
+		case 'A':
+			switch (str[1]) {
+				case 'p': // Ap
+					if (str[2] == 'r') { // Apr
+						return 3;
+					}
+					break;
+				case 'u': // Au
+					if (str[2] == 'g') { // Aug
+						return 7;
+					}
+					break;
+			}
+			break;
+		case 'D':
+			if (str[1] == 'e' && str[2] == 'c') { // Dec
+				return 11;
+			}
+			break;
+		case 'F':
+			if (str[1] == 'e' && str[2] == 'b') { // Feb
+				return 1;
+			}
+			break;
+		case 'J':
+			switch (str[1]) {
+				case 'a': // Ja
+					if (str[2] == 'n') { // Jan
+						return 0;
+					}
+					break;
+				case 'u': // Ju
+					switch (str[2]) {
+						case 'l': // Jul
+							return 6;
+						case 'n': // Jun
+							return 5;
+					}
+					break;
+			}
+			break;
+		case 'M':
+			if (str[1] == 'a') { // Ma
+				switch (str[2]) {
+					case 'r': // Mar
+						return 2;
+					case 'y': // May
+						return 4;
+				}
+			}
+			break;
+		case 'N':
+			if (str[1] == 'o' && str[2] == 'v') { // Nov
+				return 10;
+			}
+			break;
+		case 'O':
+			if (str[1] == 'c' && str[2] == 't') { // Oct
+				return 9;
+			}
+			break;
+		case 'S':
+			if (str[1] == 'e' && str[2] == 'p') { // Sep
+				return 8;
+			}
+			break;
+	}
+	return -1;
+}
+
+static int _pure str_to_offset(const char str[]) {
+	switch (str[0]) {
+		case '+':
+			return digits_to_int(str + 1, str + 3) * 3600 + digits_to_int(str + 3, str + 5) * 60;
+		case '-':
+			return digits_to_int(str + 1, str + 3) * -3600 + digits_to_int(str + 3, str + 5) * -60;
+		case 'C':
+			switch (str[1]) {
+				case 'D': // CD
+					if (str[2] == 'T') { // CDT
+						return 5 * -3600;
+					}
+					break;
+				case 'S': // CS
+					if (str[2] == 'T') { // CST
+						return 6 * -3600;
+					}
+					break;
+			}
+			break;
+		case 'E':
+			switch (str[1]) {
+				case 'D': // ED
+					if (str[2] == 'T') { // EDT
+						return 4 * -3600;
+					}
+					break;
+				case 'S': // ES
+					if (str[2] == 'T') { // EST
+						return 5 * -3600;
+					}
+					break;
+			}
+			break;
+		case 'M':
+			switch (str[1]) {
+				case 'D': // MD
+					if (str[2] == 'T') { // MDT
+						return 6 * -3600;
+					}
+					break;
+				case 'S': // MS
+					if (str[2] == 'T') { // MST
+						return 7 * -3600;
+					}
+					break;
+			}
+			break;
+		case 'P':
+			switch (str[1]) {
+				case 'D': // PD
+					if (str[2] == 'T') { // PDT
+						return 7 * -3600;
+					}
+					break;
+				case 'S': // PS
+					if (str[2] == 'T') { // PST
+						return 8 * -3600;
+					}
+					break;
+			}
+			break;
+	}
+	return 0;
+}
+
+std::time_t rfc2822_date(const char str[]) {
+#define _DIGIT_ "[0-9]"
+#define _FWS_ "(([ \t]*\r\n)?[ \t]+)"
+#define _date_time_ "(" _day_of_week_ ",)?" _FWS_ "?" _date_ _FWS_ _time_
+#define _day_of_week_ "(Mon|Tue|Wed|Thu|Fri|Sat|Sun)"
+#define _date_ "(" _FWS_ "?" _day_ _FWS_ _month_ _FWS_ _year_ ")"
+#define _year_ "(" _DIGIT_ "{2,}" ")"
+#define _month_ "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
+#define _day_ "(" _DIGIT_ "{1,2}" ")"
+#define _time_ "(" _time_of_day_ _FWS_ _zone_ ")"
+#define _time_of_day_ "(" _hour_ ":" _minute_ "(:" _second_ ")?" ")"
+#define _hour_ "(" _DIGIT_ "{2}" ")"
+#define _minute_ "(" _DIGIT_ "{2}" ")"
+#define _second_ "(" _DIGIT_ "{2}" ")"
+#define _zone_ "(" "[-+]" _DIGIT_ "{4}" "|UTC?|GMT|[ECMP][SD]T|[A-IK-Za-ik-z])"
+	static const Regex regex("^" _date_time_);
+	regmatch_t matches[26];
+	struct std::tm tm;
+	if (!regex.exec(str, sizeof matches / sizeof *matches, matches) ||
+			(tm.tm_wday = str_to_wday(str + matches[2].rm_so)) < 0 ||
+			(tm.tm_mon = str_to_month(str + matches[11].rm_so)) < 0) {
+		throw std::ios_base::failure("invalid RFC2822 date");
+	}
+	tm.tm_mday = digits_to_int(str + matches[8].rm_so, str + matches[8].rm_eo);
+	tm.tm_year = digits_to_int(str + matches[14].rm_so, str + matches[14].rm_eo);
+	if (tm.tm_year >= 1000) {
+		tm.tm_year -= 1900;
+	}
+	else if (tm.tm_year < 50) {
+		tm.tm_year += 100;
+	}
+	tm.tm_hour = digits_to_int(str + matches[19].rm_so, str + matches[19].rm_eo);
+	tm.tm_min = digits_to_int(str + matches[20].rm_so, str + matches[20].rm_eo);
+	tm.tm_sec = digits_to_int(str + matches[22].rm_so, str + matches[22].rm_eo);
+	tm.tm_isdst = -1;
+	return ::timegm(&tm) - str_to_offset(str + matches[25].rm_so);
 }
 
 

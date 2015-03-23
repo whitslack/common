@@ -1,5 +1,6 @@
 #pragma once
 
+#include <ctime>
 #include <map>
 
 #include "ci.h"
@@ -56,7 +57,8 @@ std::istream & operator >> (std::istream &is, HttpResponseHeaders &headers);
 std::ostream & operator << (std::ostream &os, const HttpResponseHeaders &headers);
 
 
-std::string rfc2822_date(struct tm &tm, bool is_utc);
+std::string rfc2822_date(const struct std::tm &tm);
+std::time_t rfc2822_date(const char str[]);
 
 
 class ChunkedSource : public Source {
