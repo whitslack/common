@@ -91,68 +91,27 @@ bool HttpConnectionBase::flush() {
 }
 
 
-HttpConnection::HttpConnection(const std::string &host, uint16_t port) : HttpConnectionBase(buffered_source, buffered_sink), buffered_source(socket), buffered_sink(socket) {
-	for (auto &info : getaddrinfo(host.c_str())) {
-		if (info.ai_family == AF_INET) {
-			reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port = htobe16(port);
-		}
-		else if (info.ai_family == AF_INET6) {
-			reinterpret_cast<sockaddr_in6 *>(info.ai_addr)->sin6_port = htobe16(port);
-		}
-		else {
-			continue;
-		}
-		try {
-			socket.open(info.ai_family, info.ai_socktype | SOCK_CLOEXEC, info.ai_protocol);
-			int optval = 1;
-			socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval));
-			socket.connect(info.ai_addr, info.ai_addrlen);
-			return;
-		}
-		catch (...) {
-			continue;
-		}
-	}
-	throw std::system_error(errno, std::system_category(), "connect");
+constexpr const char *HttpConnection::protocol_name;
+
+HttpConnection::HttpConnection(Socket &&socket) : HttpConnectionBase(buffered_source, buffered_sink), socket(std::move(socket)), buffered_source(this->socket), buffered_sink(this->socket) {
 }
 
 
 #ifdef HTTP_TLS
 
-HttpsConnection::HttpsConnection(const std::string &host, uint16_t port, const char ca_file[]) : HttpConnectionBase(tls, tls) {
-	for (auto &info : getaddrinfo(host.c_str())) {
-		if (info.ai_family == AF_INET) {
-			reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port = htobe16(port);
-		}
-		else if (info.ai_family == AF_INET6) {
-			reinterpret_cast<sockaddr_in6 *>(info.ai_addr)->sin6_port = htobe16(port);
-		}
-		else {
-			continue;
-		}
-		try {
-			Socket socket(info.ai_family, info.ai_socktype | SOCK_CLOEXEC, info.ai_protocol);
-			int optval = 1;
-			socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval));
-			socket.connect(info.ai_addr, info.ai_addrlen);
-			tls = TLSSocket(host, std::move(socket));
-			tls.set_priority_direct("NORMAL");
-			auto cred = std::make_shared<TLSCertificateCredentials>();
-			if (ca_file) {
-				cred->set_x509_trust_file(ca_file);
-			}
-			else {
-				cred->set_x509_system_trust();
-			}
-			tls.set_credentials(cred);
-			tls.handshake();
-			return;
-		}
-		catch (...) {
-			continue;
-		}
+constexpr const char *HttpsConnection::protocol_name;
+
+HttpsConnection::HttpsConnection(Socket &&socket, const std::string &host, const char ca_file[]) : HttpConnectionBase(tls, tls), tls(host, std::move(socket)) {
+	tls.set_priority_direct("NORMAL");
+	auto cred = std::make_shared<TLSCertificateCredentials>();
+	if (ca_file) {
+		cred->set_x509_trust_file(ca_file);
 	}
-	throw std::system_error(errno, std::system_category(), "connect");
+	else {
+		cred->set_x509_system_trust();
+	}
+	tls.set_credentials(cred);
+	tls.handshake();
 }
 
 #endif // defined(HTTP_TLS)

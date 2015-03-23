@@ -1,5 +1,3 @@
-#include <memory>
-
 #include "http.h"
 #include "optional.h"
 #include "socket.h"
@@ -44,13 +42,16 @@ public:
 
 class HttpConnection : public HttpConnectionBase {
 
+public:
+	static constexpr const char *protocol_name = "http";
+
 private:
 	Socket socket;
 	BufferedSource<1500> buffered_source;
 	BufferedSink<1500> buffered_sink;
 
 public:
-	HttpConnection(const std::string &host, uint16_t port = 80);
+	HttpConnection(Socket &&socket);
 
 };
 
@@ -59,11 +60,14 @@ public:
 
 class HttpsConnection : public HttpConnectionBase {
 
+public:
+	static constexpr const char *protocol_name = "https";
+
 private:
 	TLSSocket tls;
 
 public:
-	HttpsConnection(const std::string &host, uint16_t port = 443, const char ca_file[] = nullptr);
+	HttpsConnection(Socket &&socket, const std::string &host, const char ca_file[] = nullptr);
 
 };
 
