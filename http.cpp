@@ -6,7 +6,7 @@
 #define BITS(l, o) (((size_t(1) << (l)) - 1) << (o))
 
 template <typename T, size_t N>
-constexpr size_t countof(T (&)[N]) { return N; }
+static constexpr size_t countof(T (&)[N]) { return N; }
 
 const char
 		HTTP_REASON_PHRASE_100[] = "Continue",
@@ -399,6 +399,7 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool flush) {
 				// fall through
 			case Size:
 				for (;;) {
+#if SIZE_MAX >= UINT64_MAX
 					if (write_size & BITS(32, 32)) {
 						if (write_size & BITS(16, 48)) {
 							if (write_size & BITS(8, 56)) {
@@ -431,7 +432,9 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool flush) {
 							c = HEX[(mask = write_size & BITS(4, 32)) >> 32];
 						}
 					}
-					else if (write_size & BITS(16, 16)) {
+					else
+#endif
+					if (write_size & BITS(16, 16)) {
 						if (write_size & BITS(8, 24)) {
 							if (mask = write_size & BITS(4, 28)) {
 								c = HEX[mask >> 28];
