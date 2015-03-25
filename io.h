@@ -200,7 +200,7 @@ private:
 	uint8_t * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
 
 protected:
-	BufferedSinkBase(Sink &sink, uint8_t *buf_bptr, uint8_t *buf_eptr) : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
+	BufferedSinkBase(Sink &sink, uint8_t *buf_bptr, uint8_t *buf_eptr) : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_eptr), buf_pptr(buf_eptr), buf_eptr(buf_eptr) { }
 
 public:
 	size_t write(const void *buf, size_t n) override;
