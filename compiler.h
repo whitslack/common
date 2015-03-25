@@ -4,6 +4,8 @@
 #include <cstdint>
 #include <type_traits>
 
+#include <endian.h>
+
 #ifdef __GNUC__
 
 #define _const __attribute__ ((__const__))
@@ -63,6 +65,10 @@ static inline unsigned long bswap(unsigned long v) { return __builtin_bswap32(v)
 #elif ULONG_LONG_MAX == UINT64_MAX && UINT64_MAX == ULONG_MAX
 static inline long long bswap(long long v) { return __builtin_bswap64(v); }
 static inline unsigned long long bswap(unsigned long long v) { return __builtin_bswap64(v); }
+#endif
+
+#ifndef BYTE_ORDER
+#error "BYTE_ORDER is not defined"
 #endif
 
 #if BYTE_ORDER == BIG_ENDIAN
