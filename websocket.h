@@ -1,15 +1,16 @@
 #include <array>
 #include <cstdint>
-#include <mutex>
 #include <streambuf>
+#include <experimental/optional>
 
 #include "compiler.h"
-#include "epoll.h"
 #include "http.h"
 #include "socket.h"
 
+namespace stdx = std::experimental;
 
-class WebSocketBase {
+
+class WebSocket {
 
 public:
 	enum Opcode {
@@ -17,56 +18,32 @@ public:
 		Close = 0x8, Ping = 0x9, Pong = 0xA
 	};
 
+public:
+	Socket socket;
+
 protected:
 	std::array<uint8_t, 14> header_buf;
 	size_t header_pos;
 	std::array<uint8_t, 1 << 16> data_buf;
 	size_t data_pos, data_rem;
 
-	std::mutex send_mutex;
+public:
+	WebSocket(Socket &&socket) : socket(std::move(socket)), header_pos(), data_pos() { }
 
 public:
-	WebSocketBase() : header_pos(), data_pos() { }
-	virtual ~WebSocketBase() { }
-
 	void send(Opcode opcode, bool mask, const void *buf, size_t n, bool more = false);
-	void ready();
+	stdx::optional<MemorySource> receive(Opcode &opcode, bool masked);
 
-protected:
-	virtual void send(const void *buf, size_t n, bool more = false) = 0;
-	virtual size_t recv(void *buf, size_t n) = 0;
-	virtual void received(Opcode opcode, bool masked, void *buf, size_t n, bool more) = 0;
-
-};
-
-
-class WebSocket : public WebSocketBase, public EPollable {
-
-protected:
-	Socket socket;
-
-public:
-	WebSocket(Socket &&socket) : socket(std::move(socket)) { }
-
-	void send(const char text[], size_t n);
-
-protected:
-	void send(const void *buf, size_t n, bool more = false) override;
-	size_t recv(void *buf, size_t n) override;
-	void received(Opcode opcode, bool masked, void *buf, size_t n, bool more) override;
-
-	operator int () const override _pure;
-	void ready(EPoll &epoll, uint32_t events) override;
-
-	virtual bool is_client() const = 0;
-	virtual void received(char text[], size_t n) = 0;
+private:
+	void send(const void *buf, size_t n, bool more);
+	size_t recv(void *buf, size_t n);
 
 };
 
 
 class WebSocketServerHandshake {
 
-protected:
+public:
 	Socket socket;
 
 private:
@@ -92,7 +69,7 @@ private:
 
 class WebSocketClientHandshake {
 
-protected:
+public:
 	Socket socket;
 
 private:

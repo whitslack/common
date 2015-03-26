@@ -11,7 +11,7 @@
 #include "sha.h"
 
 
-void WebSocketBase::send(WebSocket::Opcode opcode, bool mask, const void *buf, size_t n, bool more) {
+void WebSocket::send(WebSocket::Opcode opcode, bool mask, const void *buf, size_t n, bool more) {
 	uint8_t header[14], *p = header;
 	*p++ = static_cast<uint8_t>(more ? opcode : 1 << 7 | opcode);
 	if (n <= 125) {
@@ -47,74 +47,94 @@ void WebSocketBase::send(WebSocket::Opcode opcode, bool mask, const void *buf, s
 		for (size_t i = 0; i < n; ++i) {
 			masked[i] = static_cast<uint8_t>(static_cast<const uint8_t *>(buf)[i] ^ mask >> i % 4 * 8);
 		}
-		std::lock_guard<std::mutex> lock(send_mutex);
 		this->send(header, p - header, true);
 		this->send(masked.get(), n, more);
 	}
 	else {
-		std::lock_guard<std::mutex> lock(send_mutex);
 		this->send(header, p - header, true);
 		this->send(buf, n, more);
 	}
 }
 
-void WebSocketBase::ready() {
-	if (header_pos < 2) {
-		if ((header_pos += this->recv(header_buf.data() + header_pos, 2 - header_pos)) < 2) {
-			return;
-		}
-		data_rem = header_buf[1] & (1 << 7) - 1;
-	}
-	bool masked = static_cast<int8_t>(header_buf[1]) < 0;
-	size_t header_len = masked ? 6 : 2, data_len = header_buf[1] & (1 << 7) - 1;
-	if (data_len > 125) {
-		if (data_len == 127) {
-			throw std::length_error("received frame exceeds size limit");
-		}
-		header_len += 2;
-		if (header_pos < header_len) {
-			if ((header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
-				return;
+stdx::optional<MemorySource> WebSocket::receive(Opcode &opcode, bool masked) {
+	for (;;) {
+		if (header_pos < 2) {
+			if ((header_pos += this->recv(header_buf.data() + header_pos, 2 - header_pos)) < 2) {
+				return stdx::nullopt;
 			}
-			data_rem = header_buf[2] << 8 | header_buf[3];
+			if (static_cast<int8_t>(header_buf[0]) >= 0) {
+				throw std::ios_base::failure("fragmented message received");
+			}
+			data_rem = header_buf[1] & (1 << 7) - 1;
 		}
-	}
-	else if (header_pos < header_len && (header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
-		return;
-	}
-	if (data_rem > 0) {
-		size_t n = this->recv(data_buf.data() + data_pos, data_rem);
-		if (n == 0) {
-			return;
+		if ((static_cast<int8_t>(header_buf[1]) < 0) != masked) {
+			throw std::ios_base::failure(masked ? "WebSocket frame from client was not masked" : "WebSocket frame from server was masked");
 		}
-		data_rem -= n;
-		if (masked) {
-			const uint8_t *mask = header_buf.data() + header_len - 4;
-			do {
-				data_buf[data_pos] ^= mask[data_pos % 4];
-				++data_pos;
-			} while (--n > 0);
+		size_t header_len = masked ? 6 : 2, data_len = header_buf[1] & (1 << 7) - 1;
+		if (data_len > 125) {
+			if (data_len == 127) {
+				throw std::length_error("received frame exceeds size limit");
+			}
+			header_len += 2;
+			if (header_pos < header_len) {
+				if ((header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
+					return stdx::nullopt;
+				}
+				data_rem = header_buf[2] << 8 | header_buf[3];
+			}
 		}
-		else {
-			data_pos += n;
+		else if (header_pos < header_len && (header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
+			return stdx::nullopt;
 		}
-	}
-	if (data_rem == 0) {
+		if (data_rem > 0) {
+			size_t n = this->recv(data_buf.data() + data_pos, data_rem);
+			if (n == 0) {
+				return stdx::nullopt;
+			}
+			data_rem -= n;
+			if (masked) {
+				const uint8_t *mask = header_buf.data() + header_len - 4;
+				do {
+					data_buf[data_pos] ^= mask[data_pos % 4];
+					++data_pos;
+				} while (--n > 0);
+			}
+			else {
+				data_pos += n;
+			}
+		}
+		if (data_rem > 0) {
+			return stdx::nullopt;
+		}
 		size_t n = data_pos;
 		data_pos = header_pos = 0;
-		this->received(static_cast<Opcode>(header_buf[0] & (1 << 4) - 1), masked, data_buf.data(), n, static_cast<int8_t>(header_buf[0]) >= 0);
+		switch (opcode = static_cast<Opcode>(header_buf[0] & (1 << 4) - 1)) {
+			case Text:
+			case Binary:
+			case Pong:
+				return MemorySource(data_buf.data(), n);
+			case Close:
+				if (n >= 2) {
+					this->send(Close, !masked, data_buf.data(), 2, false);
+				}
+				else {
+					this->send(Close, !masked, nullptr, 0, false);
+				}
+				socket.shutdown(SHUT_RDWR);
+				return stdx::nullopt;
+			case Ping:
+				this->send(Pong, !masked, data_buf.data(), n, false);
+				break;
+			default:
+				throw std::ios_base::failure("unsupported opcode");
+		}
 	}
-}
-
-
-void WebSocket::send(const char text[], size_t n) {
-	this->WebSocketBase::send(Text, this->is_client(), text, n);
 }
 
 void WebSocket::send(const void *buf, size_t n, bool more) {
 	socket.write_fully(buf, n);
 	if (!more) {
-		socket.flush();
+		socket.flush_fully();
 	}
 }
 
@@ -124,51 +144,6 @@ size_t WebSocket::recv(void *buf, size_t n) {
 		throw std::ios_base::failure("connection terminated");
 	}
 	return static_cast<size_t>(r);
-}
-
-void WebSocket::received(Opcode opcode, bool masked, void *buf, size_t n, bool more) {
-	if (this->is_client()) {
-		if (masked) {
-			throw std::ios_base::failure("WebSocket frame from server was masked");
-		}
-	}
-	else if (!masked) {
-		throw std::ios_base::failure("WebSocket frame from client was not masked");
-	}
-	if (more) {
-		throw std::ios_base::failure("fragmented message received");
-	}
-	switch (opcode) {
-		case Text: {
-			this->received(static_cast<char *>(buf), n);
-			break;
-		}
-		case Close:
-			if (n > 1) {
-				this->WebSocketBase::send(Close, !masked, buf, 2, false);
-			}
-			else {
-				this->WebSocketBase::send(Close, !masked, nullptr, 0, false);
-			}
-			socket.shutdown(SHUT_RDWR);
-			break;
-		case Ping:
-			this->WebSocketBase::send(Pong, !masked, buf, n, false);
-			break;
-		default:
-			throw std::ios_base::failure("unsupported opcode");
-	}
-}
-
-WebSocket::operator int () const {
-	return socket;
-}
-
-void WebSocket::ready(EPoll &epoll, uint32_t events) {
-	if (events & EPOLLIN) {
-		this->WebSocketBase::ready();
-		epoll.watch(this, EPOLLIN);
-	}
 }
 
 
@@ -339,7 +314,7 @@ WebSocketBuf::WebSocketBuf(WebSocket *ws, bool mask, WebSocket::Opcode opcode) :
 int WebSocketBuf::sync(bool more) {
 	char_type *pbase = this->pbase(), *pptr = this->pptr();
 	if (pptr > pbase) {
-		ws->WebSocketBase::send(opcode, mask, pbase, pptr - pbase, more);
+		ws->send(opcode, mask, pbase, pptr - pbase, more);
 		opcode = WebSocket::Continuation;
 		this->setp(buf.data(), buf.data() + buf.size());
 	}
@@ -372,8 +347,6 @@ Socket connect_websocket(const char host[], uint16_t port, const char request_ur
 	public:
 		Handshake(Socket &&socket, const char origin_uri[]) : WebSocketClientHandshake(std::move(socket)), finished(), origin_uri(origin_uri) { }
 
-		Socket & socket() { return WebSocketClientHandshake::socket; }
-
 	protected:
 		void prepare_request_headers(HttpRequestHeaders &request_headers) override {
 			if (origin_uri) {
@@ -390,5 +363,5 @@ Socket connect_websocket(const char host[], uint16_t port, const char request_ur
 	while (!handshake.finished) {
 		handshake.ready();
 	}
-	return std::move(handshake.socket());
+	return std::move(handshake.socket);
 }
