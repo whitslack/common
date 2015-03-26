@@ -23,7 +23,7 @@ class EPoll : public FileDescriptor {
 public:
 	EPoll();
 
-	void pump();
+	void pump(int timeout = -1);
 	void watch(EPollable *epollable, uint32_t events, int op = EPOLL_CTL_MOD);
 
 };

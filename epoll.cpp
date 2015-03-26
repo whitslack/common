@@ -9,10 +9,10 @@ EPoll::EPoll() : FileDescriptor(::epoll_create1(EPOLL_CLOEXEC)) {
 	}
 }
 
-void EPoll::pump() {
+void EPoll::pump(int timeout) {
 	epoll_event event;
 	int n;
-	if ((n = ::epoll_wait(fd, &event, 1, -1)) < 0 && errno != EINTR) {
+	if ((n = ::epoll_wait(fd, &event, 1, timeout)) < 0 && errno != EINTR) {
 		throw std::system_error(errno, std::system_category(), "epoll_wait");
 	}
 	if (n > 0) {
