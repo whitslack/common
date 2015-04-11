@@ -1,5 +1,6 @@
 #include "fd.h"
 
+#include <cstdio>
 #include <system_error>
 
 #include <unistd.h>
@@ -394,6 +395,18 @@ size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, siz
 		throw std::system_error(errno, std::system_category(), "readlinkat");
 	}
 	return static_cast<size_t>(ret);
+}
+
+void rename(const char *oldpath, const char *newpath) {
+	if (::rename(oldpath, newpath) < 0) {
+		throw std::system_error(errno, std::system_category(), "rename");
+	}
+}
+
+void renameat(int oldfd, const char *oldpath, int newfd, const char *newpath) {
+	if (::renameat(oldfd, oldpath, newfd, newpath) < 0) {
+		throw std::system_error(errno, std::system_category(), "renameat");
+	}
 }
 
 void rmdir(const char *path) {

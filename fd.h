@@ -64,6 +64,8 @@ size_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
 ssize_t read(int fildes, void *buf, size_t nbyte);
 size_t readlink(const char * _restrict path, char * _restrict buf, size_t bufsize);
 size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize);
+void rename(const char *oldpath, const char *newpath);
+void renameat(int oldfd, const char *oldpath, int newfd, const char *newpath);
 void rmdir(const char *path);
 void stat(const char * _restrict path, struct stat * _restrict buf);
 void symlink(const char *path1, const char *path2);
