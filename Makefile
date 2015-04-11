@@ -34,9 +34,9 @@ CFLAGS += -O3 -fvisibility=hidden
 CXXFLAGS += -O3 -fvisibility=hidden
 LDFLAGS += -Wl,-O1,--strip-all,-z,now,-z,relro
 endif
-WFLAGS += -Wall -Wextra -Wcast-qual -Wconversion -Wdisabled-optimization -Wdouble-promotion -Wmissing-declarations -Wpacked -Wno-parentheses -Wredundant-decls -Wno-sign-conversion -Wsuggest-attribute=pure -Wsuggest-attribute=const -Wno-vla
+WFLAGS += -Wall -Wextra -Wcast-qual -Wconversion -Wdisabled-optimization -Wdouble-promotion -Wmissing-declarations -Wpacked -Wno-parentheses -Wredundant-decls -Wno-sign-conversion $(addprefix -Wsuggest-attribute=,pure const noreturn) -Wno-vla
 CFLAGS += $(WFLAGS)
-CXXFLAGS += $(WFLAGS) -Wnoexcept -Wzero-as-null-pointer-constant
+CXXFLAGS += $(WFLAGS) -Wnoexcept -Wsign-promo -Wzero-as-null-pointer-constant
 
 
 DO_LINK.c = mkdir -p $(@D) && $(LINK.c) -o $@ $^ $(LOADLIBES) $(LDLIBS)
