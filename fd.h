@@ -1,13 +1,16 @@
 #pragma once
 
+#include <chrono>
+#include <initializer_list>
+
 #include <fcntl.h>
 #include <poll.h>
 #include <sys/mman.h>
 
 #include "io.h"
 
-
 namespace posix {
+
 
 void access(const char *path, int amode);
 void chdir(const char *path);
@@ -58,7 +61,7 @@ void munmap(void *addr, size_t len);
 int open(const char *path, int oflag, mode_t mode = 0666);
 int openat(int fd, const char *path, int oflag, mode_t mode = 0666);
 void pipe(int fildes[2]);
-int poll(struct pollfd fds[], nfds_t nfds, int timeout = -1);
+unsigned poll(struct pollfd fds[], nfds_t nfds, int timeout = -1);
 ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
 size_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
 ssize_t read(int fildes, void *buf, size_t nbyte);
@@ -67,6 +70,7 @@ size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, siz
 void rename(const char *oldpath, const char *newpath);
 void renameat(int oldfd, const char *oldpath, int newfd, const char *newpath);
 void rmdir(const char *path);
+unsigned select(int nfds, fd_set * _restrict readfds, fd_set * _restrict writefds = nullptr, fd_set * _restrict errorfds = nullptr, struct timeval * _restrict timeout = nullptr);
 void stat(const char * _restrict path, struct stat * _restrict buf);
 void symlink(const char *path1, const char *path2);
 void symlinkat(const char *path1, int fd, const char *path2);
@@ -76,6 +80,37 @@ void unlinkat(int fd, const char *path, int flag = 0);
 void utimensat(int fd, const char *path, const struct timespec times[2], int flag = 0);
 void utimes(const char *path, const struct timeval times[2]);
 size_t write(int fildes, const void *buf, size_t nbyte);
+
+static inline unsigned select(int nfds, fd_set * _restrict readfds, fd_set * _restrict writefds, fd_set * _restrict errorfds, std::chrono::microseconds timeout) {
+	struct timeval tv;
+	tv.tv_sec = static_cast<std::time_t>(std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
+	tv.tv_usec = static_cast<long>((timeout % std::chrono::seconds(1)).count());
+	return posix::select(nfds, readfds, writefds, errorfds, &tv);
+}
+
+
+class FDSet {
+
+private:
+	fd_set set;
+
+public:
+	FDSet() { this->clear(); }
+	FDSet(std::initializer_list<int> fds) { this->clear(); for (int fd : fds) *this += fd; }
+
+public:
+	operator const fd_set & () const { return set; }
+	operator fd_set & () { return set; }
+	operator const fd_set * () const { return &set; }
+	operator fd_set * () { return &set; }
+
+	void clear() { FD_ZERO(&set); }
+	FDSet & operator += (int fd) { FD_SET(fd, &set); return *this; }
+	FDSet & operator -= (int fd) { FD_CLR(fd, &set); return *this; }
+	bool operator & (int fd) const { return FD_ISSET(fd, &set); }
+
+};
+
 
 } // namespace posix
 

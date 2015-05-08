@@ -337,15 +337,15 @@ void pipe(int fildes[2]) {
 	}
 }
 
-int poll(struct pollfd fds[], nfds_t nfds, int timeout) {
+unsigned poll(struct pollfd fds[], nfds_t nfds, int timeout) {
 	int ret;
 	if ((ret = ::poll(fds, nfds, timeout)) < 0) {
-		if (errno == EAGAIN || errno == EINTR) {
+		if (errno == EINTR) {
 			return 0;
 		}
 		throw std::system_error(errno, std::system_category(), "poll");
 	}
-	return ret;
+	return static_cast<unsigned>(ret);
 }
 
 ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset) {
@@ -413,6 +413,17 @@ void rmdir(const char *path) {
 	if (::rmdir(path) < 0) {
 		throw std::system_error(errno, std::system_category(), "rmdir");
 	}
+}
+
+unsigned select(int nfds, fd_set * _restrict readfds, fd_set * _restrict writefds, fd_set * _restrict errorfds, struct timeval * _restrict timeout) {
+	int ret;
+	if ((ret = ::select(nfds, readfds, writefds, errorfds, timeout)) < 0) {
+		if (errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "select");
+	}
+	return static_cast<unsigned>(ret);
 }
 
 void stat(const char * _restrict path, struct stat * _restrict buf) {
