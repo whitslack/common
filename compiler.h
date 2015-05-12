@@ -20,51 +20,51 @@
 
 #define _restrict __restrict
 
-static inline int _ffs(int v) { return __builtin_ffs(v); }
-static inline int _ffs(long v) { return __builtin_ffsl(v); }
-static inline int _ffs(long long v) { return __builtin_ffsll(v); }
+static constexpr int _ffs(int v) { return __builtin_ffs(v); }
+static constexpr int _ffs(long v) { return __builtin_ffsl(v); }
+static constexpr int _ffs(long long v) { return __builtin_ffsll(v); }
 
-static inline int _clz(unsigned v) { return __builtin_clz(v); }
-static inline int _clz(unsigned long v) { return __builtin_clzl(v); }
-static inline int _clz(unsigned long long v) { return __builtin_clzll(v); }
+static constexpr int _clz(unsigned v) { return __builtin_clz(v); }
+static constexpr int _clz(unsigned long v) { return __builtin_clzl(v); }
+static constexpr int _clz(unsigned long long v) { return __builtin_clzll(v); }
 
-static inline int _ctz(unsigned v) { return __builtin_ctz(v); }
-static inline int _ctz(unsigned long v) { return __builtin_ctzl(v); }
-static inline int _ctz(unsigned long long v) { return __builtin_ctzll(v); }
+static constexpr int _ctz(unsigned v) { return __builtin_ctz(v); }
+static constexpr int _ctz(unsigned long v) { return __builtin_ctzl(v); }
+static constexpr int _ctz(unsigned long long v) { return __builtin_ctzll(v); }
 
-static inline int _clrsb(int v) { return __builtin_clrsb(v); }
-static inline int _clrsb(long v) { return __builtin_clrsbl(v); }
-static inline int _clrsb(long long v) { return __builtin_clrsbll(v); }
+static constexpr int _clrsb(int v) { return __builtin_clrsb(v); }
+static constexpr int _clrsb(long v) { return __builtin_clrsbl(v); }
+static constexpr int _clrsb(long long v) { return __builtin_clrsbll(v); }
 
-static inline int _popcount(unsigned v) { return __builtin_popcount(v); }
-static inline int _popcount(unsigned long v) { return __builtin_popcountl(v); }
-static inline int _popcount(unsigned long long v) { return __builtin_popcountll(v); }
+static constexpr int _popcount(unsigned v) { return __builtin_popcount(v); }
+static constexpr int _popcount(unsigned long v) { return __builtin_popcountl(v); }
+static constexpr int _popcount(unsigned long long v) { return __builtin_popcountll(v); }
 
-static inline int _parity(unsigned v) { return __builtin_parity(v); }
-static inline int _parity(unsigned long v) { return __builtin_parityl(v); }
-static inline int _parity(unsigned long long v) { return __builtin_parityll(v); }
+static constexpr int _parity(unsigned v) { return __builtin_parity(v); }
+static constexpr int _parity(unsigned long v) { return __builtin_parityl(v); }
+static constexpr int _parity(unsigned long long v) { return __builtin_parityll(v); }
 
-static inline unsigned rotl(unsigned v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
-static inline unsigned long rotl(unsigned long v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
-static inline unsigned long long rotl(unsigned long long v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
+static constexpr unsigned rotl(unsigned v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
+static constexpr unsigned long rotl(unsigned long v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
+static constexpr unsigned long long rotl(unsigned long long v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
 
-static inline unsigned rotr(unsigned v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
-static inline unsigned long rotr(unsigned long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
-static inline unsigned long long rotr(unsigned long long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
+static constexpr unsigned rotr(unsigned v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
+static constexpr unsigned long rotr(unsigned long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
+static constexpr unsigned long long rotr(unsigned long long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
 
-static inline int16_t bswap(int16_t v) { return __builtin_bswap16(v); }
-static inline uint16_t bswap(uint16_t v) { return __builtin_bswap16(v); }
-static inline int32_t bswap(int32_t v) { return __builtin_bswap32(v); }
-static inline uint32_t bswap(uint32_t v) { return __builtin_bswap32(v); }
-static inline int64_t bswap(int64_t v) { return __builtin_bswap64(v); }
-static inline uint64_t bswap(uint64_t v) { return __builtin_bswap64(v); }
+static constexpr int16_t bswap(int16_t v) { return __builtin_bswap16(v); }
+static constexpr uint16_t bswap(uint16_t v) { return __builtin_bswap16(v); }
+static constexpr int32_t bswap(int32_t v) { return __builtin_bswap32(v); }
+static constexpr uint32_t bswap(uint32_t v) { return __builtin_bswap32(v); }
+static constexpr int64_t bswap(int64_t v) { return __builtin_bswap64(v); }
+static constexpr uint64_t bswap(uint64_t v) { return __builtin_bswap64(v); }
 
 #if ULONG_MAX == UINT32_MAX && UINT32_MAX == UINT_MAX
-static inline long bswap(long v) { return __builtin_bswap32(v); }
-static inline unsigned long bswap(unsigned long v) { return __builtin_bswap32(v); }
+static constexpr long bswap(long v) { return __builtin_bswap32(v); }
+static constexpr unsigned long bswap(unsigned long v) { return __builtin_bswap32(v); }
 #elif ULONG_LONG_MAX == UINT64_MAX && UINT64_MAX == ULONG_MAX
-static inline long long bswap(long long v) { return __builtin_bswap64(v); }
-static inline unsigned long long bswap(unsigned long long v) { return __builtin_bswap64(v); }
+static constexpr long long bswap(long long v) { return __builtin_bswap64(v); }
+static constexpr unsigned long long bswap(unsigned long long v) { return __builtin_bswap64(v); }
 #endif
 
 #ifndef BYTE_ORDER
@@ -72,19 +72,19 @@ static inline unsigned long long bswap(unsigned long long v) { return __builtin_
 #endif
 
 #if BYTE_ORDER == BIG_ENDIAN
-template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type htobe(T v) { return v; }
-template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type betoh(T v) { return v; }
-template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type htole(T v) { return bswap(v); }
-template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type letoh(T v) { return bswap(v); }
+template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type htobe(T v) { return v; }
+template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type betoh(T v) { return v; }
+template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type htole(T v) { return bswap(v); }
+template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type letoh(T v) { return bswap(v); }
 #elif BYTE_ORDER == LITTLE_ENDIAN
-template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type htobe(T v) { return bswap(v); }
-template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type betoh(T v) { return bswap(v); }
-template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type htole(T v) { return v; }
-template <typename T> static inline typename std::enable_if<std::is_integral<T>::value, T>::type letoh(T v) { return v; }
+template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type htobe(T v) { return bswap(v); }
+template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type betoh(T v) { return bswap(v); }
+template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type htole(T v) { return v; }
+template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type letoh(T v) { return v; }
 #endif
 
 #ifdef __SIZEOF_INT128__
-static inline unsigned __int128 __bswap128(unsigned __int128 v) {
+static inline unsigned __int128 _const __bswap128(unsigned __int128 v) {
 	union {
 		uint64_t q[2];
 		unsigned __int128 o;
@@ -95,8 +95,8 @@ static inline unsigned __int128 __bswap128(unsigned __int128 v) {
 	u.q[1] = t;
 	return u.o;
 }
-static inline signed __int128 bswap(signed __int128 v) { return __bswap128(v); }
-static inline unsigned __int128 bswap(unsigned __int128 v) { return __bswap128(v); }
+static inline signed __int128 _const bswap(signed __int128 v) { return __bswap128(v); }
+static inline unsigned __int128 _const bswap(unsigned __int128 v) { return __bswap128(v); }
 #if BYTE_ORDER == BIG_ENDIAN
 static inline signed __int128 htobe(signed __int128 v) { return v; }
 static inline signed __int128 betoh(signed __int128 v) { return v; }
@@ -133,8 +133,8 @@ static inline unsigned __int128 letoh(unsigned __int128 v) { return v; }
 
 #endif
 
-template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type bswap(T v) { return static_cast<T>(bswap(static_cast<typename std::underlying_type<T>::type>(v))); }
-template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type htobe(T v) { return static_cast<T>(htobe(static_cast<typename std::underlying_type<T>::type>(v))); }
-template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type betoh(T v) { return static_cast<T>(betoh(static_cast<typename std::underlying_type<T>::type>(v))); }
-template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type htole(T v) { return static_cast<T>(htole(static_cast<typename std::underlying_type<T>::type>(v))); }
-template <typename T> static inline typename std::enable_if<std::is_enum<T>::value, T>::type letoh(T v) { return static_cast<T>(letoh(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type bswap(T v) { return static_cast<T>(bswap(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type htobe(T v) { return static_cast<T>(htobe(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type betoh(T v) { return static_cast<T>(betoh(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type htole(T v) { return static_cast<T>(htole(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type letoh(T v) { return static_cast<T>(letoh(static_cast<typename std::underlying_type<T>::type>(v))); }
