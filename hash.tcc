@@ -40,7 +40,7 @@ size_t Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_End
 }
 
 template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type, bool Big_Endian>
-const std::array<uint8_t, Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::digest_size> & Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::digest() {
+const typename Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::digest_type & Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::digest() {
 	length_type length = big_endian ? htobe(this->length + buffer_pos << 3) : htole(this->length + buffer_pos << 3);
 	uint8_t marker = 0x80;
 	this->write(&marker, sizeof marker);
@@ -56,5 +56,5 @@ const std::array<uint8_t, Hash<Block_Size, State_Size, Digest_Size, Word_Type, L
 	for (size_t i = 0; i < digest_size / sizeof(word_type); ++i) {
 		state[i] = big_endian ? htobe(state[i]) : htole(state[i]);
 	}
-	return *reinterpret_cast<const std::array<uint8_t, digest_size> *>(state);
+	return *reinterpret_cast<const digest_type *>(state);
 }

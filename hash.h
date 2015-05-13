@@ -13,6 +13,7 @@ class Hash : public Sink {
 public:
 	typedef Word_Type word_type;
 	typedef Length_Type length_type;
+	typedef std::array<uint8_t, Digest_Size> digest_type;
 
 public:
 	static constexpr size_t block_size = Block_Size, digest_size = Digest_Size;
@@ -36,7 +37,7 @@ protected:
 
 public:
 	size_t write(const void *buf, size_t n) override;
-	const std::array<uint8_t, digest_size> & digest();
+	const digest_type & digest();
 
 protected:
 	virtual void update(const uint8_t (&block)[block_size]) = 0;

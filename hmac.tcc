@@ -24,7 +24,7 @@ HMAC<Hash_Type>::HMAC(const void *key, size_t n) {
 }
 
 template <typename Hash_Type>
-const std::array<uint8_t, HMAC<Hash_Type>::digest_size> & HMAC<Hash_Type>::digest() {
+const typename HMAC<Hash_Type>::digest_type & HMAC<Hash_Type>::digest() {
 	auto ihash = hash.digest();
 	hash = hash_type();
 	for (size_t i = 0; i < sizeof secret; ++i) {
