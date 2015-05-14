@@ -3,66 +3,6 @@
 #include "io.h"
 
 
-template <typename T>
-struct _be {
-	T x;
-};
-
-template <typename T>
-static inline typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, _be<T &>>::type be(T &x) {
-	return { x };
-}
-
-template <typename T>
-static inline typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, _be<const T>>::type be(const T &x) {
-	return { x };
-}
-
-template <typename T>
-static inline Source & operator >> (Source &source, _be<T> be) {
-	source.read_fully(&be.x, sizeof be.x);
-	be.x = betoh(be.x);
-	return source;
-}
-
-template <typename T>
-static inline Sink & operator << (Sink &sink, _be<T> be) {
-	auto value_be = htobe(be.x);
-	sink.write_fully(&value_be, sizeof value_be);
-	return sink;
-}
-
-
-template <typename T>
-struct _le {
-	T x;
-};
-
-template <typename T>
-static inline typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, _le<T &>>::type le(T &x) {
-	return { x };
-}
-
-template <typename T>
-static inline typename std::enable_if<std::is_integral<T>::value || std::is_enum<T>::value, _le<const T>>::type le(const T &x) {
-	return { x };
-}
-
-template <typename T>
-static inline Source & operator >> (Source &source, _le<T> le) {
-	source.read_fully(&le.x, sizeof le.x);
-	le.x = letoh(le.x);
-	return source;
-}
-
-template <typename T>
-static inline Sink & operator << (Sink &sink, _le<T> le) {
-	auto value_le = htole(le.x);
-	sink.write_fully(&value_le, sizeof value_le);
-	return sink;
-}
-
-
 Source & read_varint(Source &source, int32_t &value);
 Sink & write_varint(Sink &sink, int32_t value);
 

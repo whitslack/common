@@ -3,6 +3,7 @@
 #include <future>
 
 #include "compiler.h"
+#include "endian.h"
 #include "hmac.h"
 #include "pbkdf2.h"
 #include "sha.h"
@@ -66,7 +67,7 @@ static void scrypt_ro_mix(void * _restrict out, const void * _restrict in, size_
 	scrypt_block_mix(outb, v[n - 1], r);
 	for (size_t i = 0; i < n; ++i) {
 		uint8_t t[r * 128];
-		size_t j = letoh(*reinterpret_cast<const size_t *>(outb + r * 128 - 64)) & n - 1;
+		size_t j = *reinterpret_cast<const le<size_t> *>(outb + r * 128 - 64) & n - 1;
 		for (size_t k = 0; k < r * 128; ++k) {
 			t[k] = outb[k] ^ v[j][k];
 		}

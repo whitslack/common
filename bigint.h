@@ -665,10 +665,6 @@ static inline std::array<uint32_t, L> _pure operator - (const std::array<uint32_
 #else
 #	define LIMB_T uint8_t
 static inline uint8_t bswap(uint8_t v) { return v; }
-static inline uint8_t htobe(uint8_t v) { return v; }
-static inline uint8_t betoh(uint8_t v) { return v; }
-static inline uint8_t htole(uint8_t v) { return v; }
-static inline uint8_t letoh(uint8_t v) { return v; }
 #endif
 
 #endif
@@ -838,25 +834,9 @@ public:
 		return *this;
 	}
 
-#if BYTE_ORDER == BIG_ENDIAN
-	BigUInt & htobe() { return *this; }
-	BigUInt & betoh() { return *this; }
-	BigUInt & htole() { __bswap(words); return *this; }
-	BigUInt & letoh() { __bswap(words); return *this; }
-#elif BYTE_ORDER == LITTLE_ENDIAN
-	BigUInt & htobe() { __bswap(words); return *this; }
-	BigUInt & betoh() { __bswap(words); return *this; }
-	BigUInt & htole() { return *this; }
-	BigUInt & letoh() { return *this; }
-#endif
-
 };
 
 template <size_t B> static inline BigUInt<B> _pure bswap(BigUInt<B> v) { return v.bswap(); }
-template <size_t B> static inline BigUInt<B> _pure htobe(BigUInt<B> v) { return v.htobe(); }
-template <size_t B> static inline BigUInt<B> _pure betoh(BigUInt<B> v) { return v.betoh(); }
-template <size_t B> static inline BigUInt<B> _pure htole(BigUInt<B> v) { return v.htole(); }
-template <size_t B> static inline BigUInt<B> _pure letoh(BigUInt<B> v) { return v.letoh(); }
 
 typedef BigUInt<128> uint128_t;
 typedef BigUInt<256> uint256_t;

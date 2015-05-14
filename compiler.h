@@ -4,8 +4,6 @@
 #include <cstdint>
 #include <type_traits>
 
-#include <endian.h>
-
 #ifdef __GNUC__
 
 #define _const __attribute__ ((__const__))
@@ -67,22 +65,6 @@ static constexpr long long bswap(long long v) { return __builtin_bswap64(v); }
 static constexpr unsigned long long bswap(unsigned long long v) { return __builtin_bswap64(v); }
 #endif
 
-#ifndef BYTE_ORDER
-#error "BYTE_ORDER is not defined"
-#endif
-
-#if BYTE_ORDER == BIG_ENDIAN
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type htobe(T v) { return v; }
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type betoh(T v) { return v; }
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type htole(T v) { return bswap(v); }
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type letoh(T v) { return bswap(v); }
-#elif BYTE_ORDER == LITTLE_ENDIAN
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type htobe(T v) { return bswap(v); }
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type betoh(T v) { return bswap(v); }
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type htole(T v) { return v; }
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value, T>::type letoh(T v) { return v; }
-#endif
-
 #ifdef __SIZEOF_INT128__
 static inline unsigned __int128 _const __bswap128(unsigned __int128 v) {
 	union {
@@ -97,25 +79,6 @@ static inline unsigned __int128 _const __bswap128(unsigned __int128 v) {
 }
 static inline signed __int128 _const bswap(signed __int128 v) { return __bswap128(v); }
 static inline unsigned __int128 _const bswap(unsigned __int128 v) { return __bswap128(v); }
-#if BYTE_ORDER == BIG_ENDIAN
-static inline signed __int128 htobe(signed __int128 v) { return v; }
-static inline signed __int128 betoh(signed __int128 v) { return v; }
-static inline signed __int128 htole(signed __int128 v) { return bswap(v); }
-static inline signed __int128 letoh(signed __int128 v) { return bswap(v); }
-static inline unsigned __int128 htobe(unsigned __int128 v) { return v; }
-static inline unsigned __int128 betoh(unsigned __int128 v) { return v; }
-static inline unsigned __int128 htole(unsigned __int128 v) { return bswap(v); }
-static inline unsigned __int128 letoh(unsigned __int128 v) { return bswap(v); }
-#elif BYTE_ORDER == LITTLE_ENDIAN
-static inline signed __int128 htobe(signed __int128 v) { return bswap(v); }
-static inline signed __int128 betoh(signed __int128 v) { return bswap(v); }
-static inline signed __int128 htole(signed __int128 v) { return v; }
-static inline signed __int128 letoh(signed __int128 v) { return v; }
-static inline unsigned __int128 htobe(unsigned __int128 v) { return bswap(v); }
-static inline unsigned __int128 betoh(unsigned __int128 v) { return bswap(v); }
-static inline unsigned __int128 htole(unsigned __int128 v) { return v; }
-static inline unsigned __int128 letoh(unsigned __int128 v) { return v; }
-#endif
 #endif
 
 #else
@@ -134,7 +97,9 @@ static inline unsigned __int128 letoh(unsigned __int128 v) { return v; }
 #endif
 
 template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type bswap(T v) { return static_cast<T>(bswap(static_cast<typename std::underlying_type<T>::type>(v))); }
-template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type htobe(T v) { return static_cast<T>(htobe(static_cast<typename std::underlying_type<T>::type>(v))); }
-template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type betoh(T v) { return static_cast<T>(betoh(static_cast<typename std::underlying_type<T>::type>(v))); }
-template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type htole(T v) { return static_cast<T>(htole(static_cast<typename std::underlying_type<T>::type>(v))); }
-template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type letoh(T v) { return static_cast<T>(letoh(static_cast<typename std::underlying_type<T>::type>(v))); }
+
+template <typename T, typename Enable = void>
+struct has_bswap : std::false_type { };
+
+template <typename T>
+struct has_bswap<T, typename std::enable_if<std::is_same<decltype(bswap(std::declval<T>())), typename std::remove_reference<T>::type>::value>::type> : std::true_type { };
