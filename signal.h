@@ -111,8 +111,13 @@ private:
 	SignalSet orig_sigmask;
 
 public:
+#if _REENTRANT
 	SignalBlock(sigset_t &sigmask) { pthread_sigmask(SIG_BLOCK, sigmask, orig_sigmask); }
 	~SignalBlock() { pthread_sigmask(SIG_SETMASK, orig_sigmask); }
+#else
+	SignalBlock(sigset_t &sigmask) { sigprocmask(SIG_BLOCK, sigmask, orig_sigmask); }
+	~SignalBlock() { sigprocmask(SIG_SETMASK, orig_sigmask); }
+#endif
 
 };
 
