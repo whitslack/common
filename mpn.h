@@ -39,14 +39,16 @@ static inline void mpn_zero(mp_limb_t *rp, mp_size_t n) {
 }
 #endif
 
-static inline bool mpn_zero_p(const mp_limb_t n[], size_t l) {
-	for (size_t i = 0; i < l; ++i) {
-		if (n[i] != 0) {
-			return false;
+#if __GNU_MP_VERSION < 6 || __GNP_MP_VERSION == 6 && __GNU_MP_VERSION_MINOR < 1
+static inline int mpn_zero_p(const mp_limb_t *sp, mp_size_t n) {
+	for (mp_size_t i = 0; i < n; ++i) {
+		if (sp[i] != 0) {
+			return 0;
 		}
 	}
-	return true;
+	return 1;
 }
+#endif
 
 static inline bool mpn_one_p(const mp_limb_t n[], size_t l) {
 	return l > 0 && n[0] == 1 && mpn_zero_p(n + 1, l - 1);
