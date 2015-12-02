@@ -18,8 +18,8 @@ BINDIR := $(OUTDIR)
 LIB_PREFIX := lib
 LIB_SUFFIX := .so
 
-CFLAGS += -std=c99 -ffunction-sections -fdata-sections
-CXXFLAGS += -std=c++11 -ffunction-sections -fdata-sections
+CFLAGS += -std=gnu99 -ffunction-sections -fdata-sections
+CXXFLAGS += -std=gnu++11 -ffunction-sections -fdata-sections
 LDFLAGS += -Wl,--as-needed,--gc-sections
 ifdef DEBUG
 CFLAGS += -Og -ggdb
