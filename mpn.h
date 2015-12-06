@@ -39,7 +39,7 @@ static inline void mpn_zero(mp_limb_t *rp, mp_size_t n) {
 }
 #endif
 
-#if __GNU_MP_VERSION < 6 || __GNP_MP_VERSION == 6 && __GNU_MP_VERSION_MINOR < 1
+#if __GNU_MP_RELEASE < 60100
 static inline int mpn_zero_p(const mp_limb_t *sp, mp_size_t n) {
 	for (mp_size_t i = 0; i < n; ++i) {
 		if (sp[i] != 0) {
