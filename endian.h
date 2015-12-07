@@ -2,7 +2,11 @@
 
 #include "compiler.h"
 
+#ifdef __APPLE__
+#include <machine/endian.h>
+#else
 #include <endian.h>
+#endif
 
 #ifndef BYTE_ORDER
 # error "BYTE_ORDER is not defined"

@@ -12,7 +12,7 @@ SHA1::SHA1() : Hash(sha1_init) {
 void SHA1::update(const uint8_t (&block)[64]) {
 	uint32_t words[80];
 	for (size_t i = 0; i < 16; ++i) {
-		words[i] = be32toh(reinterpret_cast<const uint32_t *>(block)[i]);
+		words[i] = reinterpret_cast<const be<uint32_t> (&)[16]>(block)[i];
 	}
 	for (size_t i = 16; i < 80; ++i) {
 		words[i] = rotl(words[i - 3] ^ words[i - 8] ^ words[i - 14] ^ words[i - 16], 1);
@@ -53,7 +53,7 @@ template <size_t Digest_Size>
 void SHA256Base<Digest_Size>::update(const uint8_t (&block)[64]) {
 	uint32_t words[64];
 	for (size_t i = 0; i < 16; ++i) {
-		words[i] = be32toh(reinterpret_cast<const uint32_t *>(block)[i]);
+		words[i] = reinterpret_cast<const be<uint32_t> (&)[16]>(block)[i];
 	}
 	for (size_t i = 16; i < 64; ++i) {
 		words[i] = words[i - 16] + (rotr(words[i - 15], 7) ^ rotr(words[i - 15], 18) ^ words[i - 15] >> 3) + words[i - 7] + (rotr(words[i - 2], 17) ^ rotr(words[i - 2], 19) ^ words[i - 2] >> 10);
@@ -112,7 +112,7 @@ template <size_t Digest_Size>
 void SHA512Base<Digest_Size>::update(const uint8_t (&block)[128]) {
 	uint64_t words[80];
 	for (size_t i = 0; i < 16; ++i) {
-		words[i] = be64toh(reinterpret_cast<const uint64_t *>(block)[i]);
+		words[i] = reinterpret_cast<const be<uint64_t> (&)[16]>(block)[i];
 	}
 	for (size_t i = 16; i < 80; ++i) {
 		words[i] = words[i - 16] + (rotr(words[i - 15], 1) ^ rotr(words[i - 15], 8) ^ words[i - 15] >> 7) + words[i - 7] + (rotr(words[i - 2], 19) ^ rotr(words[i - 2], 61) ^ words[i - 2] >> 6);

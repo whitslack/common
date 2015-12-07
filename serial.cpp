@@ -34,23 +34,23 @@ Source & _weak read_varint(Source &source, int32_t &value) {
 		}
 		case 3: {
 			int32_t x = b << 27;
-			uint16_t w;
+			be<uint16_t> w;
 			source.read_fully(&w, sizeof w);
-			value = (x >> 11 | be16toh(w)) + (x >> 31 | 1) * 0x2040;
+			value = (x >> 11 | w) + (x >> 31 | 1) * 0x2040;
 			break;
 		}
 		case 4: {
 			int32_t x = b << 28;
-			uint32_t d = 0;
+			be<uint32_t> d = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
-			value = (x >> 4 | be32toh(d)) + (x >> 31 | 1) * 0x102040;
+			value = (x >> 4 | d) + (x >> 31 | 1) * 0x102040;
 			break;
 		}
 		case 5: {
 			int32_t x = b << 29;
 			if (static_cast<uint32_t>((x >> 29) + 1) <= 1) {
 				source.read_fully(&value, sizeof value);
-				value = be32toh(value);
+				value = as_be(value);
 				if (x < 0 ? (value -= 0x08102040) < 0 : (value += 0x08102040) >= 0) {
 					break;
 				}
@@ -69,19 +69,19 @@ Sink & _weak write_varint(Sink &sink, int32_t value) {
 			sink.write_fully(&b, sizeof b);
 		}
 		else if ((value += (1 << 6)) > ~(1 << 13)) {
-			uint16_t w = htobe16(static_cast<uint16_t>(~(1 << 14) & value));
+			be<uint16_t> w = static_cast<uint16_t>(~(1 << 14) & value);
 			sink.write_fully(&w, sizeof w);
 		}
 		else if ((value += (1 << 13)) > ~(1 << 20)) {
-			uint32_t d = htobe32(~(1 << 21) & value);
+			be<uint32_t> d = ~(1 << 21) & value;
 			sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
 		}
 		else if ((value += (1 << 20)) > ~(1 << 27)) {
-			uint32_t d = htobe32(~(1 << 28) & value);
+			be<uint32_t> d = ~(1 << 28) & value;
 			sink.write_fully(&d, sizeof d);
 		}
 		else {
-			uint32_t a[2] = { htobe32(0xF7), htobe32(value + (1 << 27)) };
+			be<uint32_t> a[2] = { 0xF7, value + (1 << 27) };
 			sink.write_fully(reinterpret_cast<uint8_t *>(a) + 3, sizeof a - 3);
 		}
 	}
@@ -91,19 +91,19 @@ Sink & _weak write_varint(Sink &sink, int32_t value) {
 			sink.write_fully(&b, sizeof b);
 		}
 		else if ((value -= (1 << 6)) < (1 << 13)) {
-			uint16_t w = htobe16(static_cast<uint16_t>(0x8000 | value));
+			be<uint16_t> w = static_cast<uint16_t>(0x8000 | value);
 			sink.write_fully(&w, sizeof w);
 		}
 		else if ((value -= (1 << 13)) < (1 << 20)) {
-			uint32_t d = htobe32(0xC00000 | value);
+			be<uint32_t> d = 0xC00000 | value;
 			sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
 		}
 		else if ((value -= (1 << 20)) < (1 << 27)) {
-			uint32_t d = htobe32(0xE0000000 | value);
+			be<uint32_t> d = 0xE0000000 | value;
 			sink.write_fully(&d, sizeof d);
 		}
 		else {
-			uint32_t a[2] = { htobe32(0xF0), htobe32(value - (1 << 27)) };
+			be<uint32_t> a[2] = { 0xF0, value - (1 << 27) };
 			sink.write_fully(reinterpret_cast<uint8_t *>(a) + 3, sizeof a - 3);
 		}
 	}
@@ -124,21 +124,21 @@ Source & _weak read_varint(Source &source, uint32_t &value) {
 			break;
 		}
 		case 3: {
-			uint16_t w;
+			be<uint16_t> w;
 			source.read_fully(&w, sizeof w);
-			value = ((b & 0x1F) << 16 | be16toh(w)) + 0x4080;
+			value = ((b & 0x1F) << 16 | w) + 0x4080;
 			break;
 		}
 		case 4: {
-			uint32_t d = 0;
+			be<uint32_t> d = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
-			value = ((b & 0x0F) << 24 | be32toh(d)) + 0x204080;
+			value = ((b & 0x0F) << 24 | d) + 0x204080;
 			break;
 		}
 		case 5: {
 			if ((b & 0x07) == 0) {
 				source.read_fully(&value, sizeof value);
-				value = be32toh(value);
+				value = as_be(value);
 				if (value <= UINT32_MAX - 0x10204080) {
 					value += 0x10204080;
 					break;
@@ -157,19 +157,19 @@ Sink & _weak write_varint(Sink &sink, uint32_t value) {
 		sink.write_fully(&b, sizeof b);
 	}
 	else if ((value -= (1 << 7)) < (1 << 14)) {
-		uint16_t w = htobe16(static_cast<uint16_t>(0x8000 | value));
+		be<uint16_t> w = static_cast<uint16_t>(0x8000 | value);
 		sink.write_fully(&w, sizeof w);
 	}
 	else if ((value -= (1 << 14)) < (1 << 21)) {
-		uint32_t d = htobe32(0xC00000 | value);
+		be<uint32_t> d = 0xC00000 | value;
 		sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
 	}
 	else if ((value -= (1 << 21)) < (1 << 28)) {
-		uint32_t d = htobe32(0xE0000000 | value);
+		be<uint32_t> d = 0xE0000000 | value;
 		sink.write_fully(&d, sizeof d);
 	}
 	else {
-		uint32_t a[2] = { htobe32(0xF0), htobe32(value - (1 << 28)) };
+		be<uint32_t> a[2] = { 0xF0, value - (1 << 28) };
 		sink.write_fully(reinterpret_cast<uint8_t *>(a) + 3, sizeof a - 3);
 	}
 	return sink;
@@ -191,49 +191,49 @@ Source & _weak read_varint(Source &source, int64_t &value) {
 		}
 		case 3: {
 			int32_t x = b << 27;
-			uint16_t w;
+			be<uint16_t> w;
 			source.read_fully(&w, sizeof w);
-			value = (x >> 11 | be16toh(w)) + (x >> 31 | 1) * 0x2040;
+			value = (x >> 11 | w) + (x >> 31 | 1) * 0x2040;
 			break;
 		}
 		case 4: {
 			int32_t x = b << 28;
-			uint32_t d = 0;
+			be<uint32_t> d = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
-			value = static_cast<int32_t>(x >> 4 | be32toh(d)) + (x >> 31 | 1) * 0x102040;
+			value = static_cast<int32_t>(x >> 4 | d) + (x >> 31 | 1) * 0x102040;
 			break;
 		}
 		case 5: {
 			int64_t x = static_cast<int64_t>(b) << 61;
-			uint32_t d;
+			be<uint32_t> d;
 			source.read_fully(&d, sizeof d);
-			value = (x >> 29 | be32toh(d)) + (x >> 63 | 1) * 0x08102040;
+			value = (x >> 29 | d) + (x >> 63 | 1) * 0x08102040;
 			break;
 		}
 		case 6: {
 			int64_t x = static_cast<int64_t>(b) << 62;
-			uint64_t q = 0;
+			be<uint64_t> q = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
-			value = (x >> 22 | be64toh(q)) + (x >> 63 | 1) * INT64_C(0x0408102040);
+			value = (x >> 22 | q) + (x >> 63 | 1) * INT64_C(0x0408102040);
 			break;
 		}
 		case 7: {
 			int64_t x = static_cast<int64_t>(b) << 63;
-			uint64_t q = 0;
+			be<uint64_t> q = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
-			value = (x >> 15 | be64toh(q)) + (x >> 63 | 1) * INT64_C(0x020408102040);
+			value = (x >> 15 | q) + (x >> 63 | 1) * INT64_C(0x020408102040);
 			break;
 		}
 		case 8: {
 			int64_t x;
 			source.read_fully(reinterpret_cast<uint8_t *>(&x) + 1, sizeof x - 1);
-			x = be64toh(x) << 8;
+			x = as_be(x) << 8;
 			value = (x >> 8) + (x >> 63 | 1) * INT64_C(0x01020408102040);
 			break;
 		}
 		case 9:
 			source.read_fully(&value, sizeof value);
-			value = be64toh(value);
+			value = as_be(value);
 			if (value < 0 ? (value -= INT64_C(0x0081020408102040)) < 0 : (value += INT64_C(0x0081020408102040)) >= 0) {
 				break;
 			}
@@ -250,35 +250,35 @@ Sink & _weak write_varint(Sink &sink, int64_t value) {
 			sink.write_fully(&b, sizeof b);
 		}
 		else if ((value += (1 << 6)) > ~(1 << 13)) {
-			uint16_t w = htobe16(static_cast<uint16_t>(~(1 << 14) & value));
+			be<uint16_t> w = static_cast<uint16_t>(~(1 << 14) & value);
 			sink.write_fully(&w, sizeof w);
 		}
 		else if ((value += (1 << 13)) > ~(1 << 20)) {
-			uint32_t d = htobe32(static_cast<uint32_t>(~(1 << 21) & value));
+			be<uint32_t> d = static_cast<uint32_t>(~(1 << 21) & value);
 			sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
 		}
 		else if ((value += (1 << 20)) > ~(1 << 27)) {
-			uint32_t d = htobe32(static_cast<uint32_t>(~(1 << 28) & value));
+			be<uint32_t> d = static_cast<uint32_t>(~(1 << 28) & value);
 			sink.write_fully(&d, sizeof d);
 		}
 		else if ((value += (1 << 27)) > ~(INT64_C(1) << 34)) {
-			uint64_t q = htobe64(~(INT64_C(1) << 35) & value);
+			be<uint64_t> q = ~(INT64_C(1) << 35) & value;
 			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
 		}
 		else if ((value += (INT64_C(1) << 34)) > ~(INT64_C(1) << 41)) {
-			uint64_t q = htobe64(~(INT64_C(1) << 42) & value);
+			be<uint64_t> q = ~(INT64_C(1) << 42) & value;
 			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
 		}
 		else if ((value += (INT64_C(1) << 41)) > ~(INT64_C(1) << 48)) {
-			uint64_t q = htobe64(~(INT64_C(1) << 49) & value);
+			be<uint64_t> q = ~(INT64_C(1) << 49) & value;
 			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 1, sizeof q - 1);
 		}
 		else if ((value += (INT64_C(1) << 48)) > ~(INT64_C(1) << 55)) {
-			uint64_t q = htobe64(~(INT64_C(1) << 56) & value);
+			be<uint64_t> q = ~(INT64_C(1) << 56) & value;
 			sink.write_fully(&q, sizeof q);
 		}
 		else {
-			uint64_t a[2] = { htobe64(0xFF), htobe64(value + (INT64_C(1) << 55)) };
+			be<uint64_t> a[2] = { 0xFF, value + (INT64_C(1) << 55) };
 			sink.write_fully(reinterpret_cast<uint8_t *>(a) + 7, sizeof a - 7);
 		}
 	}
@@ -288,35 +288,35 @@ Sink & _weak write_varint(Sink &sink, int64_t value) {
 			sink.write_fully(&b, sizeof b);
 		}
 		else if ((value -= (1 << 6)) < (1 << 13)) {
-			uint16_t w = htobe16(static_cast<uint16_t>(0x8000 | value));
+			be<uint16_t> w = static_cast<uint16_t>(0x8000 | value);
 			sink.write_fully(&w, sizeof w);
 		}
 		else if ((value -= (1 << 13)) < (1 << 20)) {
-			uint32_t d = htobe32(static_cast<uint32_t>(0xC00000 | value));
+			be<uint32_t> d = static_cast<uint32_t>(0xC00000 | value);
 			sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
 		}
 		else if ((value -= (1 << 20)) < (1 << 27)) {
-			uint32_t d = htobe32(static_cast<uint32_t>(0xE0000000 | value));
+			be<uint32_t> d = static_cast<uint32_t>(0xE0000000 | value);
 			sink.write_fully(&d, sizeof d);
 		}
 		else if ((value -= (1 << 27)) < (INT64_C(1) << 34)) {
-			uint64_t q = htobe64(INT64_C(0xF000000000) | value);
+			be<uint64_t> q = INT64_C(0xF000000000) | value;
 			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
 		}
 		else if ((value -= (INT64_C(1) << 34)) < (INT64_C(1) << 41)) {
-			uint64_t q = htobe64(INT64_C(0xF80000000000) | value);
+			be<uint64_t> q = INT64_C(0xF80000000000) | value;
 			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
 		}
 		else if ((value -= (INT64_C(1) << 41)) < (INT64_C(1) << 48)) {
-			uint64_t q = htobe64(INT64_C(0xFC000000000000) | value);
+			be<uint64_t> q = INT64_C(0xFC000000000000) | value;
 			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 1, sizeof q - 1);
 		}
 		else if ((value -= (INT64_C(1) << 48)) < (INT64_C(1) << 55)) {
-			uint64_t q = htobe64(INT64_C(0xFE00000000000000) | value);
+			be<uint64_t> q = INT64_C(0xFE00000000000000) | value;
 			sink.write_fully(&q, sizeof q);
 		}
 		else {
-			uint64_t a[2] = { htobe64(0xFF), htobe64(value - (INT64_C(1) << 55)) };
+			be<uint64_t> a[2] = { 0xFF, value - (INT64_C(1) << 55) };
 			sink.write_fully(reinterpret_cast<uint8_t *>(a) + 7, sizeof a - 7);
 		}
 	}
@@ -337,44 +337,44 @@ Source & _weak read_varint(Source &source, uint64_t &value) {
 			break;
 		}
 		case 3: {
-			uint16_t w;
+			be<uint16_t> w;
 			source.read_fully(&w, sizeof w);
-			value = ((b & 0x1F) << 16 | be16toh(w)) + 0x4080;
+			value = ((b & 0x1F) << 16 | w) + 0x4080;
 			break;
 		}
 		case 4: {
-			uint32_t d = 0;
+			be<uint32_t> d = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
-			value = ((b & 0x0F) << 24 | be32toh(d)) + 0x204080;
+			value = ((b & 0x0F) << 24 | d) + 0x204080;
 			break;
 		}
 		case 5: {
-			uint32_t d;
+			be<uint32_t> d;
 			source.read_fully(&d, sizeof d);
-			value = (static_cast<uint64_t>(b & 0x07) << 32 | be32toh(d)) + 0x10204080;
+			value = (static_cast<uint64_t>(b & 0x07) << 32 | d) + 0x10204080;
 			break;
 		}
 		case 6: {
-			uint64_t q = 0;
+			be<uint64_t> q = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
-			value = (static_cast<uint64_t>(b & 0x03) << 40 | be64toh(q)) + UINT64_C(0x0810204080);
+			value = (static_cast<uint64_t>(b & 0x03) << 40 | q) + UINT64_C(0x0810204080);
 			break;
 		}
 		case 7: {
-			uint64_t q = 0;
+			be<uint64_t> q = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
-			value = (static_cast<uint64_t>(b & 0x01) << 48 | be64toh(q)) + UINT64_C(0x040810204080);
+			value = (static_cast<uint64_t>(b & 0x01) << 48 | q) + UINT64_C(0x040810204080);
 			break;
 		}
 		case 8: {
-			uint64_t q = 0;
+			be<uint64_t> q = 0;
 			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 1, sizeof q - 1);
-			value = be64toh(q) + UINT64_C(0x02040810204080);
+			value = q + UINT64_C(0x02040810204080);
 			break;
 		}
 		case 9:
 			source.read_fully(&value, sizeof value);
-			value = be64toh(value);
+			value = as_be(value);
 			if (value <= UINT64_MAX - UINT64_C(0x0102040810204080)) {
 				value += UINT64_C(0x0102040810204080);
 				break;
@@ -391,35 +391,35 @@ Sink & _weak write_varint(Sink &sink, uint64_t value) {
 		sink.write_fully(&b, sizeof b);
 	}
 	else if ((value -= (1 << 7)) < (1 << 14)) {
-		uint16_t w = htobe16(static_cast<uint16_t>(0x8000 | value));
+		be<uint16_t> w = static_cast<uint16_t>(0x8000 | value);
 		sink.write_fully(&w, sizeof w);
 	}
 	else if ((value -= (1 << 14)) < (1 << 21)) {
-		uint32_t d = htobe32(0xC00000 | static_cast<uint32_t>(value));
+		be<uint32_t> d = 0xC00000 | static_cast<uint32_t>(value);
 		sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
 	}
 	else if ((value -= (1 << 21)) < (1 << 28)) {
-		uint32_t d = htobe32(0xE0000000 | static_cast<uint32_t>(value));
+		be<uint32_t> d = 0xE0000000 | static_cast<uint32_t>(value);
 		sink.write_fully(&d, sizeof d);
 	}
 	else if ((value -= (1 << 28)) < (UINT64_C(1) << 35)) {
-		uint64_t q = htobe64(UINT64_C(0xF000000000) | value);
+		be<uint64_t> q = UINT64_C(0xF000000000) | value;
 		sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
 	}
 	else if ((value -= (UINT64_C(1) << 35)) < (UINT64_C(1) << 42)) {
-		uint64_t q = htobe64(UINT64_C(0xF80000000000) | value);
+		be<uint64_t> q = UINT64_C(0xF80000000000) | value;
 		sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
 	}
 	else if ((value -= (UINT64_C(1) << 42)) < (UINT64_C(1) << 49)) {
-		uint64_t q = htobe64(UINT64_C(0xFC000000000000) | value);
+		be<uint64_t> q = UINT64_C(0xFC000000000000) | value;
 		sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 1, sizeof q - 1);
 	}
 	else if ((value -= (UINT64_C(1) << 49)) < (UINT64_C(1) << 56)) {
-		uint64_t q = htobe64(UINT64_C(0xFE00000000000000) | value);
+		be<uint64_t> q = UINT64_C(0xFE00000000000000) | value;
 		sink.write_fully(&q, sizeof q);
 	}
 	else {
-		uint64_t a[2] = { htobe64(0xFF), htobe64(value - (UINT64_C(1) << 56)) };
+		be<uint64_t> a[2] = { 0xFF, value - (UINT64_C(1) << 56) };
 		sink.write_fully(reinterpret_cast<uint8_t *>(a) + 7, sizeof a - 7);
 	}
 	return sink;

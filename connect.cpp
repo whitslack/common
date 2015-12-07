@@ -3,6 +3,7 @@
 #include <thread>
 
 #include "dns.h"
+#include "endian.h"
 #include "log.h"
 
 extern Log elog;
@@ -11,13 +12,13 @@ extern Log elog;
 Socket connect(const char host[], uint16_t port, std::chrono::microseconds timeout) {
 	for (auto &info : getaddrinfo(host)) {
 		if (info.ai_family == AF_INET) {
-			reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port = htobe16(port);
+			as_be(reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port) = port;
 			if (elog.trace_enabled()) {
 				elog.trace() << "connecting to " << host << " at " << *reinterpret_cast<sockaddr_in *>(info.ai_addr) << std::endl;
 			}
 		}
 		else if (info.ai_family == AF_INET6) {
-			reinterpret_cast<sockaddr_in6 *>(info.ai_addr)->sin6_port = htobe16(port);
+			as_be(reinterpret_cast<sockaddr_in6 *>(info.ai_addr)->sin6_port) = port;
 			if (elog.trace_enabled()) {
 				elog.trace() << "connecting to " << host << " at " << *reinterpret_cast<sockaddr_in6 *>(info.ai_addr) << std::endl;
 			}

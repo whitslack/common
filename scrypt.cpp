@@ -13,7 +13,7 @@ static void salsa20_8_core(void * _restrict out, const void * _restrict in) {
 	auto outw = reinterpret_cast<uint32_t *>(out);
 	auto inw = reinterpret_cast<const uint32_t *>(in);
 	for (size_t i = 0; i < 16; ++i) {
-		outw[i] = le32toh(inw[i]);
+		outw[i] = as_le(inw[i]);
 	}
 	for (size_t i = 0; i < 4; ++i) {
 		outw[ 4] ^= rotl(outw[ 0] + outw[12],  7);	outw[ 9] ^= rotl(outw[ 5] + outw[ 1],  7);
@@ -34,7 +34,7 @@ static void salsa20_8_core(void * _restrict out, const void * _restrict in) {
 		outw[10] ^= rotl(outw[ 9] + outw[ 8], 18);	outw[15] ^= rotl(outw[14] + outw[13], 18);
 	}
 	for (size_t i = 0; i < 16; ++i) {
-		outw[i] = htole32(outw[i] + le32toh(inw[i]));
+		as_le(outw[i]) = outw[i] + as_le(inw[i]);
 	}
 }
 

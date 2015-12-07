@@ -2,9 +2,7 @@
 
 #include <cassert>
 
-#include <endian.h>
-
-#include "compiler.h"
+#include "endian.h"
 
 static const uint8_t encrypt_sbox[256] = {
 	0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b, 0xfe, 0xd7, 0xab, 0x76,
@@ -131,10 +129,10 @@ constexpr size_t AESBase<Key_Size>::sched_size;
 template <size_t Key_Size>
 size_t AESEncrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[], size_t n _unused) {
 	assert(n == 16);
-	uint32_t s0 = be32toh(reinterpret_cast<const uint32_t *>(in)[0]) ^ this->key_schedule[0];
-	uint32_t s1 = be32toh(reinterpret_cast<const uint32_t *>(in)[1]) ^ this->key_schedule[1];
-	uint32_t s2 = be32toh(reinterpret_cast<const uint32_t *>(in)[2]) ^ this->key_schedule[2];
-	uint32_t s3 = be32toh(reinterpret_cast<const uint32_t *>(in)[3]) ^ this->key_schedule[3];
+	uint32_t s0 = reinterpret_cast<const be<uint32_t> *>(in)[0] ^ this->key_schedule[0];
+	uint32_t s1 = reinterpret_cast<const be<uint32_t> *>(in)[1] ^ this->key_schedule[1];
+	uint32_t s2 = reinterpret_cast<const be<uint32_t> *>(in)[2] ^ this->key_schedule[2];
+	uint32_t s3 = reinterpret_cast<const be<uint32_t> *>(in)[3] ^ this->key_schedule[3];
 	uint32_t t0, t1, t2, t3;
 	for (size_t i = 0;;) {
 		t0 =
@@ -189,30 +187,30 @@ size_t AESEncrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[
 				rotr(encrypt_table[static_cast<uint8_t>(t2 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 3];
 	}
-	reinterpret_cast<uint32_t (&)[4]>(out)[0] = htobe32(
+	reinterpret_cast<be<uint32_t> (&)[4]>(out)[0] =
 			encrypt_sbox[static_cast<uint8_t>(t0 >> 24)] << 24 ^
 			encrypt_sbox[static_cast<uint8_t>(t1 >> 16)] << 16 ^
 			encrypt_sbox[static_cast<uint8_t>(t2 >>  8)] <<  8 ^
 			encrypt_sbox[static_cast<uint8_t>(t3 >>  0)] <<  0 ^
-			this->key_schedule[AESBase<Key_Size>::sched_size - 4]);
-	reinterpret_cast<uint32_t (&)[4]>(out)[1] = htobe32(
+			this->key_schedule[AESBase<Key_Size>::sched_size - 4];
+	reinterpret_cast<be<uint32_t> (&)[4]>(out)[1] =
 			encrypt_sbox[static_cast<uint8_t>(t1 >> 24)] << 24 ^
 			encrypt_sbox[static_cast<uint8_t>(t2 >> 16)] << 16 ^
 			encrypt_sbox[static_cast<uint8_t>(t3 >>  8)] <<  8 ^
 			encrypt_sbox[static_cast<uint8_t>(t0 >>  0)] <<  0 ^
-			this->key_schedule[AESBase<Key_Size>::sched_size - 3]);
-	reinterpret_cast<uint32_t (&)[4]>(out)[2] = htobe32(
+			this->key_schedule[AESBase<Key_Size>::sched_size - 3];
+	reinterpret_cast<be<uint32_t> (&)[4]>(out)[2] =
 			encrypt_sbox[static_cast<uint8_t>(t2 >> 24)] << 24 ^
 			encrypt_sbox[static_cast<uint8_t>(t3 >> 16)] << 16 ^
 			encrypt_sbox[static_cast<uint8_t>(t0 >>  8)] <<  8 ^
 			encrypt_sbox[static_cast<uint8_t>(t1 >>  0)] <<  0 ^
-			this->key_schedule[AESBase<Key_Size>::sched_size - 2]);
-	reinterpret_cast<uint32_t (&)[4]>(out)[3] = htobe32(
+			this->key_schedule[AESBase<Key_Size>::sched_size - 2];
+	reinterpret_cast<be<uint32_t> (&)[4]>(out)[3] =
 			encrypt_sbox[static_cast<uint8_t>(t3 >> 24)] << 24 ^
 			encrypt_sbox[static_cast<uint8_t>(t0 >> 16)] << 16 ^
 			encrypt_sbox[static_cast<uint8_t>(t1 >>  8)] <<  8 ^
 			encrypt_sbox[static_cast<uint8_t>(t2 >>  0)] <<  0 ^
-			this->key_schedule[AESBase<Key_Size>::sched_size - 1]);
+			this->key_schedule[AESBase<Key_Size>::sched_size - 1];
 	return 16;
 }
 
@@ -239,10 +237,10 @@ AESDecrypterBase<Key_Size>::AESDecrypterBase(const AESEncrypterBase<Key_Size> &e
 template <size_t Key_Size>
 size_t AESDecrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[], size_t n _unused) {
 	assert(n == 16);
-	uint32_t s0 = be32toh(reinterpret_cast<const uint32_t *>(in)[0]) ^ this->key_schedule[0];
-	uint32_t s1 = be32toh(reinterpret_cast<const uint32_t *>(in)[1]) ^ this->key_schedule[1];
-	uint32_t s2 = be32toh(reinterpret_cast<const uint32_t *>(in)[2]) ^ this->key_schedule[2];
-	uint32_t s3 = be32toh(reinterpret_cast<const uint32_t *>(in)[3]) ^ this->key_schedule[3];
+	uint32_t s0 = reinterpret_cast<const be<uint32_t> *>(in)[0] ^ this->key_schedule[0];
+	uint32_t s1 = reinterpret_cast<const be<uint32_t> *>(in)[1] ^ this->key_schedule[1];
+	uint32_t s2 = reinterpret_cast<const be<uint32_t> *>(in)[2] ^ this->key_schedule[2];
+	uint32_t s3 = reinterpret_cast<const be<uint32_t> *>(in)[3] ^ this->key_schedule[3];
 	uint32_t t0, t1, t2, t3;
 	for (size_t i = 0;;) {
 		t0 =
@@ -297,37 +295,37 @@ size_t AESDecrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[
 				rotr(decrypt_table[static_cast<uint8_t>(t0 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 3];
 	}
-	reinterpret_cast<uint32_t (&)[4]>(out)[0] = htobe32(
+	reinterpret_cast<be<uint32_t> (&)[4]>(out)[0] =
 			decrypt_sbox[static_cast<uint8_t>(t0 >> 24)] << 24 ^
 			decrypt_sbox[static_cast<uint8_t>(t3 >> 16)] << 16 ^
 			decrypt_sbox[static_cast<uint8_t>(t2 >>  8)] <<  8 ^
 			decrypt_sbox[static_cast<uint8_t>(t1 >>  0)] <<  0 ^
-			this->key_schedule[AESBase<Key_Size>::sched_size - 4]);
-	reinterpret_cast<uint32_t (&)[4]>(out)[1] = htobe32(
+			this->key_schedule[AESBase<Key_Size>::sched_size - 4];
+	reinterpret_cast<be<uint32_t> (&)[4]>(out)[1] =
 			decrypt_sbox[static_cast<uint8_t>(t1 >> 24)] << 24 ^
 			decrypt_sbox[static_cast<uint8_t>(t0 >> 16)] << 16 ^
 			decrypt_sbox[static_cast<uint8_t>(t3 >>  8)] <<  8 ^
 			decrypt_sbox[static_cast<uint8_t>(t2 >>  0)] <<  0 ^
-			this->key_schedule[AESBase<Key_Size>::sched_size - 3]);
-	reinterpret_cast<uint32_t (&)[4]>(out)[2] = htobe32(
+			this->key_schedule[AESBase<Key_Size>::sched_size - 3];
+	reinterpret_cast<be<uint32_t> (&)[4]>(out)[2] =
 			decrypt_sbox[static_cast<uint8_t>(t2 >> 24)] << 24 ^
 			decrypt_sbox[static_cast<uint8_t>(t1 >> 16)] << 16 ^
 			decrypt_sbox[static_cast<uint8_t>(t0 >>  8)] <<  8 ^
 			decrypt_sbox[static_cast<uint8_t>(t3 >>  0)] <<  0 ^
-			this->key_schedule[AESBase<Key_Size>::sched_size - 2]);
-	reinterpret_cast<uint32_t (&)[4]>(out)[3] = htobe32(
+			this->key_schedule[AESBase<Key_Size>::sched_size - 2];
+	reinterpret_cast<be<uint32_t> (&)[4]>(out)[3] =
 			decrypt_sbox[static_cast<uint8_t>(t3 >> 24)] << 24 ^
 			decrypt_sbox[static_cast<uint8_t>(t2 >> 16)] << 16 ^
 			decrypt_sbox[static_cast<uint8_t>(t1 >>  8)] <<  8 ^
 			decrypt_sbox[static_cast<uint8_t>(t0 >>  0)] <<  0 ^
-			this->key_schedule[AESBase<Key_Size>::sched_size - 1]);
+			this->key_schedule[AESBase<Key_Size>::sched_size - 1];
 	return 16;
 }
 
 
 AES128Encrypter::AES128Encrypter(const uint8_t (&key)[16]) {
 	for (size_t i = 0; i < 4; ++i) {
-		key_schedule[i] = be32toh(reinterpret_cast<const uint32_t (&)[4]>(key)[i]);
+		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[4]>(key)[i];
 	}
 	for (size_t i = 0; i < 10; ++i) {
 		key_schedule[i * 4 + 4] =
@@ -346,7 +344,7 @@ AES128Encrypter::AES128Encrypter(const uint8_t (&key)[16]) {
 
 AES192Encrypter::AES192Encrypter(const uint8_t (&key)[24]) {
 	for (size_t i = 0; i < 6; ++i) {
-		key_schedule[i] = be32toh(reinterpret_cast<const uint32_t (&)[6]>(key)[i]);
+		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[6]>(key)[i];
 	}
 	for (size_t i = 0;;) {
 		key_schedule[i * 6 + 6] =
@@ -370,7 +368,7 @@ AES192Encrypter::AES192Encrypter(const uint8_t (&key)[24]) {
 
 AES256Encrypter::AES256Encrypter(const uint8_t (&key)[32]) {
 	for (size_t i = 0; i < 8; ++i) {
-		key_schedule[i] = be32toh(reinterpret_cast<const uint32_t (&)[8]>(key)[i]);
+		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[8]>(key)[i];
 	}
 	for (size_t i = 0;;) {
 		key_schedule[i * 8 + 8] =
