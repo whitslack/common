@@ -7,7 +7,7 @@ bool HexEncoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *
 	static constexpr char encode[16] = {
 		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
 	};
-	uint b;
+	unsigned b;
 	if (buf_full) {
 		b = buf;
 		goto buf_full;
@@ -45,7 +45,7 @@ bool HexDecoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *
 		-1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1,
 		-1, 10, 11, 12, 13, 14, 15
 	};
-	uint b0, b1;
+	unsigned b0, b1;
 	if (buf_full) {
 		b0 = buf;
 		goto buf_full;

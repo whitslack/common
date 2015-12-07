@@ -12,7 +12,7 @@ static constexpr char encode[64] = {
 };
 
 bool Base64Encoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
-	uint b0, b1;
+	unsigned b0, b1;
 	switch (state) {
 		case 0:
 			goto state0;
@@ -123,7 +123,7 @@ bool Base64Decoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_
 		18, 19, 20, 21, 22, 23, 24, 25, -1, -1, -1, -1, -1, -1, 26, 27, 28, 29, 30, 31,
 		32, 33, 34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51
 	};
-	uint b0, b1;
+	unsigned b0, b1;
 	switch (state) {
 		case 0:
 			goto state0;

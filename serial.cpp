@@ -2,11 +2,11 @@
 
 
 static size_t varint_size(uint8_t first_byte) {
-	uint i = static_cast<uint8_t>(~first_byte);
+	unsigned i = static_cast<uint8_t>(~first_byte);
 	if (i == 0) {
 		return 9;
 	}
-	uint n = 2;
+	unsigned n = 2;
 	if (i >> 4 == 0) {
 		n += 4;
 		i <<= 4;

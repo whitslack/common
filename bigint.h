@@ -124,9 +124,9 @@ static inline std::array<LIMB_T, L> _pure operator - (const std::array<LIMB_T, L
 }
 
 template <typename WORD_T, size_t W>
-static inline typename std::enable_if<std::is_unsigned<WORD_T>::value, void>::type __shln(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, uint shift) {
-	uint offset = static_cast<uint>(shift / (sizeof(WORD_T) * 8));
-	if ((shift %= static_cast<uint>(sizeof(WORD_T) * 8)) == 0) {
+static inline typename std::enable_if<std::is_unsigned<WORD_T>::value, void>::type __shln(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) {
+	unsigned offset = static_cast<unsigned>(shift / (sizeof(WORD_T) * 8));
+	if ((shift %= static_cast<unsigned>(sizeof(WORD_T) * 8)) == 0) {
 		for (size_t i = W - offset; i-- > 0;) {
 			result[WORD(W, i + offset)] = operand[WORD(W, i)];
 		}
@@ -143,7 +143,7 @@ static inline typename std::enable_if<std::is_unsigned<WORD_T>::value, void>::ty
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> & operator <<= (std::array<WORD_T, W> &operand, uint shift) {
+static inline std::array<WORD_T, W> & operator <<= (std::array<WORD_T, W> &operand, unsigned shift) {
 	if (shift != 0) {
 		__shln(operand, operand, shift);
 	}
@@ -151,16 +151,16 @@ static inline std::array<WORD_T, W> & operator <<= (std::array<WORD_T, W> &opera
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> _pure operator << (const std::array<WORD_T, W> &operand, uint shift) {
+static inline std::array<WORD_T, W> _pure operator << (const std::array<WORD_T, W> &operand, unsigned shift) {
 	std::array<WORD_T, W> result;
 	__shln(result, operand, shift);
 	return result;
 }
 
 template <typename WORD_T, size_t W>
-static inline typename std::enable_if<std::is_unsigned<WORD_T>::value, void>::type __shrn(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, uint shift) {
-	uint offset = static_cast<uint>(shift / (sizeof(WORD_T) * 8));
-	if ((shift %= static_cast<uint>(sizeof(WORD_T) * 8)) == 0) {
+static inline typename std::enable_if<std::is_unsigned<WORD_T>::value, void>::type __shrn(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) {
+	unsigned offset = static_cast<unsigned>(shift / (sizeof(WORD_T) * 8));
+	if ((shift %= static_cast<unsigned>(sizeof(WORD_T) * 8)) == 0) {
 		for (size_t i = 0; i < W - offset; ++i) {
 			result[WORD(W, i)] = operand[WORD(W, i + offset)];
 		}
@@ -177,7 +177,7 @@ static inline typename std::enable_if<std::is_unsigned<WORD_T>::value, void>::ty
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> & operator >>= (std::array<WORD_T, W> &operand, uint shift) {
+static inline std::array<WORD_T, W> & operator >>= (std::array<WORD_T, W> &operand, unsigned shift) {
 	if (shift != 0) {
 		__shrn(operand, operand, shift);
 	}
@@ -185,7 +185,7 @@ static inline std::array<WORD_T, W> & operator >>= (std::array<WORD_T, W> &opera
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> _pure operator >> (const std::array<WORD_T, W> &operand, uint shift) {
+static inline std::array<WORD_T, W> _pure operator >> (const std::array<WORD_T, W> &operand, unsigned shift) {
 	std::array<WORD_T, W> result;
 	__shrn(result, operand, shift);
 	return result;
@@ -466,7 +466,7 @@ static inline void __bswap(std::array<WORD_T, W> &operand) {
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> & operator <<= (std::array<WORD_T, L> &operand, uint shift) { \
+	static inline std::array<WORD_T, L> & operator <<= (std::array<WORD_T, L> &operand, unsigned shift) { \
 		if (shift == 1) { \
 			__shl<L>(operand.data()); \
 		} \
@@ -477,7 +477,7 @@ static inline void __bswap(std::array<WORD_T, W> &operand) {
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> _pure operator << (const std::array<WORD_T, L> &operand, uint shift) { \
+	static inline std::array<WORD_T, L> _pure operator << (const std::array<WORD_T, L> &operand, unsigned shift) { \
 		std::array<WORD_T, L> result; \
 		if (shift == 1) { \
 			__shl<L>((result = operand).data()); \
@@ -505,7 +505,7 @@ static inline void __bswap(std::array<WORD_T, W> &operand) {
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> & operator >>= (std::array<WORD_T, L> &operand, uint shift) { \
+	static inline std::array<WORD_T, L> & operator >>= (std::array<WORD_T, L> &operand, unsigned shift) { \
 		if (shift == 1) { \
 			__shr<L>(operand.data()); \
 		} \
@@ -516,7 +516,7 @@ static inline void __bswap(std::array<WORD_T, W> &operand) {
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> _pure operator >> (const std::array<WORD_T, L> &operand, uint shift) { \
+	static inline std::array<WORD_T, L> _pure operator >> (const std::array<WORD_T, L> &operand, unsigned shift) { \
 		std::array<WORD_T, L> result; \
 		if (shift == 1) { \
 			__shr<L>((result = operand).data()); \
@@ -719,13 +719,13 @@ public:
 		return difference;
 	}
 
-	BigUInt operator << (uint shift) const _pure {
+	BigUInt operator << (unsigned shift) const _pure {
 		BigUInt result;
 		result.words = words << shift;
 		return result;
 	}
 
-	BigUInt operator >> (uint shift) const _pure {
+	BigUInt operator >> (unsigned shift) const _pure {
 		BigUInt result;
 		result.words = words >> shift;
 		return result;
@@ -781,12 +781,12 @@ public:
 		return *this;
 	}
 
-	BigUInt & operator <<= (uint shift) {
+	BigUInt & operator <<= (unsigned shift) {
 		words <<= shift;
 		return *this;
 	}
 
-	BigUInt & operator >>= (uint shift) {
+	BigUInt & operator >>= (unsigned shift) {
 		words >>= shift;
 		return *this;
 	}

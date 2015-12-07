@@ -44,12 +44,12 @@ class HttpResponseHeaders : public HttpHeaders {
 
 public:
 	std::string protocol_version;
-	uint status_code;
+	unsigned status_code;
 	std::string reason_phrase;
 
 public:
 	HttpResponseHeaders() { }
-	HttpResponseHeaders(const std::string &protocol_version, uint status_code, const std::string &reason_phrase) : protocol_version(protocol_version), status_code(status_code), reason_phrase(reason_phrase) { }
+	HttpResponseHeaders(const std::string &protocol_version, unsigned status_code, const std::string &reason_phrase) : protocol_version(protocol_version), status_code(status_code), reason_phrase(reason_phrase) { }
 
 };
 
