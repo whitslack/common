@@ -1,6 +1,7 @@
 #pragma once
 
 #include <climits>
+#include <cstddef>
 #include <cstdint>
 #include <type_traits>
 
@@ -50,20 +51,19 @@ static constexpr unsigned rotr(unsigned v, unsigned s) { return v >> s | v << si
 static constexpr unsigned long rotr(unsigned long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
 static constexpr unsigned long long rotr(unsigned long long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
 
-static constexpr int16_t bswap(int16_t v) { return __builtin_bswap16(v); }
-static constexpr uint16_t bswap(uint16_t v) { return __builtin_bswap16(v); }
-static constexpr int32_t bswap(int32_t v) { return __builtin_bswap32(v); }
-static constexpr uint32_t bswap(uint32_t v) { return __builtin_bswap32(v); }
-static constexpr int64_t bswap(int64_t v) { return __builtin_bswap64(v); }
-static constexpr uint64_t bswap(uint64_t v) { return __builtin_bswap64(v); }
+template <size_t B> struct _builtin_bswap { };
+template <> struct _builtin_bswap<2> { static constexpr uint16_t bswap(uint16_t v) { return __builtin_bswap16(v); } };
+template <> struct _builtin_bswap<4> { static constexpr uint32_t bswap(uint32_t v) { return __builtin_bswap32(v); } };
+template <> struct _builtin_bswap<8> { static constexpr uint64_t bswap(uint64_t v) { return __builtin_bswap64(v); } };
 
-#if ULONG_MAX == UINT32_MAX && UINT32_MAX == UINT_MAX
-static constexpr long bswap(long v) { return __builtin_bswap32(v); }
-static constexpr unsigned long bswap(unsigned long v) { return __builtin_bswap32(v); }
-#elif ULONG_LONG_MAX == UINT64_MAX && UINT64_MAX == ULONG_MAX
-static constexpr long long bswap(long long v) { return __builtin_bswap64(v); }
-static constexpr unsigned long long bswap(unsigned long long v) { return __builtin_bswap64(v); }
-#endif
+static constexpr short bswap(short v) { return _builtin_bswap<sizeof(short)>::bswap(v); }
+static constexpr unsigned short bswap(unsigned short v) { return _builtin_bswap<sizeof(unsigned short)>::bswap(v); }
+static constexpr int bswap(int v) { return _builtin_bswap<sizeof(int)>::bswap(v); }
+static constexpr unsigned int bswap(unsigned int v) { return _builtin_bswap<sizeof(unsigned int)>::bswap(v); }
+static constexpr long bswap(long v) { return _builtin_bswap<sizeof(long)>::bswap(v); }
+static constexpr unsigned long bswap(unsigned long v) { return _builtin_bswap<sizeof(unsigned long)>::bswap(v); }
+static constexpr long long bswap(long long v) { return _builtin_bswap<sizeof(long long)>::bswap(v); }
+static constexpr unsigned long long bswap(unsigned long long v) { return _builtin_bswap<sizeof(unsigned long long)>::bswap(v); }
 
 #ifdef __SIZEOF_INT128__
 static inline unsigned __int128 _const __bswap128(unsigned __int128 v) {
