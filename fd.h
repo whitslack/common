@@ -86,7 +86,7 @@ size_t write(int fildes, const void *buf, size_t nbyte);
 static inline unsigned select(int nfds, fd_set * _restrict readfds, fd_set * _restrict writefds, fd_set * _restrict errorfds, std::chrono::microseconds timeout) {
 	struct timeval tv;
 	tv.tv_sec = static_cast<std::time_t>(std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
-	tv.tv_usec = static_cast<long>((timeout % std::chrono::seconds(1)).count());
+	tv.tv_usec = static_cast<decltype(tv.tv_usec)>((timeout % std::chrono::seconds(1)).count());
 	return posix::select(nfds, readfds, writefds, errorfds, &tv);
 }
 
