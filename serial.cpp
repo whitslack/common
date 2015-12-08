@@ -18,7 +18,7 @@ static size_t varint_size(uint8_t first_byte) {
 	return n - (i >> 7);
 }
 
-Source & _weak read_varint(Source &source, int32_t &value) {
+Source & _varint_ops<4>::read_signed(Source &source, int32_t &value) {
 	int8_t b;
 	source.read_fully(&b, sizeof b);
 	switch (varint_size(b)) {
@@ -62,7 +62,7 @@ Source & _weak read_varint(Source &source, int32_t &value) {
 	return source;
 }
 
-Sink & _weak write_varint(Sink &sink, int32_t value) {
+Sink & _varint_ops<4>::write_signed(Sink &sink, int32_t value) {
 	if (value < 0) {
 		if (value > ~(1 << 6)) {
 			uint8_t b = static_cast<uint8_t>(~(1 << 7) & value);
@@ -110,7 +110,7 @@ Sink & _weak write_varint(Sink &sink, int32_t value) {
 	return sink;
 }
 
-Source & _weak read_varint(Source &source, uint32_t &value) {
+Source & _varint_ops<4>::read_unsigned(Source &source, uint32_t &value) {
 	uint8_t b;
 	source.read_fully(&b, sizeof b);
 	switch (varint_size(b)) {
@@ -151,7 +151,7 @@ Source & _weak read_varint(Source &source, uint32_t &value) {
 	return source;
 }
 
-Sink & _weak write_varint(Sink &sink, uint32_t value) {
+Sink & _varint_ops<4>::write_unsigned(Sink &sink, uint32_t value) {
 	if (value < (1 << 7)) {
 		uint8_t b = static_cast<uint8_t>(value);
 		sink.write_fully(&b, sizeof b);
@@ -175,7 +175,7 @@ Sink & _weak write_varint(Sink &sink, uint32_t value) {
 	return sink;
 }
 
-Source & _weak read_varint(Source &source, int64_t &value) {
+Source & _varint_ops<8>::read_signed(Source &source, int64_t &value) {
 	int8_t b;
 	source.read_fully(&b, sizeof b);
 	switch (varint_size(b)) {
@@ -243,7 +243,7 @@ Source & _weak read_varint(Source &source, int64_t &value) {
 	return source;
 }
 
-Sink & _weak write_varint(Sink &sink, int64_t value) {
+Sink & _varint_ops<8>::write_signed(Sink &sink, int64_t value) {
 	if (value < 0) {
 		if (value > ~(1 << 6)) {
 			uint8_t b = static_cast<uint8_t>(~(1 << 7) & value);
@@ -323,7 +323,7 @@ Sink & _weak write_varint(Sink &sink, int64_t value) {
 	return sink;
 }
 
-Source & _weak read_varint(Source &source, uint64_t &value) {
+Source & _varint_ops<8>::read_unsigned(Source &source, uint64_t &value) {
 	uint8_t b;
 	source.read_fully(&b, sizeof b);
 	switch (varint_size(b)) {
@@ -385,7 +385,7 @@ Source & _weak read_varint(Source &source, uint64_t &value) {
 	return source;
 }
 
-Sink & _weak write_varint(Sink &sink, uint64_t value) {
+Sink & _varint_ops<8>::write_unsigned(Sink &sink, uint64_t value) {
 	if (value < (1 << 7)) {
 		uint8_t b = static_cast<uint8_t>(value);
 		sink.write_fully(&b, sizeof b);

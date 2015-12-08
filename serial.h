@@ -3,17 +3,43 @@
 #include "io.h"
 
 
-Source & read_varint(Source &source, int32_t &value);
-Sink & write_varint(Sink &sink, int32_t value);
+template <size_t S> struct _varint_ops { };
+template <> struct _varint_ops<4> {
+	typedef int32_t signed_type;
+	typedef uint32_t unsigned_type;
+	static Source & read_signed(Source &source, signed_type &value);
+	static Sink & write_signed(Sink &sink, signed_type value);
+	static Source & read_unsigned(Source &source, unsigned_type &value);
+	static Sink & write_unsigned(Sink &sink, unsigned_type value);
+};
+template <> struct _varint_ops<8> {
+	typedef int64_t signed_type;
+	typedef uint64_t unsigned_type;
+	static Source & read_signed(Source &source, signed_type &value);
+	static Sink & write_signed(Sink &sink, signed_type value);
+	static Source & read_unsigned(Source &source, unsigned_type &value);
+	static Sink & write_unsigned(Sink &sink, unsigned_type value);
+};
 
-Source & read_varint(Source &source, uint32_t &value);
-Sink & write_varint(Sink &sink, uint32_t value);
+template <typename T>
+static inline typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value, Source &>::type read_varint(Source &source, T &value) {
+	return _varint_ops<sizeof(T)>::read_signed(source, reinterpret_cast<typename _varint_ops<sizeof(T)>::signed_type &>(value));
+}
 
-Source & read_varint(Source &source, int64_t &value);
-Sink & write_varint(Sink &sink, int64_t value);
+template <typename T>
+static inline typename std::enable_if<std::is_integral<T>::value && std::is_signed<T>::value, Sink &>::type write_varint(Sink &sink, T value) {
+	return _varint_ops<sizeof(T)>::write_signed(sink, value);
+}
 
-Source & read_varint(Source &source, uint64_t &value);
-Sink & write_varint(Sink &sink, uint64_t value);
+template <typename T>
+static inline typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value, Source &>::type read_varint(Source &source, T &value) {
+	return _varint_ops<sizeof(T)>::read_unsigned(source, reinterpret_cast<typename _varint_ops<sizeof(T)>::unsigned_type &>(value));
+}
+
+template <typename T>
+static inline typename std::enable_if<std::is_integral<T>::value && std::is_unsigned<T>::value, Sink &>::type write_varint(Sink &sink, T value) {
+	return _varint_ops<sizeof(T)>::write_unsigned(sink, value);
+}
 
 template <typename T>
 struct _varint {
