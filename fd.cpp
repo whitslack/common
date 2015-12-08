@@ -65,26 +65,6 @@ int dup2(int fildes, int fildes2) {
 	return ret;
 }
 
-void faccessat(int fd, const char *path, int amode, int flag) {
-	if (::faccessat(fd, path, amode, flag) < 0) {
-		throw std::system_error(errno, std::system_category(), "faccessat");
-	}
-}
-
-void fadvise(int fd, off_t offset, off_t len, int advice) {
-	int error;
-	if ((error = ::posix_fadvise(fd, offset, len, advice)) != 0) {
-		throw std::system_error(error, std::system_category(), "posix_fadvise");
-	}
-}
-
-void fallocate(int fd, off_t offset, off_t len) {
-	int error;
-	if ((error = ::posix_fallocate(fd, offset, len)) != 0) {
-		throw std::system_error(error, std::system_category(), "posix_fallocate");
-	}
-}
-
 void fchdir(int fildes) {
 	if (::fchdir(fildes) < 0) {
 		throw std::system_error(errno, std::system_category(), "fchdir");
@@ -97,21 +77,9 @@ void fchmod(int fildes, mode_t mode) {
 	}
 }
 
-void fchmodat(int fd, const char *path, mode_t mode, int flag) {
-	if (::fchmodat(fd, path, mode, flag) < 0) {
-		throw std::system_error(errno, std::system_category(), "fchmodat");
-	}
-}
-
 void fchown(int fildes, uid_t owner, gid_t group) {
 	if (::fchown(fildes, owner, group) < 0) {
 		throw std::system_error(errno, std::system_category(), "fchown");
-	}
-}
-
-void fchownat(int fd, const char *path, uid_t owner, gid_t group, int flag) {
-	if (::fchownat(fd, path, owner, group, flag) < 0) {
-		throw std::system_error(errno, std::system_category(), "fchownat");
 	}
 }
 
@@ -139,21 +107,9 @@ int fcntl(int fildes, int cmd, void *arg) {
 	return ret;
 }
 
-void fdatasync(int fildes) {
-	if (::fdatasync(fildes) < 0) {
-		throw std::system_error(errno, std::system_category(), "fdatasync");
-	}
-}
-
 void fstat(int fildes, struct stat *buf) {
 	if (::fstat(fildes, buf) < 0) {
 		throw std::system_error(errno, std::system_category(), "fstat");
-	}
-}
-
-void fstatat(int fd, const char * _restrict path, struct stat * _restrict buf, int flag) {
-	if (::fstatat(fd, path, buf, flag) < 0) {
-		throw std::system_error(errno, std::system_category(), "fstatat");
 	}
 }
 
@@ -166,12 +122,6 @@ void fsync(int fildes) {
 void ftruncate(int fildes, off_t length) {
 	if (::ftruncate(fildes, length) < 0) {
 		throw std::system_error(errno, std::system_category(), "ftruncate");
-	}
-}
-
-void futimens(int fd, const struct timespec times[2]) {
-	if (::futimens(fd, times) < 0) {
-		throw std::system_error(errno, std::system_category(), "futimens");
 	}
 }
 
@@ -220,12 +170,6 @@ void link(const char *path1, const char *path2) {
 	}
 }
 
-void linkat(int fd1, const char *path1, int fd2, const char *path2, int flag) {
-	if (::linkat(fd1, path1, fd2, path2, flag) < 0) {
-		throw std::system_error(errno, std::system_category(), "linkat");
-	}
-}
-
 void lockf(int fildes, int function, off_t size) {
 	if (::lockf(fildes, function, size) < 0) {
 		throw std::system_error(errno, std::system_category(), "lockf");
@@ -259,33 +203,15 @@ void mkdir(const char *path, mode_t mode) {
 	}
 }
 
-void mkdirat(int fd, const char *path, mode_t mode) {
-	if (::mkdirat(fd, path, mode) < 0) {
-		throw std::system_error(errno, std::system_category(), "mkdirat");
-	}
-}
-
 void mkfifo(const char *path, mode_t mode) {
 	if (::mkfifo(path, mode) < 0) {
 		throw std::system_error(errno, std::system_category(), "mkfifo");
 	}
 }
 
-void mkfifoat(int fd, const char *path, mode_t mode) {
-	if (::mkfifoat(fd, path, mode) < 0) {
-		throw std::system_error(errno, std::system_category(), "mkfifoat");
-	}
-}
-
 void mknod(const char *path, mode_t mode, dev_t dev) {
 	if (::mknod(path, mode, dev) < 0) {
 		throw std::system_error(errno, std::system_category(), "mknod");
-	}
-}
-
-void mknodat(int fd, const char *path, mode_t mode, dev_t dev) {
-	if (::mknodat(fd, path, mode, dev) < 0) {
-		throw std::system_error(errno, std::system_category(), "mknodat");
 	}
 }
 
@@ -319,14 +245,6 @@ int open(const char *path, int oflag, mode_t mode) {
 	int ret;
 	if ((ret = ::open(path, oflag, mode)) < 0) {
 		throw std::system_error(errno, std::system_category(), "open");
-	}
-	return ret;
-}
-
-int openat(int fd, const char *path, int oflag, mode_t mode) {
-	int ret;
-	if ((ret = ::openat(fd, path, oflag, mode)) < 0) {
-		throw std::system_error(errno, std::system_category(), "openat");
 	}
 	return ret;
 }
@@ -389,23 +307,9 @@ size_t readlink(const char * _restrict path, char * _restrict buf, size_t bufsiz
 	return static_cast<size_t>(ret);
 }
 
-size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize) {
-	ssize_t ret;
-	if ((ret = ::readlinkat(fd, path, buf, bufsize)) < 0) {
-		throw std::system_error(errno, std::system_category(), "readlinkat");
-	}
-	return static_cast<size_t>(ret);
-}
-
 void rename(const char *oldpath, const char *newpath) {
 	if (::rename(oldpath, newpath) < 0) {
 		throw std::system_error(errno, std::system_category(), "rename");
-	}
-}
-
-void renameat(int oldfd, const char *oldpath, int newfd, const char *newpath) {
-	if (::renameat(oldfd, oldpath, newfd, newpath) < 0) {
-		throw std::system_error(errno, std::system_category(), "renameat");
 	}
 }
 
@@ -438,12 +342,6 @@ void symlink(const char *path1, const char *path2) {
 	}
 }
 
-void symlinkat(const char *path1, int fd, const char *path2) {
-	if (::symlinkat(path1, fd, path2) < 0) {
-		throw std::system_error(errno, std::system_category(), "symlinkat");
-	}
-}
-
 void truncate(const char *path, off_t length) {
 	if (::truncate(path, length) < 0) {
 		throw std::system_error(errno, std::system_category(), "truncate");
@@ -453,18 +351,6 @@ void truncate(const char *path, off_t length) {
 void unlink(const char *path) {
 	if (::unlink(path) < 0) {
 		throw std::system_error(errno, std::system_category(), "unlink");
-	}
-}
-
-void unlinkat(int fd, const char *path, int flag) {
-	if (::unlinkat(fd, path, flag) < 0) {
-		throw std::system_error(errno, std::system_category(), "unlinkat");
-	}
-}
-
-void utimensat(int fd, const char *path, const struct timespec times[2], int flag) {
-	if (::utimensat(fd, path, times, flag) < 0) {
-		throw std::system_error(errno, std::system_category(), "utimensat");
 	}
 }
 
@@ -484,5 +370,123 @@ size_t write(int fildes, const void *buf, size_t nbyte) {
 	}
 	return static_cast<size_t>(ret);
 }
+
+#ifndef __APPLE__
+
+void faccessat(int fd, const char *path, int amode, int flag) {
+	if (::faccessat(fd, path, amode, flag) < 0) {
+		throw std::system_error(errno, std::system_category(), "faccessat");
+	}
+}
+
+void fadvise(int fd, off_t offset, off_t len, int advice) {
+	int error;
+	if ((error = ::posix_fadvise(fd, offset, len, advice)) != 0) {
+		throw std::system_error(error, std::system_category(), "posix_fadvise");
+	}
+}
+
+void fallocate(int fd, off_t offset, off_t len) {
+	int error;
+	if ((error = ::posix_fallocate(fd, offset, len)) != 0) {
+		throw std::system_error(error, std::system_category(), "posix_fallocate");
+	}
+}
+
+void fchmodat(int fd, const char *path, mode_t mode, int flag) {
+	if (::fchmodat(fd, path, mode, flag) < 0) {
+		throw std::system_error(errno, std::system_category(), "fchmodat");
+	}
+}
+
+void fchownat(int fd, const char *path, uid_t owner, gid_t group, int flag) {
+	if (::fchownat(fd, path, owner, group, flag) < 0) {
+		throw std::system_error(errno, std::system_category(), "fchownat");
+	}
+}
+
+void fdatasync(int fildes) {
+	if (::fdatasync(fildes) < 0) {
+		throw std::system_error(errno, std::system_category(), "fdatasync");
+	}
+}
+
+void fstatat(int fd, const char * _restrict path, struct stat * _restrict buf, int flag) {
+	if (::fstatat(fd, path, buf, flag) < 0) {
+		throw std::system_error(errno, std::system_category(), "fstatat");
+	}
+}
+
+void futimens(int fd, const struct timespec times[2]) {
+	if (::futimens(fd, times) < 0) {
+		throw std::system_error(errno, std::system_category(), "futimens");
+	}
+}
+
+void linkat(int fd1, const char *path1, int fd2, const char *path2, int flag) {
+	if (::linkat(fd1, path1, fd2, path2, flag) < 0) {
+		throw std::system_error(errno, std::system_category(), "linkat");
+	}
+}
+
+void mkdirat(int fd, const char *path, mode_t mode) {
+	if (::mkdirat(fd, path, mode) < 0) {
+		throw std::system_error(errno, std::system_category(), "mkdirat");
+	}
+}
+
+void mkfifoat(int fd, const char *path, mode_t mode) {
+	if (::mkfifoat(fd, path, mode) < 0) {
+		throw std::system_error(errno, std::system_category(), "mkfifoat");
+	}
+}
+
+void mknodat(int fd, const char *path, mode_t mode, dev_t dev) {
+	if (::mknodat(fd, path, mode, dev) < 0) {
+		throw std::system_error(errno, std::system_category(), "mknodat");
+	}
+}
+
+int openat(int fd, const char *path, int oflag, mode_t mode) {
+	int ret;
+	if ((ret = ::openat(fd, path, oflag, mode)) < 0) {
+		throw std::system_error(errno, std::system_category(), "openat");
+	}
+	return ret;
+}
+
+size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize) {
+	ssize_t ret;
+	if ((ret = ::readlinkat(fd, path, buf, bufsize)) < 0) {
+		throw std::system_error(errno, std::system_category(), "readlinkat");
+	}
+	return static_cast<size_t>(ret);
+}
+
+void renameat(int oldfd, const char *oldpath, int newfd, const char *newpath) {
+	if (::renameat(oldfd, oldpath, newfd, newpath) < 0) {
+		throw std::system_error(errno, std::system_category(), "renameat");
+	}
+}
+
+void symlinkat(const char *path1, int fd, const char *path2) {
+	if (::symlinkat(path1, fd, path2) < 0) {
+		throw std::system_error(errno, std::system_category(), "symlinkat");
+	}
+}
+
+void unlinkat(int fd, const char *path, int flag) {
+	if (::unlinkat(fd, path, flag) < 0) {
+		throw std::system_error(errno, std::system_category(), "unlinkat");
+	}
+}
+
+void utimensat(int fd, const char *path, const struct timespec times[2], int flag) {
+	if (::utimensat(fd, path, times, flag) < 0) {
+		throw std::system_error(errno, std::system_category(), "utimensat");
+	}
+}
+
+#endif // !defined(__APPLE__)
 
 } // namespace posix
