@@ -18,9 +18,14 @@ BINDIR := $(OUTDIR)
 LIB_PREFIX := lib
 LIB_SUFFIX := .so
 
+OS := $(shell uname -s)
 CFLAGS += -std=gnu99 -ffunction-sections -fdata-sections
 CXXFLAGS += -std=gnu++11 -ffunction-sections -fdata-sections
+ifeq ($(OS),Darwin)
+LDFLAGS += -Wl,-dead_strip
+else
 LDFLAGS += -Wl,--as-needed,--gc-sections
+endif
 ifdef DEBUG
 CFLAGS += -Og -ggdb
 CXXFLAGS += -Og -ggdb
@@ -32,7 +37,9 @@ endif
 CPPFLAGS += -DNDEBUG
 CFLAGS += -O3 -fvisibility=hidden
 CXXFLAGS += -O3 -fvisibility=hidden
+ifneq ($(OS),Darwin)
 LDFLAGS += -Wl,-O1,--strip-all,-z,now,-z,relro
+endif
 endif
 WFLAGS += -Wall -Wextra -Wcast-qual -Wconversion -Wdisabled-optimization -Wdouble-promotion -Wmissing-declarations -Wpacked -Wno-parentheses -Wredundant-decls -Wno-sign-conversion $(addprefix -Wsuggest-attribute=,pure const noreturn) -Wno-vla
 CFLAGS += $(WFLAGS)
