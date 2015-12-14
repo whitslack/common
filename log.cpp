@@ -1,6 +1,7 @@
 #include "log.h"
 
 #include <ctime>
+#include <iomanip>
 
 
 const char Log::trace_label[] = "TRACE";
@@ -24,10 +25,6 @@ LogStream::LogStream(std::ostream *stream_ptr, const char label[]) : std::ostrea
 		std::time_t time = std::time(nullptr);
 		std::tm tm;
 		::localtime_r(&time, &tm);
-		// [C++11] *this << std::put_time(&tm, "%c") << "  " << std::setw(5) << label << "  ";
-		char buf[34];
-		size_t n = std::strftime(buf, sizeof buf, "%c", &tm);
-		n += std::snprintf(buf + n, sizeof buf - n, "  %5s  ", label);
-		this->write(buf, n);
+		*this << std::put_time(&tm, "%c") << "  " << std::setw(5) << label << "  ";
 	}
 }

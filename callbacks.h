@@ -12,7 +12,7 @@ public:
 	typedef std::function<void (Args...) noexcept> callback_t;
 
 private:
-	typedef typename std::list<callback_t>::/* [C++11] const_*/iterator callback_itr_t;
+	typedef typename std::list<callback_t>::const_iterator callback_itr_t;
 
 public:
 	class CallbackRegistration {

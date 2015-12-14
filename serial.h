@@ -84,60 +84,47 @@ static inline T read_varint(Source &source) {
 }
 
 template <typename T>
-static inline typename std::enable_if<std::is_pod/* [C++11] is_trivially_copyable*/<T>::value, Source>::type & operator >> (Source &source, T &value) {
+static inline typename std::enable_if<std::is_trivially_copyable<T>::value, Source>::type & operator >> (Source &source, T &value) {
 	source.read_fully(&value, sizeof value);
 	return source;
 }
 
 template <typename T>
-static inline typename std::enable_if<std::is_pod/* [C++11] is_trivially_copyable*/<T>::value, Sink>::type & operator << (Sink &sink, const T &value) {
+static inline typename std::enable_if<std::is_trivially_copyable<T>::value, Sink>::type & operator << (Sink &sink, const T &value) {
 	sink.write_fully(&value, sizeof value);
 	return sink;
 }
 
-// [C++11] the next two overloads will not be needed once libstdc++ implements std::is_trivially_copyable
-template <typename T, size_t N>
-static inline typename std::enable_if<std::is_pod<T>::value, Source>::type & operator >> (Source &source, std::array<T, N> &array) {
-	source.read_fully(array.data(), array.size() * sizeof(T));
-	return source;
-}
-
-template <typename T, size_t N>
-static inline typename std::enable_if<std::is_pod<T>::value, Sink>::type & operator << (Sink &sink, const std::array<T, N> &array) {
-	sink.write_fully(array.data(), array.size() * sizeof(T));
-	return sink;
-}
-
 template <typename T>
-static inline typename std::enable_if<std::is_pod/* [C++11] is_trivially_copyable */<T>::value, Source>::type & operator >> (Source &source, std::basic_string<T> &string) {
+static inline typename std::enable_if<std::is_trivially_copyable<T>::value, Source>::type & operator >> (Source &source, std::basic_string<T> &string) {
 	string.resize(read_varint<size_t>(source));
 	source.read_fully(&string.front(), string.size() * sizeof(T));
 	return source;
 }
 
 template <typename T>
-static inline typename std::enable_if<std::is_pod/* [C++11] is_trivially_copyable */<T>::value, Sink>::type & operator << (Sink &sink, const std::basic_string<T> &string) {
+static inline typename std::enable_if<std::is_trivially_copyable<T>::value, Sink>::type & operator << (Sink &sink, const std::basic_string<T> &string) {
 	write_varint(sink, string.size());
 	sink.write_fully(string.data(), string.size() * sizeof(T));
 	return sink;
 }
 
 template <typename T>
-static inline typename std::enable_if<std::is_pod/* [C++11] is_trivially_copyable */<T>::value, Source>::type & operator >> (Source &source, std::vector<T> &vector) {
+static inline typename std::enable_if<std::is_trivially_copyable<T>::value, Source>::type & operator >> (Source &source, std::vector<T> &vector) {
 	vector.resize(read_varint<size_t>(source));
 	source.read_fully(vector.data(), vector.size() * sizeof(T));
 	return source;
 }
 
 template <typename T>
-static inline typename std::enable_if<std::is_pod/* [C++11] is_trivially_copyable */<T>::value, Sink>::type & operator << (Sink &sink, const std::vector<T> &vector) {
+static inline typename std::enable_if<std::is_trivially_copyable<T>::value, Sink>::type & operator << (Sink &sink, const std::vector<T> &vector) {
 	write_varint(sink, vector.size());
 	sink.write_fully(vector.data(), vector.size() * sizeof(T));
 	return sink;
 }
 
 template <typename T, size_t N>
-static inline typename std::enable_if<!std::is_pod/* [C++11] is_trivially_copyable */<T>::value, Source>::type & operator >> (Source &source, std::array<T, N> &array) {
+static inline typename std::enable_if<!std::is_trivially_copyable<T>::value, Source>::type & operator >> (Source &source, std::array<T, N> &array) {
 	for (auto &element : array) {
 		source >> element;
 	}
@@ -145,7 +132,7 @@ static inline typename std::enable_if<!std::is_pod/* [C++11] is_trivially_copyab
 }
 
 template <typename T, size_t N>
-static inline typename std::enable_if<!std::is_pod/* [C++11] is_trivially_copyable */<T>::value, Sink>::type & operator << (Sink &sink, const std::array<T, N> &array) {
+static inline typename std::enable_if<!std::is_trivially_copyable<T>::value, Sink>::type & operator << (Sink &sink, const std::array<T, N> &array) {
 	for (auto &element : array) {
 		sink << element;
 	}
@@ -153,7 +140,7 @@ static inline typename std::enable_if<!std::is_pod/* [C++11] is_trivially_copyab
 }
 
 template <typename T>
-static inline typename std::enable_if<!std::is_pod/* [C++11] is_trivially_copyable */<T>::value, Source>::type & operator >> (Source &source, std::vector<T> &vector) {
+static inline typename std::enable_if<!std::is_trivially_copyable<T>::value, Source>::type & operator >> (Source &source, std::vector<T> &vector) {
 	vector.resize(read_varint<size_t>(source));
 	for (auto &element : vector) {
 		source >> element;
@@ -162,7 +149,7 @@ static inline typename std::enable_if<!std::is_pod/* [C++11] is_trivially_copyab
 }
 
 template <typename T>
-static inline typename std::enable_if<!std::is_pod/* [C++11] is_trivially_copyable */<T>::value, Sink>::type & operator << (Sink &sink, const std::vector<T> &vector) {
+static inline typename std::enable_if<!std::is_trivially_copyable<T>::value, Sink>::type & operator << (Sink &sink, const std::vector<T> &vector) {
 	write_varint(sink, vector.size());
 	for (auto &element : vector) {
 		sink << element;

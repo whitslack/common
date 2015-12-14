@@ -8,9 +8,6 @@ class LogBuf : public std::stringbuf {
 private:
 	std::ostream *stream_ptr;
 
-public:
-	LogBuf(const LogBuf &copy) : std::stringbuf(copy.str()), stream_ptr(copy.stream_ptr) { }
-
 private:
 	LogBuf(std::ostream *stream_ptr) : stream_ptr(stream_ptr) { }
 
@@ -27,7 +24,7 @@ private:
 	LogBuf buf;
 
 public:
-	LogStream(const LogStream &copy) : std::ios(), std::ostream(&buf), buf(copy.buf) { }
+	LogStream(LogStream &&move) : std::ios(), std::ostream(std::move(move)), buf(std::move(buf)) { }
 
 private:
 	LogStream(std::ostream *stream_ptr, const char label[]);
