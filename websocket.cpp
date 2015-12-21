@@ -47,7 +47,7 @@ void WebSocketBase::send(WebSocket::Opcode opcode, bool mask, const void *buf, s
 		*p++ = static_cast<uint8_t>(mask >> 24);
 		std::vector<uint8_t> masked(n); // [C++14] std::dynarray
 		for (size_t i = 0; i < n; ++i) {
-			masked[i] = static_cast<const uint8_t *>(buf)[i] ^ static_cast<uint8_t>(mask >> i % 4 * 8);
+			masked[i] = static_cast<uint8_t>(static_cast<const uint8_t *>(buf)[i] ^ mask >> i % 4 * 8);
 		}
 		std::lock_guard<std::mutex> lock(send_mutex);
 		this->send(header, p - header, true);
