@@ -37,9 +37,7 @@ class Socket : public FileDescriptor {
 public:
 	Socket() { }
 	Socket(int domain, int type, int protocol = 0) : FileDescriptor(posix::socket(domain, type, protocol)) { }
-
-protected:
-	explicit Socket(int fd) : FileDescriptor(fd) { }
+	explicit Socket(FileDescriptor &&move) : FileDescriptor(std::move(move)) { }
 
 public:
 	void open(int domain, int type, int protocol = 0) { *this = Socket(domain, type, protocol); }
@@ -53,7 +51,7 @@ public:
 
 	void getpeername(sockaddr *addr, socklen_t *addrlen) const { posix::getpeername(fd, addr, addrlen); }
 	bool connect(const sockaddr *addr, socklen_t addrlen) { return posix::connect(fd, addr, addrlen); }
-	Socket accept(sockaddr *addr, socklen_t *addrlen, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { return Socket(posix::accept(fd, addr, addrlen, flags)); }
+	Socket accept(sockaddr *addr = nullptr, socklen_t *addrlen = nullptr, int flags = SOCK_CLOEXEC) { return Socket(FileDescriptor(posix::accept(fd, addr, addrlen, flags))); }
 
 	void listen(int backlog = SOMAXCONN) { posix::listen(fd, backlog); }
 	ssize_t recv(void *buffer, size_t length, int flags = 0) { return posix::recv(fd, buffer, length, flags); }
@@ -79,39 +77,33 @@ public:
 
 	void getpeername(A &addr) const;
 	bool connect(const A &addr);
-	T accept(A *addr = nullptr, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC);
+	T accept(A *addr = nullptr, int flags = SOCK_CLOEXEC);
 
 };
 
 
 class Socket4 : public SocketBase<Socket4, sockaddr_in> {
-	friend SocketBase<Socket4, sockaddr_in>;
 
 public:
 	Socket4() { }
-	explicit Socket4(int type, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) : SocketBase(AF_INET, type | flags, protocol) { }
-
-protected:
-	Socket4(int fd, std::nullptr_t) : SocketBase<Socket4, sockaddr_in>(fd) { }
+	explicit Socket4(int type, int protocol = 0, int flags = SOCK_CLOEXEC) : SocketBase(AF_INET, type | flags, protocol) { }
+	explicit Socket4(FileDescriptor &&move) : SocketBase<Socket4, sockaddr_in>(std::move(move)) { }
 
 public:
-	void open(int type = SOCK_STREAM, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { *this = Socket4(type, protocol, flags); }
+	void open(int type = SOCK_STREAM, int protocol = 0, int flags = SOCK_CLOEXEC) { *this = Socket4(type, protocol, flags); }
 
 };
 
 
 class Socket6 : public SocketBase<Socket6, sockaddr_in6> {
-	friend SocketBase<Socket6, sockaddr_in6>;
 
 public:
 	Socket6() { }
-	explicit Socket6(int type, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) : SocketBase(AF_INET6, type | flags, protocol) { }
-
-protected:
-	Socket6(int fd, std::nullptr_t) : SocketBase<Socket6, sockaddr_in6>(fd) { }
+	explicit Socket6(int type, int protocol = 0, int flags = SOCK_CLOEXEC) : SocketBase(AF_INET6, type | flags, protocol) { }
+	explicit Socket6(FileDescriptor &&move) : SocketBase<Socket6, sockaddr_in6>(std::move(move)) { }
 
 public:
-	void open(int type = SOCK_STREAM, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { *this = Socket6(type, protocol, flags); }
+	void open(int type = SOCK_STREAM, int protocol = 0, int flags = SOCK_CLOEXEC) { *this = Socket6(type, protocol, flags); }
 
 };
 

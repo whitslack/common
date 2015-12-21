@@ -214,7 +214,7 @@ bool SocketBase<T, A>::connect(const A &addr) {
 template <typename T, typename A>
 T SocketBase<T, A>::accept(A *addr, int flags) {
 	socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
-	return T(posix::accept(fd, reinterpret_cast<sockaddr *>(addr), addr ? &addrlen : nullptr, flags), nullptr);
+	return T(this->Socket::accept(reinterpret_cast<sockaddr *>(addr), addr ? &addrlen : nullptr, flags));
 }
 
 template class SocketBase<Socket4, sockaddr_in>;
