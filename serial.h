@@ -1,3 +1,4 @@
+#include <map>
 #include <tuple>
 
 #include "io.h"
@@ -165,6 +166,26 @@ static inline Source & operator >> (Source &source, std::pair<T1, T2> &pair) {
 template <typename T1, typename T2>
 static inline Sink & operator << (Sink &sink, const std::pair<T1, T2> &pair) {
 	return sink << pair.first << pair.second;
+}
+
+template <typename K, typename T, typename... _>
+static inline Source & operator >> (Source &source, std::map<K, T, _...> &map) {
+	map.clear();
+	for (auto count = read_varint<size_t>(source); count > 0; --count) {
+		std::pair<K, T> pair;
+		source >> pair;
+		map.emplace_hint(map.end(), std::move(pair));
+	}
+	return source;
+}
+
+template <typename K, typename T, typename... _>
+static inline Sink & operator << (Sink &sink, const std::map<K, T, _...> &map) {
+	write_varint(sink, map.size());
+	for (auto &pair : map) {
+		sink << pair;
+	}
+	return sink;
 }
 
 template <size_t I, typename... Types>
