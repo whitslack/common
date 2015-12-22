@@ -1,5 +1,7 @@
 #include "serial.h"
 
+#include "endian.h"
+
 
 static size_t varint_size(uint8_t first_byte) {
 	unsigned i = static_cast<uint8_t>(~first_byte);
