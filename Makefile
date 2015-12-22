@@ -19,8 +19,8 @@ LIB_PREFIX := lib
 LIB_SUFFIX := .so
 
 OS := $(shell uname -s)
-CFLAGS += -std=gnu99 -ffunction-sections -fdata-sections
-CXXFLAGS += -std=gnu++11 -ffunction-sections -fdata-sections
+CFLAGS += -std=gnu11 -ffunction-sections -fdata-sections
+CXXFLAGS += -std=gnu++14 -ffunction-sections -fdata-sections
 ifeq ($(OS),Darwin)
 LDFLAGS += -Wl,-dead_strip
 else
@@ -35,8 +35,8 @@ CPPFLAGS += -fPIE
 LDFLAGS += -pie
 endif
 CPPFLAGS += -DNDEBUG
-CFLAGS += -O3 -fvisibility=hidden
-CXXFLAGS += -O3 -fvisibility=hidden
+CFLAGS += -O3 -flto -fvisibility=hidden
+CXXFLAGS += -O3 -flto -fvisibility=hidden
 ifneq ($(OS),Darwin)
 LDFLAGS += -Wl,-O1,--strip-all,-z,now,-z,relro
 endif
