@@ -1,8 +1,10 @@
 #include "socket.h"
 
 #include <cassert>
+#include <ostream>
 #include <system_error>
 
+#include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/ioctl.h>
 
@@ -217,3 +219,20 @@ T SocketBase<T, A>::accept(A *addr, int flags) {
 
 template class SocketBase<Socket4, sockaddr_in>;
 template class SocketBase<Socket6, sockaddr_in6>;
+
+
+std::ostream & operator << (std::ostream &os, const in_addr &addr) {
+	char buf[INET_ADDRSTRLEN];
+	if (!::inet_ntop(AF_INET, &addr, buf, sizeof buf)) {
+		throw std::system_error(errno, std::system_category(), "inet_ntop");
+	}
+	return os << buf;
+}
+
+std::ostream & operator << (std::ostream &os, const in6_addr &addr) {
+	char buf[INET6_ADDRSTRLEN];
+	if (!::inet_ntop(AF_INET6, &addr, buf, sizeof buf)) {
+		throw std::system_error(errno, std::system_category(), "inet_ntop");
+	}
+	return os << buf;
+}

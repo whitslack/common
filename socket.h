@@ -1,5 +1,7 @@
 #pragma once
 
+#include <iosfwd>
+
 #include <netinet/in.h>
 
 #include "fd.h"
@@ -112,3 +114,7 @@ public:
 	void open(int type = SOCK_STREAM, int protocol = 0, int flags = SOCK_NONBLOCK | SOCK_CLOEXEC) { *this = Socket6(type, protocol, flags); }
 
 };
+
+
+std::ostream & operator << (std::ostream &os, const in_addr &addr);
+std::ostream & operator << (std::ostream &os, const in6_addr &addr);
