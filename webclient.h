@@ -1,5 +1,6 @@
+#include <experimental/optional>
+
 #include "http.h"
-#include "optional.h"
 #include "socket.h"
 
 #ifdef HTTP_GZIP
@@ -20,7 +21,7 @@ private:
 	ChunkedSource chunked_source;
 	ChunkedSink chunked_sink;
 #ifdef HTTP_GZIP
-	optional<GZipSource> gzip_source; // [C++14] std::optional
+	std::experimental::optional<GZipSource> gzip_source;
 #endif
 	Source *read_source;
 	Sink *write_sink;
