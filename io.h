@@ -298,6 +298,24 @@ public:
 };
 
 
+class StreamBufSourceSink : public Source, public Sink {
+
+private:
+	std::streambuf &sb;
+
+public:
+	explicit StreamBufSourceSink(std::streambuf &sb) : sb(sb) { }
+
+public:
+	ssize_t read(void *buf, size_t n) override;
+	size_t avail() override;
+
+	size_t write(const void *buf, size_t n) override;
+	bool flush() override { return sb.pubsync() == 0; }
+
+};
+
+
 class SourceBuf : public virtual std::streambuf {
 
 protected:

@@ -164,6 +164,20 @@ ssize_t Tap::read(void *buf, size_t n) {
 }
 
 
+ssize_t StreamBufSourceSink::read(void *buf, size_t n) {
+	auto r = sb.sgetn(static_cast<std::streambuf::char_type *>(buf), saturate<std::streamsize>(n));
+	return r == 0 ? -1 : r;
+}
+
+size_t StreamBufSourceSink::avail() {
+	return saturate<size_t>(sb.in_avail());
+}
+
+size_t StreamBufSourceSink::write(const void *buf, size_t n) {
+	return static_cast<size_t>(sb.sputn(static_cast<const std::streambuf::char_type *>(buf), saturate<std::streamsize>(n)));
+}
+
+
 SourceBuf::SourceBuf(Source &source) : source(source) {
 	this->setbuf(&gbuf, 1);
 }
