@@ -1,6 +1,7 @@
 #include <libaio.h>
 
 
+#undef linux
 namespace linux {
 
 class AIOContext {
