@@ -7,6 +7,7 @@
 #include <sys/ioctl.h>
 #include <sys/stat.h>
 #include <sys/time.h>
+#include <sys/uio.h>
 
 
 namespace posix {
@@ -277,6 +278,24 @@ ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset) {
 	return ret == 0 && nbyte > 0 ? -1 : ret;
 }
 
+ssize_t preadv(int fildes, const struct iovec iov[], int iovcnt, off_t offset) {
+	ssize_t ret;
+	if ((ret = ::preadv(fildes, iov, iovcnt, offset)) < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "preadv");
+	}
+	if (ret == 0) {
+		for (int i = 0; i < iovcnt; ++i) {
+			if (iov[i].iov_len > 0) {
+				return -1;
+			}
+		}
+	}
+	return ret;
+}
+
 size_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset) {
 	ssize_t ret;
 	if ((ret = ::pwrite(fildes, buf, nbyte, offset)) < 0) {
@@ -284,6 +303,17 @@ size_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset) {
 			return 0;
 		}
 		throw std::system_error(errno, std::system_category(), "pwrite");
+	}
+	return static_cast<size_t>(ret);
+}
+
+size_t pwritev(int fildes, const struct iovec iov[], int iovcnt, off_t offset) {
+	ssize_t ret;
+	if ((ret = ::pwritev(fildes, iov, iovcnt, offset)) < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "pwritev");
 	}
 	return static_cast<size_t>(ret);
 }
@@ -297,6 +327,24 @@ ssize_t read(int fildes, void *buf, size_t nbyte) {
 		throw std::system_error(errno, std::system_category(), "read");
 	}
 	return ret == 0 && nbyte > 0 ? -1 : ret;
+}
+
+ssize_t readv(int fildes, const struct iovec iov[], int iovcnt) {
+	ssize_t ret;
+	if ((ret = ::readv(fildes, iov, iovcnt)) < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "readv");
+	}
+	if (ret == 0) {
+		for (int i = 0; i < iovcnt; ++i) {
+			if (iov[i].iov_len > 0) {
+				return -1;
+			}
+		}
+	}
+	return ret;
 }
 
 size_t readlink(const char * _restrict path, char * _restrict buf, size_t bufsize) {
@@ -367,6 +415,17 @@ size_t write(int fildes, const void *buf, size_t nbyte) {
 			return 0;
 		}
 		throw std::system_error(errno, std::system_category(), "write");
+	}
+	return static_cast<size_t>(ret);
+}
+
+size_t writev(int fildes, const struct iovec iov[], int iovcnt) {
+	ssize_t ret;
+	if ((ret = ::writev(fildes, iov, iovcnt)) < 0) {
+		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
+			return 0;
+		}
+		throw std::system_error(errno, std::system_category(), "writev");
 	}
 	return static_cast<size_t>(ret);
 }

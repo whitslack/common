@@ -65,8 +65,11 @@ int openat(int fd, const char *path, int oflag, mode_t mode = 0666);
 void pipe(int fildes[2]);
 unsigned poll(struct pollfd fds[], nfds_t nfds, int timeout = -1);
 ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
+ssize_t preadv(int fd, const struct iovec iov[], int iovcnt, off_t offset);
 size_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
+size_t pwritev(int fd, const struct iovec iov[], int iovcnt, off_t offset);
 ssize_t read(int fildes, void *buf, size_t nbyte);
+ssize_t readv(int fildes, const struct iovec iov[], int iovcnt);
 size_t readlink(const char * _restrict path, char * _restrict buf, size_t bufsize);
 size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize);
 void rename(const char *oldpath, const char *newpath);
@@ -82,6 +85,7 @@ void unlinkat(int fd, const char *path, int flag = 0);
 void utimensat(int fd, const char *path, const struct timespec times[2], int flag = 0);
 void utimes(const char *path, const struct timeval times[2]);
 size_t write(int fildes, const void *buf, size_t nbyte);
+size_t writev(int fildes, const struct iovec iov[], int iovcnt);
 
 static inline unsigned select(int nfds, fd_set * _restrict readfds, fd_set * _restrict writefds, fd_set * _restrict errorfds, std::chrono::microseconds timeout) {
 	struct timeval tv;
@@ -165,8 +169,12 @@ public:
 	void close() { posix::close(fd), fd = -1; }
 	ssize_t read(void *buf, size_t n) override { return posix::read(fd, buf, n); }
 	size_t write(const void *buf, size_t n) override { return posix::write(fd, buf, n); }
+	ssize_t readv(const struct iovec iov[], int iovcnt) { return posix::readv(fd, iov, iovcnt); }
+	size_t writev(const struct iovec iov[], int iovcnt) { return posix::writev(fd, iov, iovcnt); }
 	ssize_t pread(void *buf, size_t nbyte, off_t offset) { return posix::pread(fd, buf, nbyte, offset); }
 	size_t pwrite(const void *buf, size_t nbyte, off_t offset) { return posix::pwrite(fd, buf, nbyte, offset); }
+	ssize_t preadv(const struct iovec iov[], int iovcnt, off_t offset) { return posix::preadv(fd, iov, iovcnt, offset); }
+	size_t pwritev(const struct iovec iov[], int iovcnt, off_t offset) { return posix::pwritev(fd, iov, iovcnt, offset); }
 	void lockf(int function, off_t size) { posix::lockf(fd, function, size); }
 	int fcntl(int cmd) { return posix::fcntl(fd, cmd); }
 	int fcntl(int cmd, int arg) { return posix::fcntl(fd, cmd, arg); }
