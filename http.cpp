@@ -1,13 +1,12 @@
 #include "http.h"
-#include "regex.h"
 
 #include <iomanip>
 #include <sstream>
 
-#define BITS(l, o) (((size_t(1) << (l)) - 1) << (o))
+#include "memory.h"
+#include "regex.h"
 
-template <typename T, size_t N>
-static constexpr size_t countof(T (&)[N]) { return N; }
+#define BITS(l, o) (((size_t(1) << (l)) - 1) << (o))
 
 const char
 		HTTP_REASON_PHRASE_100[] = "Continue",
@@ -107,7 +106,7 @@ static std::istream & read_token(std::istream &is, std::string &token) {
 		/*"x"*/ true, /*"y"*/ true, /*"z"*/ true, /*"{"*/false, /*"|"*/ true, /*"}"*/false, /*"~"*/ true, /*DEL*/false
 	};
 	token.clear();
-	for (int c; !std::istream::traits_type::eq_int_type(c = is.peek(), std::istream::traits_type::eof()) && c >= 0 && static_cast<size_t>(c) < countof(map) && map[c];) {
+	for (int c; !std::istream::traits_type::eq_int_type(c = is.peek(), std::istream::traits_type::eof()) && c >= 0 && static_cast<size_t>(c) < std::size(map) && map[c];) {
 		token.push_back(std::istream::traits_type::to_char_type(is.get()));
 	}
 	return is;
@@ -485,7 +484,7 @@ std::time_t rfc2822_date(const char str[]) {
 	static const Regex regex("^" _date_time_);
 	regmatch_t matches[26];
 	struct std::tm tm;
-	if (!regex.exec(str, sizeof matches / sizeof *matches, matches) ||
+	if (!regex.exec(str, std::size(matches), matches) ||
 			(tm.tm_wday = str_to_wday(str + matches[2].rm_so)) < 0 ||
 			(tm.tm_mon = str_to_month(str + matches[11].rm_so)) < 0) {
 		throw std::ios_base::failure("invalid RFC2822 date");

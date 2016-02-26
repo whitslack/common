@@ -2,10 +2,8 @@
 
 #include <stdexcept>
 
+#include "memory.h"
 #include "regex.h"
-
-template <typename T, size_t N>
-constexpr size_t countof(T (&)[N]) { return N; }
 
 #define _URI_reference_ "(" _absoluteURI_ "|" _relativeURI_ ")?" "(#" _fragment_ ")?"
 
@@ -58,7 +56,7 @@ static Regex parse_regex("^" _URI_reference_ "$");
 
 void URI::parse() {
 	regmatch_t matches[98];
-	if (!parse_regex.exec(uri.c_str(), countof(matches), matches)) {
+	if (!parse_regex.exec(uri.c_str(), std::size(matches), matches)) {
 		throw std::invalid_argument("invalid URI");
 	}
 	scheme = { uri.begin() + matches[2].rm_so, uri.begin() + matches[2].rm_eo };
@@ -107,8 +105,8 @@ int main() {
 	std::cerr << std::boolalpha;
 	while (getline(std::cin, line)) {
 		regmatch_t matches[98];
-		if (parse_regex.exec(line.c_str(), countof(matches), matches)) {
-			for (size_t i = 0; i < countof(matches); ++i) {
+		if (parse_regex.exec(line.c_str(), std::size(matches), matches)) {
+			for (size_t i = 0; i < std::size(matches); ++i) {
 				(std::cout << " [" << i << "]=\"").write(line.data() + matches[i].rm_so, matches[i].rm_eo - matches[i].rm_so) << '"';
 			}
 			std::cout << std::endl;

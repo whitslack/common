@@ -8,10 +8,8 @@
 #include "base64.h"
 #include "codec.h"
 #include "connect.h"
+#include "memory.h"
 #include "sha.h"
-
-template <typename T, size_t N>
-constexpr size_t countof(T (&)[N]) { return N; }
 
 void WebSocketBase::send(WebSocket::Opcode opcode, bool mask, const void *buf, size_t n, bool more) {
 	uint8_t header[14], *p = header;
@@ -280,7 +278,7 @@ void WebSocketClientHandshake::start(const char host[], uint16_t port, const cha
 	}
 	{
 		uint32_t key[4];
-		for (size_t i = 0; i < countof(key); ++i) {
+		for (size_t i = 0; i < std::size(key); ++i) {
 			key[i] = static_cast<uint32_t>(::mrand48());
 		}
 		transcode<Base64Encoder>(this->key, key, sizeof key);
