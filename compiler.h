@@ -18,37 +18,37 @@
 
 #define _restrict __restrict
 
-static constexpr int _ffs(int v) { return __builtin_ffs(v); }
-static constexpr int _ffs(long v) { return __builtin_ffsl(v); }
-static constexpr int _ffs(long long v) { return __builtin_ffsll(v); }
+static constexpr auto _ffs(int v) { return __builtin_ffs(v); }
+static constexpr auto _ffs(long v) { return __builtin_ffsl(v); }
+static constexpr auto _ffs(long long v) { return __builtin_ffsll(v); }
 
-static constexpr int _clz(unsigned v) { return __builtin_clz(v); }
-static constexpr int _clz(unsigned long v) { return __builtin_clzl(v); }
-static constexpr int _clz(unsigned long long v) { return __builtin_clzll(v); }
+static constexpr auto _clz(unsigned v) { return __builtin_clz(v); }
+static constexpr auto _clz(unsigned long v) { return __builtin_clzl(v); }
+static constexpr auto _clz(unsigned long long v) { return __builtin_clzll(v); }
 
-static constexpr int _ctz(unsigned v) { return __builtin_ctz(v); }
-static constexpr int _ctz(unsigned long v) { return __builtin_ctzl(v); }
-static constexpr int _ctz(unsigned long long v) { return __builtin_ctzll(v); }
+static constexpr auto _ctz(unsigned v) { return __builtin_ctz(v); }
+static constexpr auto _ctz(unsigned long v) { return __builtin_ctzl(v); }
+static constexpr auto _ctz(unsigned long long v) { return __builtin_ctzll(v); }
 
-static constexpr int _clrsb(int v) { return __builtin_clrsb(v); }
-static constexpr int _clrsb(long v) { return __builtin_clrsbl(v); }
-static constexpr int _clrsb(long long v) { return __builtin_clrsbll(v); }
+static constexpr auto _clrsb(int v) { return __builtin_clrsb(v); }
+static constexpr auto _clrsb(long v) { return __builtin_clrsbl(v); }
+static constexpr auto _clrsb(long long v) { return __builtin_clrsbll(v); }
 
-static constexpr int _popcount(unsigned v) { return __builtin_popcount(v); }
-static constexpr int _popcount(unsigned long v) { return __builtin_popcountl(v); }
-static constexpr int _popcount(unsigned long long v) { return __builtin_popcountll(v); }
+static constexpr auto _popcount(unsigned v) { return __builtin_popcount(v); }
+static constexpr auto _popcount(unsigned long v) { return __builtin_popcountl(v); }
+static constexpr auto _popcount(unsigned long long v) { return __builtin_popcountll(v); }
 
-static constexpr int _parity(unsigned v) { return __builtin_parity(v); }
-static constexpr int _parity(unsigned long v) { return __builtin_parityl(v); }
-static constexpr int _parity(unsigned long long v) { return __builtin_parityll(v); }
+static constexpr auto _parity(unsigned v) { return __builtin_parity(v); }
+static constexpr auto _parity(unsigned long v) { return __builtin_parityl(v); }
+static constexpr auto _parity(unsigned long long v) { return __builtin_parityll(v); }
 
-static constexpr unsigned rotl(unsigned v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
-static constexpr unsigned long rotl(unsigned long v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
-static constexpr unsigned long long rotl(unsigned long long v, unsigned s) { return v << s | v >> sizeof v * 8 - s; }
+static constexpr unsigned rotl(unsigned v, unsigned s) { return v << s | v >> sizeof v * CHAR_BIT - s; }
+static constexpr unsigned long rotl(unsigned long v, unsigned s) { return v << s | v >> sizeof v * CHAR_BIT - s; }
+static constexpr unsigned long long rotl(unsigned long long v, unsigned s) { return v << s | v >> sizeof v * CHAR_BIT - s; }
 
-static constexpr unsigned rotr(unsigned v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
-static constexpr unsigned long rotr(unsigned long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
-static constexpr unsigned long long rotr(unsigned long long v, unsigned s) { return v >> s | v << sizeof v * 8 - s; }
+static constexpr unsigned rotr(unsigned v, unsigned s) { return v >> s | v << sizeof v * CHAR_BIT - s; }
+static constexpr unsigned long rotr(unsigned long v, unsigned s) { return v >> s | v << sizeof v * CHAR_BIT - s; }
+static constexpr unsigned long long rotr(unsigned long long v, unsigned s) { return v >> s | v << sizeof v * CHAR_BIT - s; }
 
 template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value && sizeof(T) == sizeof(uint16_t), T>::type bswap(T v) { return __builtin_bswap16(v); }
 template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value && sizeof(T) == sizeof(uint32_t), T>::type bswap(T v) { return __builtin_bswap32(v); }
