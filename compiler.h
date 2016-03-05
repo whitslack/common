@@ -14,6 +14,7 @@
 #define _unused __attribute__ ((__unused__))
 #define _visible __attribute__ ((__visibility__ ("default")))
 #define _weak __attribute__ ((__weak__))
+#define _weakref(...) __attribute__ ((__weakref__ (__VA_ARGS__)))
 #define _wur __attribute__ ((__warn_usused_result__))
 
 #define _restrict __restrict

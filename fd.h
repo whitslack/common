@@ -5,11 +5,14 @@
 
 #include <fcntl.h>
 #include <poll.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/select.h>
 #include <sys/stat.h>
+#include <sys/uio.h>
 
 #include "io.h"
+
 
 namespace posix {
 
@@ -206,8 +209,74 @@ public:
 	void mknodat(const char *path, mode_t mode, dev_t dev) const { posix::mknodat(fd, path, mode, dev); }
 	FileDescriptor openat(const char *path, int oflag, mode_t mode = 0666) const { return FileDescriptor(posix::openat(fd, path, oflag, mode)); }
 	size_t readlinkat(const char * _restrict path, char * _restrict buf, size_t bufsize) const { return posix::readlinkat(fd, path, buf, bufsize); }
+	void renameat(const char *oldpath, const char *newpath) const { posix::renameat(fd, oldpath, fd, newpath); }
 	void symlinkat(const char *path1, const char *path2) const { posix::symlinkat(path1, fd, path2); }
 	void unlinkat(const char *path, int flag = 0) const { posix::unlinkat(fd, path, flag); }
 	void utimensat(const char *path, const struct timespec times[2], int flag = 0) const { posix::utimensat(fd, path, times, flag); }
 
 };
+
+
+#if _POSIX_VERSION < 200809L
+// polyfill file functions standardized in POSIX.1-2008
+#ifndef AT_FDCWD
+#	define AT_FDCWD (-100)
+#endif
+#ifndef AT_SYMLINK_NOFOLLOW
+#	define AT_SYMLINK_NOFOLLOW 0x100
+#endif
+#ifndef AT_EACCESS
+#	define AT_EACCESS 0x200
+#endif
+#ifndef AT_REMOVEDIR
+#	define AT_REMOVEDIR 0x200
+#endif
+#ifndef AT_SYMLINK_FOLLOW
+#	define AT_SYMLINK_FOLLOW 0x400
+#endif
+#ifndef UTIME_NOW
+#	define UTIME_NOW ((1L << 30) - 1L)
+#endif
+#ifndef UTIME_OMIT
+#	define UTIME_OMIT ((1L << 30) - 2L)
+#endif
+extern "C" {
+	int faccessat(int fd, const char *path, int amode, int flag) _weak;
+	int fchmodat(int fd, const char *path, mode_t mode, int flag) _weak;
+	int fchownat(int fd, const char *path, uid_t owner, gid_t group, int flag) _weak;
+	int fstatat(int fd, const char * _restrict path, struct stat * _restrict buf, int flag) _weak;
+	int futimens(int fd, const struct timespec times[2]) _weak;
+	int linkat(int fd1, const char *path1, int fd2, const char *path2, int flag) _weak;
+	int mkdirat(int fd, const char *path, mode_t mode) _weak;
+	int mkfifoat(int fd, const char *path, mode_t mode) _weak;
+	int mknodat(int fd, const char *path, mode_t mode, dev_t dev) _weak;
+	int openat(int fd, const char *path, int oflag, ...) _weak;
+	ssize_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize) _weak;
+	int renameat(int oldfd, const char *oldpath, int newfd, const char *newpath) _weak;
+	int symlinkat(const char *path1, int fd, const char *path2) _weak;
+	int unlinkat(int fd, const char *path, int flag) _weak;
+	int utimensat(int fd, const char *path, const struct timespec times[2], int flag) _weak;
+}
+#endif // _POSIX_VERSION < 200809L
+
+#if _POSIX_SYNCHRONIZED_IO <= 0
+static int fdatasync(int fildes) _weakref("fsync");
+#endif
+
+#ifndef POSIX_FADV_NORMAL
+#	define POSIX_FADV_NORMAL 0
+#	define POSIX_FADV_RANDOM 1
+#	define POSIX_FADV_SEQUENTIAL 2
+#	define POSIX_FADV_WILLNEED 3
+#	define POSIX_FADV_DONTNEED 4
+#	define POSIX_FADV_NOREUSE 5
+extern "C" int posix_fadvise(int fd, off_t offset, off_t len, int advice) _weak;
+#endif // !defined(POSIX_FADV_NORMAL)
+
+#ifdef __APPLE__
+extern "C" {
+	int posix_fallocate(int fd, off_t offset, off_t len) _weak;
+	ssize_t preadv(int fd, const struct iovec iov[], int iovcnt, off_t offset) _weak;
+	ssize_t pwritev(int fd, const struct iovec iov[], int iovcnt, off_t offset) _weak;
+}
+#endif // defined(__APPLE__)
