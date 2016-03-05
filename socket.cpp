@@ -170,19 +170,45 @@ void socketpair(int domain, int type, int protocol, int socket_vector[2]) {
 } // namespace posix
 
 
+bool Socket::connect(const sockaddr *addr, socklen_t addrlen) {
+	bool ret = posix::connect(fd, addr, addrlen);
+#ifdef TCP_CORK
+	this->setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
+	this->setsockopt(IPPROTO_TCP, TCP_CORK, 1);
+#elif defined(TCP_NOPUSH)
+	this->setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
+	this->setsockopt(IPPROTO_TCP, TCP_NOPUSH, 1);
+#endif
+	return ret;
+}
+
+Socket Socket::accept(sockaddr *addr, socklen_t *addrlen, int flags) {
+	Socket socket(FileDescriptor(posix::accept(fd, addr, addrlen, flags)));
+#ifdef TCP_CORK
+	socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
+	socket.setsockopt(IPPROTO_TCP, TCP_CORK, 1);
+#elif defined(TCP_NOPUSH)
+	socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
+	socket.setsockopt(IPPROTO_TCP, TCP_NOPUSH, 1);
+#endif
+	return socket;
+}
+
 size_t Socket::avail() {
 	int n;
 	this->ioctl(FIONREAD, &n);
 	return n;
 }
 
-size_t Socket::write(const void *buf, size_t n) {
-	return this->send(buf, n, MSG_MORE);
-}
-
 bool Socket::flush() {
-	int optval = 0;
-	this->setsockopt(IPPROTO_TCP, TCP_CORK, &optval, static_cast<socklen_t>(sizeof optval));
+#ifdef TCP_CORK
+	this->setsockopt(IPPROTO_TCP, TCP_CORK, 0);
+	this->setsockopt(IPPROTO_TCP, TCP_CORK, 1);
+#elif defined(TCP_NOPUSH)
+	this->setsockopt(IPPROTO_TCP, TCP_NOPUSH, 0);
+	this->send(nullptr, 0, 0);
+	this->setsockopt(IPPROTO_TCP, TCP_NOPUSH, 1);
+#endif
 	return true;
 }
 

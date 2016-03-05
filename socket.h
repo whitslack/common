@@ -51,8 +51,8 @@ public:
 	void bind(const sockaddr *addr, socklen_t addrlen) { posix::bind(fd, addr, addrlen); }
 
 	void getpeername(sockaddr *addr, socklen_t *addrlen) const { posix::getpeername(fd, addr, addrlen); }
-	bool connect(const sockaddr *addr, socklen_t addrlen) { return posix::connect(fd, addr, addrlen); }
-	Socket accept(sockaddr *addr = nullptr, socklen_t *addrlen = nullptr, int flags = SOCK_CLOEXEC) { return Socket(FileDescriptor(posix::accept(fd, addr, addrlen, flags))); }
+	bool connect(const sockaddr *addr, socklen_t addrlen);
+	Socket accept(sockaddr *addr = nullptr, socklen_t *addrlen = nullptr, int flags = SOCK_CLOEXEC);
 
 	void listen(int backlog = SOMAXCONN) { posix::listen(fd, backlog); }
 	ssize_t recv(void *buffer, size_t length, int flags = 0) { return posix::recv(fd, buffer, length, flags); }
@@ -60,7 +60,6 @@ public:
 	size_t send(const void *buffer, size_t length, int flags = 0) { return posix::send(fd, buffer, length, flags); }
 
 	size_t avail() override;
-	size_t write(const void *buf, size_t n) override;
 	bool flush() override;
 
 };
