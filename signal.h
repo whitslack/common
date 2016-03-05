@@ -23,6 +23,7 @@ void pthread_sigqueue(pthread_t thread, int sig, const union sigval value);
 void raise(int sig);
 void sigaction(int sig, const struct ::sigaction * _restrict act, struct ::sigaction * _restrict oact = nullptr);
 void sigaltstack(const stack_t * _restrict ss, stack_t * _restrict oss = nullptr);
+sighandler_t signal(int signum, sighandler_t handler);
 void sigpending(sigset_t &set);
 void sigprocmask(int how, const sigset_t & _restrict set, sigset_t * _restrict oset = nullptr);
 void sigqueue(pid_t pid, int signo, const union sigval value);

@@ -84,6 +84,14 @@ void sigaltstack(const stack_t * _restrict ss, stack_t * _restrict oss) {
 	}
 }
 
+sighandler_t signal(int signum, sighandler_t handler) {
+	sighandler_t ret;
+	if ((ret = ::signal(signum, handler)) == SIG_ERR) {
+		throw std::system_error(errno, std::system_category(), "signal");
+	}
+	return ret;
+}
+
 void sigpending(sigset_t &set) {
 	if (::sigpending(&set) < 0) {
 		throw std::system_error(errno, std::system_category(), "sigpending");
