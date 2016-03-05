@@ -177,7 +177,7 @@ size_t Socket::avail() {
 }
 
 size_t Socket::write(const void *buf, size_t n) {
-	return this->send(buf, n, MSG_MORE | MSG_NOSIGNAL);
+	return this->send(buf, n, MSG_MORE);
 }
 
 bool Socket::flush() {

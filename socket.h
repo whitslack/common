@@ -57,7 +57,7 @@ public:
 	void listen(int backlog = SOMAXCONN) { posix::listen(fd, backlog); }
 	ssize_t recv(void *buffer, size_t length, int flags = 0) { return posix::recv(fd, buffer, length, flags); }
 	size_t send(const void *, size_t, bool) = delete;
-	size_t send(const void *buffer, size_t length, int flags = MSG_NOSIGNAL) { return posix::send(fd, buffer, length, flags); }
+	size_t send(const void *buffer, size_t length, int flags = 0) { return posix::send(fd, buffer, length, flags); }
 
 	size_t avail() override;
 	size_t write(const void *buf, size_t n) override;
