@@ -6,6 +6,7 @@
 
 #ifdef __GNUC__
 
+#define _always_inline __attribute__ ((__always_inline__))
 #define _const __attribute__ ((__const__))
 #define _hidden __attribute__ ((__visibility__ ("hidden")))
 #define _nonnull(...) __attribute__ ((__nonnull__ (__VA_ARGS__)))
@@ -70,6 +71,10 @@ static inline unsigned __int128 _const __bswap128(unsigned __int128 v) {
 static inline signed __int128 _const bswap(signed __int128 v) { return __bswap128(v); }
 static inline unsigned __int128 _const bswap(unsigned __int128 v) { return __bswap128(v); }
 #endif
+
+#define __USER_LABEL_PREFIX_STR__ __USER_LABEL_PREFIX_STR_0(__USER_LABEL_PREFIX__)
+#define __USER_LABEL_PREFIX_STR_0(prefix) __USER_LABEL_PREFIX_STR_1(prefix)
+#define __USER_LABEL_PREFIX_STR_1(prefix) #prefix
 
 #else
 

@@ -32,6 +32,17 @@ void socketpair(int domain, int type, int protocol, int socket_vector[2]);
 } // namespace posix
 
 
+#ifndef SOCK_NONBLOCK
+#	define SOCK_NONBLOCK 0x800
+#	define __NEED_SOCKET_POLYFILL 1
+#endif
+#ifndef SOCK_CLOEXEC
+#	define SOCK_CLOEXEC 0x80000
+#	undef __NEED_SOCKET_POLYFILL
+#	define __NEED_SOCKET_POLYFILL 1
+#endif
+
+
 class Socket : public FileDescriptor {
 
 public:
@@ -110,3 +121,18 @@ public:
 
 std::ostream & operator << (std::ostream &os, const in_addr &addr);
 std::ostream & operator << (std::ostream &os, const in6_addr &addr);
+
+
+#if __NEED_SOCKET_POLYFILL
+extern "C" {
+	int __accept4_polyfill(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags);
+	extern inline _always_inline int accept4(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags) {
+		return __builtin_constant_p(flags) && flags == 0 ? ::accept(socket, address, address_len) : ::__accept4_polyfill(socket, address, address_len, flags);
+	}
+	int __socket(int domain, int type, int protocol) __asm__ (__USER_LABEL_PREFIX_STR__ "socket");
+	int __socket_polyfill(int domain, int type, int protocol);
+	extern inline _always_inline int socket(int domain, int type, int protocol) {
+		return __builtin_constant_p(type) && !(type & (SOCK_NONBLOCK | SOCK_CLOEXEC)) ? ::__socket(domain, type, protocol) : ::__socket_polyfill(domain, type, protocol);
+	}
+}
+#endif // __NEED_SOCKET_POLYFILL

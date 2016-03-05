@@ -262,3 +262,46 @@ std::ostream & operator << (std::ostream &os, const in6_addr &addr) {
 	}
 	return os << buf;
 }
+
+
+#if __NEED_SOCKET_POLYFILL
+
+static int set_socket_flags(int fd, int flags) {
+	if (flags & SOCK_CLOEXEC) {
+		int f = ::fcntl(fd, F_GETFD);
+		if (f < 0 || ::fcntl(fd, F_SETFD, f | FD_CLOEXEC) < 0) {
+			return -1;
+		}
+	}
+	if (flags & SOCK_NONBLOCK) {
+		int f = ::fcntl(fd, F_GETFL);
+		if (f < 0 || ::fcntl(fd, F_SETFL, f | O_NONBLOCK) < 0) {
+			return -1;
+		}
+	}
+	return 0;
+}
+
+int __accept4_polyfill(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags) {
+	if (flags & ~(SOCK_NONBLOCK | SOCK_CLOEXEC)) {
+		errno = EINVAL;
+		return -1;
+	}
+	int fd = ::accept(socket, address, address_len);
+	if (fd >= 0 && set_socket_flags(fd, flags) < 0) {
+		::close(fd);
+		return -1;
+	}
+	return fd;
+}
+
+int __socket_polyfill(int domain, int type, int protocol) {
+	int fd = ::__socket(domain, type & ~(SOCK_NONBLOCK | SOCK_CLOEXEC), protocol);
+	if (fd >= 0 && set_socket_flags(fd, type) < 0) {
+		::close(fd);
+		return -1;
+	}
+	return fd;
+}
+
+#endif // __NEED_SOCKET_POLYFILL
