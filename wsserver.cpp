@@ -60,9 +60,8 @@ void WebSocketServer::ready(EPoll &epoll, uint32_t events) {
 	if ((events & EPOLLIN) != 0) {
 		sockaddr_in6 from_addr;
 		Socket6 socket = this->accept(&from_addr, SOCK_NONBLOCK | SOCK_CLOEXEC);
-		const int optval = 1;
-		socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval));
-		socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, &optval, static_cast<socklen_t>(sizeof optval));
+		socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1);
+		socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
 		new Handshake(std::move(socket), *this, epoll);
 	}
 	epoll.watch(this, EPOLLIN);

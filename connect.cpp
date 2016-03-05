@@ -28,18 +28,17 @@ Socket connect(const char host[], uint16_t port, std::chrono::microseconds timeo
 		}
 		try {
 			Socket socket(info.ai_family, info.ai_socktype | SOCK_CLOEXEC, info.ai_protocol);
-			int optval = 1;
-			socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, &optval, static_cast<socklen_t>(sizeof optval));
+			socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1);
 			if (timeout > std::chrono::microseconds::zero()) {
 				struct timeval tv;
 				tv.tv_sec = static_cast<decltype(tv.tv_sec)>(std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
 				tv.tv_usec = static_cast<decltype(tv.tv_usec)>((timeout % std::chrono::seconds(1)).count());
-				socket.setsockopt(SOL_SOCKET, SO_SNDTIMEO, &tv, static_cast<socklen_t>(sizeof tv));
+				socket.setsockopt(SOL_SOCKET, SO_SNDTIMEO, tv);
 			}
 			if (socket.connect(info.ai_addr, info.ai_addrlen)) {
 				if (timeout > std::chrono::microseconds::zero()) {
 					struct timeval tv = { 0, 0 };
-					socket.setsockopt(SOL_SOCKET, SO_SNDTIMEO, &tv, static_cast<socklen_t>(sizeof tv));
+					socket.setsockopt(SOL_SOCKET, SO_SNDTIMEO, tv);
 				}
 				if (elog.debug_enabled()) {
 					if (info.ai_family == AF_INET) {

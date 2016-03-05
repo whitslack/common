@@ -45,6 +45,7 @@ public:
 
 	void getsockopt(int level, int optname, void *optval, socklen_t *optlen) const { posix::getsockopt(fd, level, optname, optval, optlen); }
 	void setsockopt(int level, int optname, const void *optval, socklen_t optlen) { posix::setsockopt(fd, level, optname, optval, optlen); }
+	template <typename T> void setsockopt(int level, int optname, const T &optval) { this->setsockopt(level, optname, &optval, static_cast<socklen_t>(sizeof optval)); }
 
 	void getsockname(sockaddr *addr, socklen_t *addrlen) const { posix::getsockname(fd, addr, addrlen); }
 	void bind(const sockaddr *addr, socklen_t addrlen) { posix::bind(fd, addr, addrlen); }
