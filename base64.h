@@ -10,7 +10,7 @@ private:
 	uint8_t state, buf;
 
 public:
-	Base64Encoder() : state() { }
+	Base64Encoder() : state(), buf() { }
 
 public:
 	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);
@@ -25,7 +25,7 @@ private:
 	uint8_t state, buf;
 
 public:
-	Base64Decoder() : state() { }
+	Base64Decoder() : state(), buf() { }
 
 public:
 	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);
