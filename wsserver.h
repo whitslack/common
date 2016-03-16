@@ -1,22 +1,21 @@
 #include "compiler.h"
-#include "epoll.h"
 #include "http.h"
+#include "selector.h"
 #include "socket.h"
 
 namespace {
 class Handshake;
 }
 
-class WebSocketServer : public Socket6, public EPollable {
+class WebSocketServer : public Socket, public Selectable {
 	friend Handshake;
 
 protected:
-	using Socket6::Socket6;
+	using Socket::Socket;
 
 protected:
-	operator int () const override _pure;
-	void ready(EPoll &epoll, uint32_t events) override;
+	void selected(Selector &selector, Selector::Flags flags) override;
 	virtual void prepare_response_headers(const HttpRequestHeaders &, HttpResponseHeaders &) { }
-	virtual void client_attached(Socket6 &&socket, EPoll &epoll) = 0;
+	virtual void client_attached(Socket &&socket, Selector &selector) = 0;
 
 };

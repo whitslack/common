@@ -11,25 +11,28 @@
 #include "websocket.h"
 
 namespace {
-class Handshake : public WebSocketServerHandshake, public EPollable {
+class Handshake : public WebSocketServerHandshake, public Selectable {
 
 private:
 	WebSocketServer &server;
-	EPoll &epoll;
+	Selector &selector;
 
 public:
-	Handshake(Socket &&socket, WebSocketServer &server, EPoll &epoll, int epoll_op = EPOLL_CTL_ADD) : WebSocketServerHandshake(std::move(socket)), server(server), epoll(epoll) {
-		epoll.watch(this, EPOLLIN, epoll_op);
+	Handshake(Socket &&socket, WebSocketServer &server, Selector &selector, bool add = true) : WebSocketServerHandshake(std::move(socket)), server(server), selector(selector) {
+		if (add) {
+			selector.add(this->socket, this, Selector::Flags::READABLE);
+		}
+		else {
+			selector.modify(this->socket, this, Selector::Flags::READABLE);
+		}
 	}
 
-protected:
-	operator int () const override _pure { return socket; }
-
-	void ready(EPoll &epoll, uint32_t events) override {
-		if (events & EPOLLIN) {
+public:
+	void selected(Selector &selector, Selector::Flags flags) override {
+		if ((flags & Selector::Flags::READABLE) != Selector::Flags::NONE) {
 			try {
 				if (this->WebSocketServerHandshake::ready()) {
-					epoll.watch(this, EPOLLIN);
+					selector.modify(socket, this, Selector::Flags::READABLE);
 				}
 				else {
 					delete this;
@@ -41,28 +44,23 @@ protected:
 		}
 	}
 
+protected:
 	void prepare_response_headers(const HttpRequestHeaders &request_headers, HttpResponseHeaders &response_headers) override {
 		server.prepare_response_headers(request_headers, response_headers);
 	}
 
 	void connected(const HttpRequestHeaders &, const HttpResponseHeaders &) override {
-		server.client_attached(std::move(*static_cast<Socket6 *>(&socket)), epoll);
+		server.client_attached(std::move(socket), selector);
 	}
 
 };
 }
 
-WebSocketServer::operator int () const {
-	return fd;
-}
-
-void WebSocketServer::ready(EPoll &epoll, uint32_t events) {
-	if ((events & EPOLLIN) != 0) {
-		sockaddr_in6 from_addr;
-		Socket6 socket = this->accept(&from_addr, SOCK_NONBLOCK | SOCK_CLOEXEC);
+void WebSocketServer::selected(Selector &selector, Selector::Flags flags) {
+	if ((flags & Selector::Flags::READABLE) != Selector::Flags::NONE) {
+		Socket socket = this->accept(nullptr, nullptr, SOCK_NONBLOCK | SOCK_CLOEXEC);
 		socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1);
-		socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
-		new Handshake(std::move(socket), *this, epoll);
+		new Handshake(std::move(socket), *this, selector);
 	}
-	epoll.watch(this, EPOLLIN);
+	selector.modify(*this, this, Selector::Flags::READABLE);
 }
