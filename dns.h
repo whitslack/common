@@ -59,5 +59,10 @@ private:
 GAIResults getaddrinfo(const char host[], const char service[] = nullptr, int family = AF_UNSPEC, int type = SOCK_STREAM, int protocol = 0, int flags = AI_V4MAPPED | AI_ADDRCONFIG);
 
 
-std::ostream & operator << (std::ostream &os, const sockaddr_in &addr);
-std::ostream & operator << (std::ostream &os, const sockaddr_in6 &addr);
+std::ostream & operator << (std::ostream &os, const struct sockaddr &addr);
+std::ostream & operator << (std::ostream &os, const struct sockaddr_in &addr);
+std::ostream & operator << (std::ostream &os, const struct sockaddr_in6 &addr);
+
+static inline std::ostream & operator << (std::ostream &os, const struct sockaddr_storage &addr) {
+	return os << reinterpret_cast<const struct sockaddr &>(addr);
+}

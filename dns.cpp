@@ -34,7 +34,18 @@ GAIResults getaddrinfo(const char host[], const char service[], int family, int 
 }
 
 
-std::ostream & operator << (std::ostream &os, const sockaddr_in &addr) {
+std::ostream & operator << (std::ostream &os, const struct sockaddr &addr) {
+	switch (addr.sa_family) {
+		case AF_INET:
+			return os << reinterpret_cast<const struct sockaddr_in &>(addr);
+		case AF_INET6:
+			return os << reinterpret_cast<const struct sockaddr_in6 &>(addr);
+		default:
+			return os << "(unsupported address)";
+	}
+}
+
+std::ostream & operator << (std::ostream &os, const struct sockaddr_in &addr) {
 	char host[NI_MAXHOST], serv[NI_MAXSERV];
 	int error;
 	if ((error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV)) != 0) {
@@ -48,7 +59,7 @@ std::ostream & operator << (std::ostream &os, const sockaddr_in &addr) {
 	return os << host << ':' << serv;
 }
 
-std::ostream & operator << (std::ostream &os, const sockaddr_in6 &addr) {
+std::ostream & operator << (std::ostream &os, const struct sockaddr_in6 &addr) {
 	char host[NI_MAXHOST], serv[NI_MAXSERV];
 	int error;
 	if ((error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV)) != 0) {
