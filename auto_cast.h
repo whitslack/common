@@ -1,4 +1,5 @@
 // copied from GManNickG's blog post at http://www.gmannickg.com/?p=28
+// modified to support warning-free narrowing conversions of arithmetic types
 
 #include <utility>
 
@@ -12,11 +13,7 @@ public:
 	template <typename U>
 	operator U() const
 	{
-		// doesn't allow downcasts, otherwise acts like static_cast
-		// see: http://stackoverflow.com/questions/5693432/making-auto-cast-safe
-		//return U{std::forward<T>(mX)};
-		// [MLW] The above emits a warning on narrowing conversions.
-		return static_cast<U>(std::forward<T>(mX));
+		return do_cast<U>(std::forward<T>(mX));
 	}
 
 private:
@@ -31,6 +28,20 @@ private:
 	auto_cast_wrapper& operator=(const auto_cast_wrapper&) = delete;
 
 	T&& mX;
+
+	template <typename U>
+	static typename std::enable_if<std::is_arithmetic<U>::value, U>::type do_cast(T&& x)
+	{
+		return static_cast<U>(std::forward<T>(x));
+	}
+
+	template <typename U>
+	static typename std::enable_if<!std::is_arithmetic<U>::value, U>::type do_cast(T&& x)
+	{
+		// doesn't allow downcasts, otherwise acts like static_cast
+		// see: http://stackoverflow.com/questions/5693432/making-auto-cast-safe
+		return U{std::forward<T>(x)};
+	}
 };
 
 template <typename R>
