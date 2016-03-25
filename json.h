@@ -44,7 +44,7 @@ public:
 	}
 	template <typename V>
 	std::pair<map_t::iterator, bool> insert(const std::string &key, V &&value) {
-		return map.emplace(key, ValuePtr(new typename std::decay<V>::type(std::forward<V>(value))));
+		return map.emplace(key, ValuePtr(new std::decay_t<V>(std::forward<V>(value))));
 	}
 	std::ostream & format(std::ostream &) const override;
 
@@ -69,7 +69,7 @@ public:
 	}
 	template <typename V>
 	void insert(V &&value) {
-		vector.emplace_back(new typename std::decay<V>::type(std::forward<V>(value)));
+		vector.emplace_back(new std::decay_t<V>(std::forward<V>(value)));
 	}
 	std::ostream & format(std::ostream &) const override;
 

@@ -52,9 +52,9 @@ static constexpr unsigned rotr(unsigned v, unsigned s) { return v >> s | v << si
 static constexpr unsigned long rotr(unsigned long v, unsigned s) { return v >> s | v << sizeof v * CHAR_BIT - s; }
 static constexpr unsigned long long rotr(unsigned long long v, unsigned s) { return v >> s | v << sizeof v * CHAR_BIT - s; }
 
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value && sizeof(T) == sizeof(uint16_t), T>::type bswap(T v) { return __builtin_bswap16(v); }
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value && sizeof(T) == sizeof(uint32_t), T>::type bswap(T v) { return __builtin_bswap32(v); }
-template <typename T> static constexpr typename std::enable_if<std::is_integral<T>::value && sizeof(T) == sizeof(uint64_t), T>::type bswap(T v) { return __builtin_bswap64(v); }
+template <typename T> static constexpr std::enable_if_t<std::is_integral<T>::value && sizeof(T) == sizeof(uint16_t), T> bswap(T v) { return __builtin_bswap16(v); }
+template <typename T> static constexpr std::enable_if_t<std::is_integral<T>::value && sizeof(T) == sizeof(uint32_t), T> bswap(T v) { return __builtin_bswap32(v); }
+template <typename T> static constexpr std::enable_if_t<std::is_integral<T>::value && sizeof(T) == sizeof(uint64_t), T> bswap(T v) { return __builtin_bswap64(v); }
 
 #ifdef __SIZEOF_INT128__
 static inline unsigned __int128 _const __bswap128(unsigned __int128 v) {
@@ -91,10 +91,10 @@ static inline unsigned __int128 _const bswap(unsigned __int128 v) { return __bsw
 
 #endif
 
-template <typename T> static constexpr typename std::enable_if<std::is_enum<T>::value, T>::type bswap(T v) { return static_cast<T>(bswap(static_cast<typename std::underlying_type<T>::type>(v))); }
+template <typename T> static constexpr std::enable_if_t<std::is_enum<T>::value, T> bswap(T v) { return static_cast<T>(bswap(static_cast<std::underlying_type_t<T>>(v))); }
 
 template <typename T, typename Enable = void>
 struct has_bswap : std::false_type { };
 
 template <typename T>
-struct has_bswap<T, typename std::enable_if<std::is_same<decltype(bswap(std::declval<T>())), typename std::remove_reference<T>::type>::value>::type> : std::true_type { };
+struct has_bswap<T, std::enable_if_t<std::is_same<decltype(bswap(std::declval<T>())), std::remove_reference_t<T>>::value>> : std::true_type { };

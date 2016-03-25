@@ -43,7 +43,7 @@ size_t Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_End
 
 template <size_t Block_Size, size_t State_Size, size_t Digest_Size, typename Word_Type, typename Length_Type, bool Big_Endian>
 const typename Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::digest_type & Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_Endian>::digest() {
-	typename std::conditional<Big_Endian, be<Length_Type>, le<Length_Type>>::type length = this->length + buffer_pos << 3;
+	std::conditional_t<Big_Endian, be<Length_Type>, le<Length_Type>> length = this->length + buffer_pos << 3;
 	uint8_t marker = 0x80;
 	this->write(&marker, sizeof marker);
 	if (buffer_pos + sizeof length > block_size) {
@@ -56,7 +56,7 @@ const typename Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type,
 	this->update(buffer);
 	buffer_pos = 0;
 	for (size_t i = 0; i < digest_size / sizeof(word_type); ++i) {
-		reinterpret_cast<typename std::conditional<Big_Endian, be<Word_Type>, le<Word_Type>>::type &>(state[i]) = state[i];
+		reinterpret_cast<std::conditional_t<Big_Endian, be<Word_Type>, le<Word_Type>> &>(state[i]) = state[i];
 	}
 	return *reinterpret_cast<const digest_type *>(state);
 }

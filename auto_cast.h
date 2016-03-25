@@ -30,13 +30,13 @@ private:
 	T&& mX;
 
 	template <typename U>
-	static typename std::enable_if<std::is_arithmetic<U>::value, U>::type do_cast(T&& x)
+	static std::enable_if_t<std::is_arithmetic<U>::value, U> do_cast(T&& x)
 	{
 		return static_cast<U>(std::forward<T>(x));
 	}
 
 	template <typename U>
-	static typename std::enable_if<!std::is_arithmetic<U>::value, U>::type do_cast(T&& x)
+	static std::enable_if_t<!std::is_arithmetic<U>::value, U> do_cast(T&& x)
 	{
 		// doesn't allow downcasts, otherwise acts like static_cast
 		// see: http://stackoverflow.com/questions/5693432/making-auto-cast-safe

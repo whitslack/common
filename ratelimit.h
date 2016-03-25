@@ -8,8 +8,8 @@ public:
 	typedef typename Clock::rep rep_t;
 
 private:
-	typedef std::chrono::duration<rep_t, typename std::ratio_divide<std::ratio<1, 1>, FillRate>::type> tokens_t;
-	typedef typename std::common_type<typename Clock::duration, tokens_t>::type ticks_t;
+	typedef std::chrono::duration<rep_t, std::ratio_divide<std::ratio<1, 1>, FillRate>> tokens_t;
+	typedef std::common_type_t<typename Clock::duration, tokens_t> ticks_t;
 
 private:
 	ticks_t ref;

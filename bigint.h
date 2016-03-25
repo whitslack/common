@@ -36,7 +36,7 @@
 
 
 template <typename LIMB_T, size_t L>
-static inline typename std::enable_if<sizeof(LIMB_T) < sizeof(uintptr_t), void>::type __add(std::array<LIMB_T, L> &sum, const std::array<LIMB_T, L> &augend, LIMB_T addend) {
+static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __add(std::array<LIMB_T, L> &sum, const std::array<LIMB_T, L> &augend, LIMB_T addend) {
 	intptr_t carry = addend;
 	for (size_t i = 0; i < L; ++i) {
 		sum[WORD(L, i)] = static_cast<LIMB_T>(carry += augend[WORD(L, i)]), carry >>= sizeof(LIMB_T) * 8;
@@ -44,7 +44,7 @@ static inline typename std::enable_if<sizeof(LIMB_T) < sizeof(uintptr_t), void>:
 }
 
 template <typename LIMB_T, size_t L>
-static inline typename std::enable_if<sizeof(LIMB_T) < sizeof(uintptr_t), void>::type __add(std::array<LIMB_T, L> &sum, const std::array<LIMB_T, L> &augend, const std::array<LIMB_T, L> &addend) {
+static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __add(std::array<LIMB_T, L> &sum, const std::array<LIMB_T, L> &augend, const std::array<LIMB_T, L> &addend) {
 	intptr_t carry = 0;
 	for (size_t i = 0; i < L; ++i) {
 		sum[WORD(L, i)] = static_cast<LIMB_T>((carry += augend[WORD(L, i)]) += addend[WORD(L, i)]), carry >>= sizeof(LIMB_T) * 8;
@@ -80,7 +80,7 @@ static inline std::array<LIMB_T, L> _pure operator + (const std::array<LIMB_T, L
 }
 
 template <typename LIMB_T, size_t L>
-static inline typename std::enable_if<sizeof(LIMB_T) < sizeof(uintptr_t), void>::type __sub(std::array<LIMB_T, L> &difference, const std::array<LIMB_T, L> &minuend, LIMB_T subtrahend) {
+static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __sub(std::array<LIMB_T, L> &difference, const std::array<LIMB_T, L> &minuend, LIMB_T subtrahend) {
 	intptr_t borrow = -subtrahend;
 	for (size_t i = 0; i < L; ++i) {
 		difference[WORD(L, i)] = static_cast<LIMB_T>(borrow += minuend[WORD(L, i)]), borrow >>= sizeof(LIMB_T) * 8;
@@ -88,7 +88,7 @@ static inline typename std::enable_if<sizeof(LIMB_T) < sizeof(uintptr_t), void>:
 }
 
 template <typename LIMB_T, size_t L>
-static inline typename std::enable_if<sizeof(LIMB_T) < sizeof(uintptr_t), void>::type __sub(std::array<LIMB_T, L> &difference, const std::array<LIMB_T, L> &minuend, const std::array<LIMB_T, L> &subtrahend) {
+static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __sub(std::array<LIMB_T, L> &difference, const std::array<LIMB_T, L> &minuend, const std::array<LIMB_T, L> &subtrahend) {
 	intptr_t borrow = 0;
 	for (size_t i = 0; i < L; ++i) {
 		difference[WORD(L, i)] = static_cast<LIMB_T>((borrow += minuend[WORD(L, i)]) -= subtrahend[WORD(L, i)]), borrow >>= sizeof(LIMB_T) * 8;
@@ -124,7 +124,7 @@ static inline std::array<LIMB_T, L> _pure operator - (const std::array<LIMB_T, L
 }
 
 template <typename WORD_T, size_t W>
-static inline typename std::enable_if<std::is_unsigned<WORD_T>::value, void>::type __shln(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) {
+static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shln(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) {
 	unsigned offset = static_cast<unsigned>(shift / (sizeof(WORD_T) * 8));
 	if ((shift %= static_cast<unsigned>(sizeof(WORD_T) * 8)) == 0) {
 		for (size_t i = W - offset; i-- > 0;) {
@@ -158,7 +158,7 @@ static inline std::array<WORD_T, W> _pure operator << (const std::array<WORD_T, 
 }
 
 template <typename WORD_T, size_t W>
-static inline typename std::enable_if<std::is_unsigned<WORD_T>::value, void>::type __shrn(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) {
+static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shrn(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) {
 	unsigned offset = static_cast<unsigned>(shift / (sizeof(WORD_T) * 8));
 	if ((shift %= static_cast<unsigned>(sizeof(WORD_T) * 8)) == 0) {
 		for (size_t i = 0; i < W - offset; ++i) {
