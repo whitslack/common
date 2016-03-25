@@ -174,9 +174,9 @@ public:
 	size_t write(const void *buf, size_t n) override { return posix::write(fd, buf, n); }
 	ssize_t readv(const struct iovec iov[], int iovcnt) { return posix::readv(fd, iov, iovcnt); }
 	size_t writev(const struct iovec iov[], int iovcnt) { return posix::writev(fd, iov, iovcnt); }
-	ssize_t pread(void *buf, size_t nbyte, off_t offset) { return posix::pread(fd, buf, nbyte, offset); }
+	ssize_t pread(void *buf, size_t nbyte, off_t offset) const { return posix::pread(fd, buf, nbyte, offset); }
 	size_t pwrite(const void *buf, size_t nbyte, off_t offset) { return posix::pwrite(fd, buf, nbyte, offset); }
-	ssize_t preadv(const struct iovec iov[], int iovcnt, off_t offset) { return posix::preadv(fd, iov, iovcnt, offset); }
+	ssize_t preadv(const struct iovec iov[], int iovcnt, off_t offset) const { return posix::preadv(fd, iov, iovcnt, offset); }
 	size_t pwritev(const struct iovec iov[], int iovcnt, off_t offset) { return posix::pwritev(fd, iov, iovcnt, offset); }
 	void lockf(int function, off_t size) { posix::lockf(fd, function, size); }
 	int fcntl(int cmd) { return posix::fcntl(fd, cmd); }
@@ -196,7 +196,7 @@ public:
 	void futimens(const struct timespec times[2]) { posix::futimens(fd, times); }
 	void fsync() { posix::fsync(fd); }
 	void fdatasync() { posix::fdatasync(fd); }
-	void fadvise(off_t offset, off_t length, int advice) { posix::fadvise(fd, offset, length, advice); }
+	void fadvise(off_t offset, off_t length, int advice) const { posix::fadvise(fd, offset, length, advice); }
 	MemoryMapping mmap(off_t off, size_t len, int prot = PROT_READ, int flags = MAP_SHARED) { return { posix::mmap(nullptr, len, prot, flags, fd, off), len }; }
 
 	void faccessat(const char *path, int amode, int flag = 0) const { posix::faccessat(fd, path, amode, flag); }
