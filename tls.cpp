@@ -229,6 +229,31 @@ void TLSSession::set_credentials(const std::shared_ptr<TLSAnonClientCredentials>
 }
 */
 
+std::string TLSSession::get_server_name() {
+	std::string server_name;
+	int error;
+	size_t size = 0;
+	unsigned int type;
+	if ((error = ::gnutls_server_name_get(session, nullptr, &size, &type, 0)) != GNUTLS_E_SUCCESS && error != GNUTLS_E_SHORT_MEMORY_BUFFER) {
+		if (error == GNUTLS_E_REQUESTED_DATA_NOT_AVAILABLE) {
+			return server_name;
+		}
+		throw TLSError(error, "gnutls_server_name_get");
+	}
+	server_name.resize(size);
+	if ((error = ::gnutls_server_name_get(session, &server_name.front(), &size, &type, 0)) != GNUTLS_E_SUCCESS) {
+		throw TLSError(error, "gnutls_server_name_get");
+	}
+	return server_name;
+}
+
+void TLSSession::set_server_name(const char server_name[], size_t len) {
+	int error;
+	if ((error = ::gnutls_server_name_set(session, GNUTLS_NAME_DNS, server_name, len)) != GNUTLS_E_SUCCESS) {
+		throw TLSError(error, "gnutls_server_name_set");
+	}
+}
+
 std::vector<uint8_t> TLSSession::get_session_data() {
 	int error;
 	size_t size = 0;
@@ -380,6 +405,11 @@ int TLSSession::verify(gnutls_session_t session) noexcept {
 	}
 }
 
+
+TLSSocket::TLSSocket(std::string host_name, Socket &&socket)
+		: host_name(std::move(host_name)), socket(std::move(socket)) {
+	this->set_server_name(this->host_name.c_str(), this->host_name.size());
+}
 
 ssize_t TLSSocket::pull(void *buf, size_t n) {
 	return socket.read(buf, n);

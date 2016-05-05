@@ -219,6 +219,8 @@ public:
 	void set_credentials(const std::shared_ptr<TLSPSKClientCredentials> &credentials);
 	void set_credentials(const std::shared_ptr<TLSAnonClientCredentials> &credentials);
 */
+	std::string get_server_name();
+	void set_server_name(const char server_name[], size_t len);
 	std::vector<uint8_t> get_session_data();
 	void set_session_data(const void *session_data, size_t session_data_size);
 	unsigned int verify_peers(const char hostname[] = nullptr);
@@ -255,7 +257,7 @@ protected:
 
 public:
 	TLSSocket() { }
-	TLSSocket(const std::string &host_name, Socket &&socket) : host_name(host_name), socket(std::move(socket)) { }
+	TLSSocket(std::string host_name, Socket &&socket);
 
 protected:
 	ssize_t pull(void *buf, size_t n) override;
