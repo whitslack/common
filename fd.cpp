@@ -545,6 +545,150 @@ size_t writev(int fildes, const struct iovec iov[], int iovcnt) {
 } // namespace posix
 
 
+void FileDescriptor::pread_fully(void *buf, size_t nbyte, off_t offset) const {
+	while (nbyte > 0) {
+		ssize_t r = this->pread(buf, nbyte, offset);
+		if (r > 0) {
+			buf = static_cast<uint8_t *>(buf) + r, nbyte -= r, offset += r;
+		}
+		else if (r < 0) {
+			throw std::ios_base::failure("premature EOF");
+		}
+		else {
+			throw std::logic_error("non-blocking read in blocking context");
+		}
+	}
+}
+
+void FileDescriptor::pwrite_fully(const void *buf, size_t nbyte, off_t offset) {
+	while (nbyte > 0) {
+		size_t w = this->pwrite(buf, nbyte, offset);
+		if (w > 0) {
+			buf = static_cast<const uint8_t *>(buf) + w, nbyte -= w, offset += w;
+		}
+		else {
+			throw std::logic_error("non-blocking write in blocking context");
+		}
+	}
+}
+
+void FileDescriptor::readv_fully(struct iovec iov[], int iovcnt) {
+	while (iovcnt > 0) {
+		while (iov->iov_len == 0) {
+			++iov;
+			if (--iovcnt == 0) {
+				return;
+			}
+		}
+		ssize_t r = this->readv(iov, iovcnt);
+		if (r > 0) {
+			while (static_cast<size_t>(r) > iov->iov_len) {
+				r -= iov->iov_len;
+				iov->iov_base = static_cast<char *>(iov->iov_base) + iov->iov_len;
+				iov->iov_len = 0;
+				++iov, --iovcnt;
+			}
+			iov->iov_base = static_cast<char *>(iov->iov_base) + r;
+			if ((iov->iov_len -= r) == 0) {
+				++iov, --iovcnt;
+			}
+		}
+		else if (r < 0) {
+			throw std::ios_base::failure("premature EOF");
+		}
+		else {
+			throw std::logic_error("non-blocking read in blocking context");
+		}
+	}
+}
+
+void FileDescriptor::writev_fully(struct iovec iov[], int iovcnt) {
+	while (iovcnt > 0) {
+		while (iov->iov_len == 0) {
+			++iov;
+			if (--iovcnt == 0) {
+				return;
+			}
+		}
+		size_t w = this->writev(iov, iovcnt);
+		if (w > 0) {
+			while (w > iov->iov_len) {
+				w -= iov->iov_len;
+				iov->iov_base = static_cast<char *>(iov->iov_base) + iov->iov_len;
+				iov->iov_len = 0;
+				++iov, --iovcnt;
+			}
+			iov->iov_base = static_cast<char *>(iov->iov_base) + w;
+			if ((iov->iov_len -= w) == 0) {
+				++iov, --iovcnt;
+			}
+		}
+		else {
+			throw std::logic_error("non-blocking write in blocking context");
+		}
+	}
+}
+
+void FileDescriptor::preadv_fully(struct iovec iov[], int iovcnt, off_t offset) const {
+	while (iovcnt > 0) {
+		while (iov->iov_len == 0) {
+			++iov;
+			if (--iovcnt == 0) {
+				return;
+			}
+		}
+		ssize_t r = this->preadv(iov, iovcnt, offset);
+		if (r > 0) {
+			offset += r;
+			while (static_cast<size_t>(r) > iov->iov_len) {
+				r -= iov->iov_len;
+				iov->iov_base = static_cast<char *>(iov->iov_base) + iov->iov_len;
+				iov->iov_len = 0;
+				++iov, --iovcnt;
+			}
+			iov->iov_base = static_cast<char *>(iov->iov_base) + r;
+			if ((iov->iov_len -= r) == 0) {
+				++iov, --iovcnt;
+			}
+		}
+		else if (r < 0) {
+			throw std::ios_base::failure("premature EOF");
+		}
+		else {
+			throw std::logic_error("non-blocking read in blocking context");
+		}
+	}
+}
+
+void FileDescriptor::pwritev_fully(struct iovec iov[], int iovcnt, off_t offset) {
+	while (iovcnt > 0) {
+		while (iov->iov_len == 0) {
+			++iov;
+			if (--iovcnt == 0) {
+				return;
+			}
+		}
+		size_t w = this->pwritev(iov, iovcnt, offset);
+		if (w > 0) {
+			offset += w;
+			while (w > iov->iov_len) {
+				w -= iov->iov_len;
+				iov->iov_base = static_cast<char *>(iov->iov_base) + iov->iov_len;
+				iov->iov_len = 0;
+				++iov, --iovcnt;
+			}
+			iov->iov_base = static_cast<char *>(iov->iov_base) + w;
+			if ((iov->iov_len -= w) == 0) {
+				++iov, --iovcnt;
+			}
+		}
+		else {
+			throw std::logic_error("non-blocking write in blocking context");
+		}
+	}
+}
+
+
 #if _POSIX_VERSION < 200809L
 
 #ifdef __APPLE__

@@ -214,6 +214,13 @@ public:
 	void unlinkat(const char *path, int flag = 0) const { posix::unlinkat(fd, path, flag); }
 	void utimensat(const char *path, const struct timespec times[2], int flag = 0) const { posix::utimensat(fd, path, times, flag); }
 
+	void pread_fully(void *buf, size_t nbyte, off_t offset) const;
+	void pwrite_fully(const void *buf, size_t nbyte, off_t offset);
+	void readv_fully(struct iovec iov[], int iovcnt);
+	void writev_fully(struct iovec iov[], int iovcnt);
+	void preadv_fully(struct iovec iov[], int iovcnt, off_t offset) const;
+	void pwritev_fully(struct iovec iov[], int iovcnt, off_t offset);
+
 };
 
 
