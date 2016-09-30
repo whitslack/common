@@ -79,12 +79,18 @@ static inline int sigtimedwait(const sigset_t & _restrict set, siginfo_t * _rest
 
 class SignalSet {
 
+public:
+	static const SignalSet none, all;
+
 private:
 	sigset_t set;
 
 public:
 	SignalSet() { this->clear(); }
 	SignalSet(std::initializer_list<int> signos) { this->clear(); for (int signo : signos) *this += signo; }
+
+private:
+	explicit SignalSet(std::nullptr_t) { this->fill(); }
 
 public:
 	operator const sigset_t & () const { return set; }

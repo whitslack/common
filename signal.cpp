@@ -195,4 +195,8 @@ void sigandset(sigset_t &dest, const sigset_t &left, const sigset_t &right) {
 #endif
 
 
+const SignalSet SignalSet::none;
+const SignalSet SignalSet::all(nullptr);
+
+
 } // namespace posix
