@@ -141,9 +141,9 @@ public:
 		MemoryMapping(const MemoryMapping &) = delete;
 		MemoryMapping & operator = (const MemoryMapping &) = delete;
 	public:
-		operator void * () const { return addr; }
-		void * data() const { return addr; }
-		size_t size() const { return len; }
+		_pure operator void * () const { return addr; }
+		void * _pure data() const { return addr; }
+		size_t _pure size() const { return len; }
 		void madvise(size_t offset, size_t len, int advice) { posix::madvise(static_cast<uint8_t *>(addr) + offset, len, advice); }
 		void mprotect(size_t offset, size_t len, int prot) { posix::mprotect(static_cast<uint8_t *>(addr) + offset, len, prot); }
 		void msync(size_t offset, size_t len, int flags = MS_ASYNC) { posix::msync(static_cast<uint8_t *>(addr) + offset, len, flags); }

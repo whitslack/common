@@ -3,8 +3,11 @@
 #include <limits>
 #include <stdexcept>
 
+#include "compiler.h"
+
+
 template <typename I, typename J>
-static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I> narrow_check(J value) {
+static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I> _const narrow_check(J value) {
 	if (value < std::numeric_limits<I>::min() || value > std::numeric_limits<I>::max()) {
 		throw std::out_of_range("out of range");
 	}
@@ -12,7 +15,7 @@ static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I>
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, I> narrow_check(J value) {
+static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, I> _const narrow_check(J value) {
 	if (value > static_cast<std::make_unsigned_t<I>>(std::numeric_limits<I>::max())) {
 		throw std::out_of_range("out of range");
 	}
@@ -20,7 +23,7 @@ static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, 
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, I> narrow_check(J value) {
+static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, I> _const narrow_check(J value) {
 	if (value < 0 || static_cast<std::make_unsigned_t<J>>(value) > std::numeric_limits<I>::max()) {
 		throw std::out_of_range("out of range");
 	}
@@ -28,7 +31,7 @@ static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, 
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_unsigned<I>::value && std::is_unsigned<J>::value, I> narrow_check(J value) {
+static std::enable_if_t<std::is_unsigned<I>::value && std::is_unsigned<J>::value, I> _const narrow_check(J value) {
 	if (value > std::numeric_limits<I>::max()) {
 		throw std::out_of_range("out of range");
 	}
@@ -37,7 +40,7 @@ static std::enable_if_t<std::is_unsigned<I>::value && std::is_unsigned<J>::value
 
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I> saturate(J value) {
+static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I> _const saturate(J value) {
 	if (value < std::numeric_limits<I>::min()) {
 		return std::numeric_limits<I>::min();
 	}
@@ -48,7 +51,7 @@ static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I>
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, I> saturate(J value) {
+static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, I> _const saturate(J value) {
 	if (value > static_cast<std::make_unsigned_t<I>>(std::numeric_limits<I>::max())) {
 		return std::numeric_limits<I>::max();
 	}
@@ -56,7 +59,7 @@ static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, 
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, I> saturate(J value) {
+static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, I> _const saturate(J value) {
 	if (value < 0) {
 		return 0;
 	}
@@ -67,7 +70,7 @@ static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, 
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_unsigned<I>::value && std::is_unsigned<J>::value, I> saturate(J value) {
+static std::enable_if_t<std::is_unsigned<I>::value && std::is_unsigned<J>::value, I> _const saturate(J value) {
 	if (value > std::numeric_limits<I>::max()) {
 		return std::numeric_limits<I>::max();
 	}
