@@ -82,7 +82,7 @@ public:
 	WebSocketClientHandshake(Socket &&socket) : socket(std::move(socket)), delimited_source(this->socket, "\r\n\r\n"), response_pos() { }
 
 public:
-	void start(const char host[], uint16_t port = 0, const char request_uri[] = "/");
+	void start(const char host[], in_port_t port = 0, const char request_uri[] = "/");
 	bool ready();
 
 protected:
@@ -112,4 +112,4 @@ protected:
 };
 
 
-Socket connect_websocket(const char host[], uint16_t port, const char request_uri[], const char origin_uri[] = nullptr);
+Socket connect_websocket(const char host[], in_port_t port, const char request_uri[], const char origin_uri[] = nullptr);

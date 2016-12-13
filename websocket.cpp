@@ -240,7 +240,7 @@ void WebSocketServerHandshake::send_error(int status_code, const char reason_phr
 }
 
 
-void WebSocketClientHandshake::start(const char host[], uint16_t port, const char request_uri[]) {
+void WebSocketClientHandshake::start(const char host[], in_port_t port, const char request_uri[]) {
 	HttpRequestHeaders request_headers("GET", request_uri, "HTTP/1.1");
 	request_headers.emplace_hint(request_headers.end(), "Connection", "Upgrade");
 	if (port == 0) {
@@ -335,7 +335,7 @@ WebSocketBuf::int_type WebSocketBuf::overflow(int_type ch) {
 }
 
 
-Socket connect_websocket(const char host[], uint16_t port, const char request_uri[], const char origin_uri[]) {
+Socket connect_websocket(const char host[], in_port_t port, const char request_uri[], const char origin_uri[]) {
 	class Handshake : public WebSocketClientHandshake {
 
 	public:

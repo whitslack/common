@@ -9,7 +9,7 @@
 extern Log elog;
 
 
-Socket connect(const char host[], uint16_t port, std::chrono::microseconds timeout) {
+Socket connect(const char host[], in_port_t port, std::chrono::microseconds timeout) {
 	for (auto &info : getaddrinfo(host)) {
 		if (info.ai_family == AF_INET) {
 			as_be(reinterpret_cast<sockaddr_in *>(info.ai_addr)->sin_port) = port;
@@ -65,7 +65,7 @@ Socket connect(const char host[], uint16_t port, std::chrono::microseconds timeo
 	throw std::system_error(errno, std::system_category(), "connect");
 }
 
-Socket connect_with_retry(const char host[], uint16_t port) {
+Socket connect_with_retry(const char host[], in_port_t port) {
 	static constexpr std::chrono::steady_clock::duration
 			min_delay = std::chrono::milliseconds(500),
 			max_delay = std::chrono::seconds(15);
