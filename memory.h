@@ -1,6 +1,6 @@
 #pragma once
 
-#include <cstddef>
+#include <cstdlib>
 #include <memory>
 
 #ifndef __cpp_lib_nonmember_container_access
@@ -13,3 +13,6 @@ namespace std {
 static inline std::unique_ptr<std::byte[]> make_buffer(size_t size) {
 	return std::unique_ptr<std::byte[]>(new std::byte[size]);
 }
+
+template <typename T>
+using unique_c_ptr = std::unique_ptr<T, std::integral_constant<void (*)(void *), &std::free>>;
