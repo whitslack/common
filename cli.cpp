@@ -2,127 +2,88 @@
 
 #include <cstring>
 
+
 namespace cli {
 
 
-static std::string make_what(const char msg[], const Option &opt) {
-	std::string what(msg);
+static std::string make_what(const std::string &msg, const AbstractOption &opt) {
+	std::string what;
 	if (opt.long_form) {
-		(what += ": --") += opt.long_form;
+		what.reserve(std::strlen(opt.long_form) + 4 + msg.size());
+		what.append("--").append(opt.long_form).append(": ").append(msg);
 	}
 	else {
-		(what += ": -") += opt.short_form;
+		what.reserve(4 + msg.size());
+		what.push_back('-');
+		what.push_back(opt.short_form);
+		what.append(": ").append(msg);
 	}
 	return what;
 }
 
-OptionException::OptionException(const char msg[], const Option &opt) : runtime_error(make_what(msg, opt)) {
+OptionException::OptionException(const std::string &msg, const AbstractOption &opt) : runtime_error(make_what(msg, opt)) {
 }
 
-
-bool BooleanOption::parse(char []) {
-	value = true;
-	return false;
-}
-
-
-bool StringOption::parse(char value[]) {
-	if (value) {
-		this->value = value;
-		return true;
-	}
-	throw OptionException("expected argument for option", *this);
-}
-
-
-bool StringVectorOption::parse(char value[]) {
-	if (value) {
-		if (delim == '\0') {
-			values.push_back(value);
-			return true;
-		}
-		for (;;) {
-			char *d = std::strchr(value, delim);
-			if (!d) {
-				values.push_back(value);
-				return true;
-			}
-			*d = '\0';
-			values.push_back(value);
-			value = d + 1;
-		}
-	}
-	throw OptionException("expected argument for option", *this);
-}
-
-
-int parse(int argc, char *argv[], Option * const opts[], size_t numopts) {
-	int unused = 0;
-	for (int i = 0; i < argc; ++i) {
-		char *arg = argv[i];
-		if (arg[0] == '-') {
-			if (arg[1] == '-') {
-				if (arg[2] == '\0') {
-					while (++i < argc) {
-						argv[unused++] = argv[i];
+int parse(int argc, char *argv[], AbstractOption * const opts[], size_t n_opts) {
+	char **head = argv, **tail = argv, **end = argv + argc;
+	while (head < end) {
+		if ((*head)[0] == '-') {
+			if ((*head)[1] == '-') {
+				if ((*head)[2] == '\0') {
+					while (++head < end) {
+						*tail++ = *head;
 					}
-					return unused;
+					break;
+				}
+				char *opt = *head + 2, *eq = std::strchr(opt, '=');
+				if (eq) {
+					*eq = '\0';
+					*head = eq + 1;
 				}
 				else {
-					arg += 2;
-					size_t optlen = std::strcspn(arg, "=");
-					for (size_t j = 0; j < numopts; ++j) {
-						const char *long_form = opts[j]->long_form;
-						if (long_form && std::strncmp(long_form, arg, optlen) == 0 && long_form[optlen] == '\0') {
-							if (arg[optlen] == '\0') {
-								if (i + 1 < argc) {
-									if (opts[j]->parse(argv[i + 1])) {
-										++i;
-									}
-								}
-								else if (opts[j]->parse(nullptr)) {
-									throw std::runtime_error("internal error while parsing command line");
-								}
-							}
-							else if (!opts[j]->parse(arg + optlen + 1)) {
-								throw OptionException("option takes no argument", *opts[j]);
-							}
+					++head;
+				}
+				for (size_t i = 0; i < n_opts; ++i) {
+					if (opts[i]->long_form) {
+						if (std::strcmp(opts[i]->long_form, opt) == 0) {
+							opts[i]->parse(opts[i]->takes_arg() > 0 || eq ? *head++ : nullptr);
 							goto next_arg;
 						}
 					}
-					throw OptionException(std::string("unrecognized option: -") + (arg - 1));
 				}
+				throw OptionException(std::string("--") + opt + ": unrecognized option");
 			}
-			else if (arg[1] != '\0') {
-				for (char *flag = arg + 1; *flag != '\0'; ++flag) {
-					for (size_t j = 0; j < numopts; ++j) {
-						if (opts[j]->short_form == *flag) {
-							if (flag[1] == '\0') {
-								if (i + 1 < argc) {
-									if (opts[j]->parse(argv[i + 1])) {
-										++i;
-									}
-								}
-								else if (opts[j]->parse(nullptr)) {
-									throw std::runtime_error("internal error while parsing command line");
-								}
+			else if ((*head)[1] != '\0') {
+				++*head;
+				do {
+					char opt = *(*head)++;
+					for (size_t i = 0; i < n_opts; ++i) {
+						if (opts[i]->short_form == opt) {
+							if (**head == '\0') {
+								++head;
+								opts[i]->parse(opts[i]->takes_arg() > 0 ? *head++ : nullptr);
+								goto next_arg;
 							}
-							else if (!opts[j]->parse(flag + 1)) {
-								goto next_flag;
+							if (opts[i]->takes_arg()) {
+								opts[i]->parse(*head++);
+								goto next_arg;
 							}
-							goto next_arg;
+							opts[i]->parse(nullptr);
+							goto next_opt;
 						}
 					}
-					throw OptionException(std::string("unrecognized option: -") + *flag);
-				next_flag:;
-				}
+					throw OptionException(std::string("-") + opt + ": unrecognized option");
+				next_opt:;
+				} while (**head != '\0');
+				++head;
 				goto next_arg;
 			}
 		}
-		argv[unused++] = argv[i];
+		*tail++ = *head++;
 	next_arg:;
 	}
-	return unused;
+	std::memset(tail, 0, (end - tail) * sizeof(char *));
+	return static_cast<int>(tail - argv);
 }
 
 

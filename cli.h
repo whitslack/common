@@ -1,32 +1,114 @@
-#include <limits>
-#include <sstream>
 #include <stdexcept>
 #include <vector>
+#include <experimental/optional>
 
+#include "compiler.h"
 #include "narrow.h"
+
 
 namespace cli {
 
 
-class Option {
-	friend int parse(int, char *[], Option * const [], size_t);
+template <typename Func, typename... Args>
+static inline std::result_of_t<Func(const char *, char **, Args...)> strto(Func strto, const char str[], Args &&...args) {
+	char *end = nullptr;
+	auto ret = strto(str, &end, std::forward<Args>(args)...);
+	if (!end || end == str || *end) {
+		throw std::invalid_argument("expected a number");
+	}
+	return ret;
+}
+
+static inline void convert(short &out, const char str[]) {
+	out = narrow_check<short>(strto(std::strtol, str, 0));
+}
+
+static inline void convert(int &out, const char str[]) {
+	out = narrow_check<int>(strto(std::strtol, str, 0));
+}
+
+static inline void convert(long &out, const char str[]) {
+	out = strto(std::strtol, str, 0);
+}
+
+static inline void convert(long long &out, const char str[]) {
+	out = strto(std::strtoll, str, 0);
+}
+
+static inline void convert(unsigned short &out, const char str[]) {
+	out = narrow_check<unsigned short>(strto(std::strtoul, str, 0));
+}
+
+static inline void convert(unsigned &out, const char str[]) {
+	out = narrow_check<unsigned>(strto(std::strtoul, str, 0));
+}
+
+static inline void convert(unsigned long &out, const char str[]) {
+	out = strto(std::strtoul, str, 0);
+}
+
+static inline void convert(unsigned long long &out, const char str[]) {
+	out = strto(std::strtoull, str, 0);
+}
+
+static inline void convert(float &out, const char str[]) {
+	out = strto(std::strtof, str);
+}
+
+static inline void convert(double &out, const char str[]) {
+	out = strto(std::strtod, str);
+}
+
+static inline void convert(long double &out, const char str[]) {
+	out = strto(std::strtold, str);
+}
+
+
+class AbstractOption {
+	friend int parse(int, char *[], AbstractOption * const [], size_t);
 
 public:
 	const char * const long_form;
 	const char short_form;
 
 public:
-	virtual ~Option() { }
+	explicit AbstractOption(const char long_form[], char short_form = '\0') : long_form(long_form), short_form(short_form) { }
+
+	virtual ~AbstractOption() { }
 
 protected:
-	Option(const char long_form[], char short_form) : long_form(long_form), short_form(short_form) { }
+	virtual int takes_arg() const _pure = 0;
 
-protected:
-	virtual bool parse(char value[]) = 0;
+	virtual void parse(char arg[]) = 0;
 
-private:
-	Option(const Option &) = delete;
-	Option & operator = (const Option &) = delete;
+};
+
+
+template <typename Arg>
+class WithArgument {
+
+public:
+	typedef Arg argument_type;
+
+public:
+	std::vector<argument_type> args;
+
+public:
+	explicit _pure operator bool () const {
+		return !args.empty();
+	}
+
+	const argument_type & _pure value() const {
+		return args.back();
+	}
+
+	size_t _pure count() const {
+		return args.size();
+	}
+
+	const argument_type & _pure operator [] (size_t i) const {
+		return args[i];
+	}
 
 };
 
@@ -34,194 +116,121 @@ private:
 class OptionException : public std::runtime_error {
 
 public:
-	OptionException(const char msg[], const Option &opt);
-	OptionException(const std::string &msg) : runtime_error(msg) { }
+	using std::runtime_error::runtime_error;
+
+	OptionException(const std::string &msg, const AbstractOption &opt);
 
 };
 
 
-class BooleanOption : public Option {
+template <typename Arg = void>
+class Option : public AbstractOption, public WithArgument<Arg> {
 
 public:
-	bool value;
+	using AbstractOption::AbstractOption;
 
 public:
-	explicit BooleanOption(const char long_form[], char short_form = '\0') : Option(long_form, short_form), value(false) { }
+	template <typename Def>
+	Arg _pure value_or(Def &&def) const {
+		return this->args.empty() ? Arg { std::forward<Def>(def) } : this->args.back();
+	}
 
 protected:
-	bool parse(char value[]) override;
+	int _pure takes_arg() const override { return 1; }
 
-};
-
-
-template <typename N>
-static N strto(const std::string &str, size_t *pos = nullptr) {
-	static_assert(std::is_integral<N>::value && (std::is_signed<N>::value || std::is_unsigned<N>::value), "unsupported type");
-	return std::is_signed<N>::value ? narrow_check<N>(std::stol(str, pos, 0)) : narrow_check<N>(std::stoul(str, pos, 0));
-}
-
-template <>
-int strto<int>(const std::string &str, size_t *pos) {
-	return std::stoi(str, pos, 0);
-}
-
-template <>
-long strto<long>(const std::string &str, size_t *pos) {
-	return std::stol(str, pos, 0);
-}
-
-template <>
-long long strto<long long>(const std::string &str, size_t *pos) {
-	return std::stoll(str, pos, 0);
-}
-
-template <>
-unsigned long strto<unsigned long>(const std::string &str, size_t *pos) {
-	return std::stoul(str, pos, 0);
-}
-
-template <>
-unsigned long long strto<unsigned long long>(const std::string &str, size_t *pos) {
-	return std::stoull(str, pos, 0);
-}
-
-template <>
-float strto<float>(const std::string &str, size_t *pos) {
-	return std::stof(str, pos);
-}
-
-template <>
-double strto<double>(const std::string &str, size_t *pos) {
-	return std::stod(str, pos);
-}
-
-template <>
-long double strto<long double>(const std::string &str, size_t *pos) {
-	return std::stold(str, pos);
-}
-
-
-template <typename T = long>
-class NumericOption : public Option {
-
-public:
-	typedef T num_type;
-
-public:
-	num_type value;
-
-private:
-	const num_type min;
-	const num_type max;
-
-public:
-	explicit NumericOption(const char long_form[], char short_form = '\0', num_type default_value = num_type(), num_type min = std::numeric_limits<num_type>::min(), num_type max = std::numeric_limits<num_type>::max()) : Option(long_form, short_form), value(default_value), min(min), max(max) { }
-
-protected:
-	bool parse(char value[]) override {
-		if (value) {
-			try {
-				size_t pos;
-				this->value = strto<num_type>(value, &pos);
-				if (value[pos] == '\0' && this->value >= min && this->value <= max) {
-					return true;
-				}
-			}
-			catch (const std::out_of_range &) {
-				// swallow
-			}
+	void parse(char arg[]) override {
+		if (!arg) {
+			throw OptionException("option requires an argument", *this);
 		}
-		std::ostringstream msg;
-		msg << "expected " << (std::is_integral<num_type>::value ? "integer" : "numeric") << " argument in range [" << min << ',' << max << "] for option";
-		throw OptionException(msg.str().c_str(), *this);
+		try {
+			Arg converted;
+			convert(converted, arg); // unqualified call invokes argument-dependent lookup
+			return this->args.emplace_back(std::move(converted));
+		}
+		catch (const std::exception &e) {
+			throw OptionException(e.what(), *this);
+		}
 	}
 
 };
 
 
-class StringOption : public Option {
+template <typename Arg>
+class Option<std::experimental::optional<Arg>> : public AbstractOption, public WithArgument<std::experimental::optional<Arg>> {
 
 public:
-	const char *value;
+	using AbstractOption::AbstractOption;
 
 public:
-	explicit StringOption(const char long_form[], char short_form = '\0', const char default_value[] = nullptr) : Option(long_form, short_form), value(default_value) { }
+	template <typename Def>
+	Arg _pure value_or(Def &&def) const {
+		return this->args.empty() ? Arg { std::forward<Def>(def) } : this->args.back().value_or(std::forward<Def>(def));
+	}
 
 protected:
-	bool parse(char value[]) override;
+	int _pure takes_arg() const override { return -1; }
 
-};
-
-
-template <typename T>
-class NumericVectorOption : public Option {
-
-public:
-	typedef T num_type;
-
-public:
-	std::vector<num_type> values;
-
-private:
-	const char delim;
-	const num_type min;
-	const num_type max;
-
-public:
-	explicit NumericVectorOption(const char long_form[], char short_form = '\0', char delim = ',', num_type min = std::numeric_limits<num_type>::min(), num_type max = std::numeric_limits<num_type>::max()) : Option(long_form, short_form), delim(delim), min(min), max(max) { }
-
-protected:
-	bool parse(char value[]) override {
-		if (value) {
-			try {
-				for (;;) {
-					size_t pos;
-					num_type temp = strto<num_type>(value, &pos);
-					if (pos == 0 || this->value < min || this->value > max) {
-						break;
-					}
-					values.push_back(temp);
-					if (value[pos] == '\0') {
-						return true;
-					}
-					value += pos + 1;
-				}
-			}
-			catch (const std::out_of_range &) {
-				// swallow
-			}
+	void parse(char arg[]) override {
+		if (!arg) {
+			return this->args.emplace_back();
 		}
-		std::ostringstream msg;
-		msg << "expected " << (std::is_integral<num_type>::value ? "integer" : "numeric") << " argument in range [" << min << ',' << max << "] for option";
-		throw OptionException(msg.str().c_str(), *this);
+		try {
+			Arg converted;
+			convert(converted, arg); // unqualified call invokes argument-dependent lookup
+			return this->args.emplace_back(std::move(converted));
+		}
+		catch (const std::exception &e) {
+			throw OptionException(e.what(), *this);
+		}
 	}
 
 };
 
 
-class StringVectorOption : public Option {
+template <>
+class Option<void> : public AbstractOption {
 
 public:
-	std::vector<char *> values;
-
-private:
-	const char delim;
+	typedef void argument_type;
 
 public:
-	explicit StringVectorOption(const char long_form[], char short_form = '\0', char delim = '\0') : Option(long_form, short_form), values(), delim(delim) { }
+	size_t occurrences = 0;
+
+public:
+	using AbstractOption::AbstractOption;
+
+public:
+	explicit _pure operator bool () const {
+		return occurrences;
+	}
+
+	size_t _pure count() const {
+		return occurrences;
+	}
 
 protected:
-	bool parse(char value[]) override;
+	int _pure takes_arg() const override { return 0; }
+
+	void parse(char arg[]) override {
+		if (arg) {
+			throw OptionException("option does not accept an argument", *this);
+		}
+		++occurrences;
+	}
 
 };
 
 
-template <size_t numopts>
-static inline int parse(int argc, char *argv[], Option * const (&opts)[numopts]) {
-	return parse(argc, argv, opts, numopts);
+int parse(int argc, char *argv[], AbstractOption * const opts[], size_t n_opts);
+
+template <size_t N>
+static inline int parse(int argc, char *argv[], AbstractOption * const (&opts)[N]) {
+	return parse(argc, argv, opts, N);
 }
 
-int parse(int argc, char *argv[], Option * const opts[], size_t numopts);
+static inline int parse(int argc, char *argv[], std::initializer_list<AbstractOption *> opts) {
+	return parse(argc, argv, opts.begin(), opts.size());
+}
 
 
 } // namespace cli
