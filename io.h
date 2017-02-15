@@ -262,7 +262,7 @@ public:
 
 public:
 	ssize_t read(void *buf, size_t n) override;
-	size_t avail() { return source.avail(); }
+	size_t avail() override { return source.avail(); }
 
 };
 
