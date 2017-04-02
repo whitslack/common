@@ -110,12 +110,7 @@ void Selectable::pump(Selector &selector) {
 	for (;;) {
 		auto pair = selector.select();
 		if (pair.first) {
-			try {
-				static_cast<Selectable *>(pair.first)->selected(selector, pair.second);
-			}
-			catch (...) {
-				delete static_cast<Selectable *>(pair.first);
-			}
+			static_cast<Selectable *>(pair.first)->selected(selector, pair.second);
 		}
 	}
 }

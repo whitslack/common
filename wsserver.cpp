@@ -28,7 +28,7 @@ public:
 	}
 
 public:
-	void selected(Selector &selector, Selector::Flags flags) override {
+	void selected(Selector &selector, Selector::Flags flags) noexcept override {
 		if ((flags & Selector::Flags::READABLE) != Selector::Flags::NONE) {
 			try {
 				if (this->WebSocketServerHandshake::ready()) {
@@ -56,7 +56,7 @@ protected:
 };
 }
 
-void WebSocketServer::selected(Selector &selector, Selector::Flags flags) {
+void WebSocketServer::selected(Selector &selector, Selector::Flags flags) noexcept {
 	if ((flags & Selector::Flags::READABLE) != Selector::Flags::NONE) {
 		Socket socket = this->accept(nullptr, nullptr, SOCK_NONBLOCK | SOCK_CLOEXEC);
 		socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1);

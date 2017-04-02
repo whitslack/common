@@ -47,10 +47,14 @@ DEFINE_ENUM_FLAG_OPS(Selector::Flags)
 
 
 class Selectable {
+
 public:
 	static void _noreturn pump(Selector &selector);
+
 public:
 	virtual ~Selectable() { }
+
 protected:
-	virtual void selected(Selector &selector, Selector::Flags flags) = 0;
+	virtual void selected(Selector &selector, Selector::Flags flags) noexcept = 0;
+
 };
