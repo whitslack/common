@@ -45,6 +45,8 @@ unsigned pselect(int nfds, fd_set * _restrict readfds, fd_set * _restrict writef
 	return static_cast<unsigned>(ret);
 }
 
+#if _REENTRANT
+
 void pthread_kill(pthread_t thread, int sig) {
 	int error;
 	if ((error = ::pthread_kill(thread, sig)) != 0) {
@@ -65,6 +67,8 @@ void pthread_sigqueue(pthread_t thread, int sig, const union sigval value) {
 		throw std::system_error(error, std::system_category(), "pthread_sigqueue");
 	}
 }
+
+#endif // _REENTRANT
 
 void raise(int sig) {
 	if (::raise(sig) < 0) {
