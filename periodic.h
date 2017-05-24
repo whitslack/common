@@ -36,6 +36,6 @@ protected:
 	virtual bool work(time_point_t &deadline) = 0;
 
 private:
-	std::function<void (void) noexcept> make_task(unsigned long seq);
+	std::function<void (void) /* noexcept */> make_task(unsigned long seq);
 
 };

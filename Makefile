@@ -43,7 +43,7 @@ endif
 endif
 WFLAGS += -Wall -Wextra -Wcast-qual -Wconversion -Wdisabled-optimization -Wdouble-promotion -Wmissing-declarations -Wpacked -Wno-parentheses -Wredundant-decls -Wno-sign-conversion $(addprefix -Wsuggest-attribute=,pure const noreturn) -Wno-vla
 CFLAGS += $(WFLAGS)
-CXXFLAGS += $(WFLAGS) -Wnoexcept -Wsign-promo -Wsuggest-override -Wzero-as-null-pointer-constant
+CXXFLAGS += $(WFLAGS) -Wnoexcept -Wsign-promo -Wsuggest-override -Wno-terminate -Wzero-as-null-pointer-constant
 
 
 DO_LINK.c = mkdir -p $(@D) && $(LINK.c) -o $@ $^ $(LOADLIBES) $(LDLIBS)

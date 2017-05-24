@@ -81,6 +81,7 @@ bool Base64Encoder::finish(uint8_t *&out, size_t n_out) {
 				return false;
 			}
 			*out++ = encode[buf << 4 & 0x3F], --n_out;
+			_fallthrough;
 		case 4:
 			if (n_out == 0) {
 				state = 4;
@@ -93,6 +94,7 @@ bool Base64Encoder::finish(uint8_t *&out, size_t n_out) {
 				return false;
 			}
 			*out++ = encode[buf << 2 & 0x3F], --n_out;
+			_fallthrough;
 		case 5:
 state5:
 			if (n_out == 0) {
@@ -108,6 +110,7 @@ state5:
 			}
 			*out++ = encode[buf & 0x3F], --n_out;
 			state = 6;
+			_fallthrough;
 		case 6:
 			return true;
 		default:

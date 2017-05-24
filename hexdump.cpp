@@ -40,6 +40,7 @@ bool HexDumpEncoder::process(uint8_t * _restrict &out, size_t n_out, const uint8
 				auto pos = (state - 10) / 3;
 				int b = buf[pos] = *in++; --n_in;
 				*out++ = encode[b >> 4], --n_out, ++state;
+				_fallthrough;
 			}
 			case 11: case 14: case 17: case 20: case 23: case 26: case 29: case 32:
 			case 36: case 39: case 42: case 45: case 48: case 51: case 54: case 57: {

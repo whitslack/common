@@ -14,10 +14,10 @@ void Scheduler<Clock>::run() {
 				condition.wait_until(lock, work.deadline);
 			}
 			else {
-				auto task = work.task;
+				auto task = std::move(work.task);
 				queue.pop();
 				lock.unlock();
-				(*task)();
+				task();
 				lock.lock();
 			}
 		}

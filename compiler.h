@@ -18,6 +18,16 @@
 #define _weakref(...) __attribute__ ((__weakref__ (__VA_ARGS__)))
 #define _wur __attribute__ ((__warn_usused_result__))
 
+#if __GNUC__ >= 7
+#	if __cplusplus >= 201500L
+#		define _fallthrough [[fallthrough]]
+#	else
+#		define _fallthrough [[gnu::fallthrough]]
+#	endif
+#else
+#	define _fallthrough
+#endif
+
 #define _restrict __restrict
 
 static constexpr auto _const _ffs(int v) { return __builtin_ffs(v); }
@@ -85,6 +95,8 @@ static constexpr unsigned __int128 _const bswap(unsigned __int128 v) { return __
 #define _unused
 #define _visible
 #define _wur
+
+#define _fallthrough
 
 #define _restrict
 

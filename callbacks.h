@@ -9,7 +9,7 @@ class Callbacks {
 	friend class CallbackRegistration;
 
 public:
-	typedef std::function<void (Args...) noexcept> callback_t;
+	typedef std::function<void (Args...) /* noexcept */> callback_t;
 
 private:
 	typedef typename std::list<callback_t>::const_iterator callback_itr_t;

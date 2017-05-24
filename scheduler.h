@@ -1,4 +1,5 @@
 #include <condition_variable>
+#include <functional>
 #include <memory>
 #include <mutex>
 #include <queue>
@@ -17,7 +18,7 @@ public:
 private:
 	struct Work {
 		time_point_t deadline;
-		std::shared_ptr<std::function<void (void) noexcept>> task;
+		std::function<void (void) /* noexcept */> task;
 		bool operator > (const Work &other) const { return deadline > other.deadline; }
 	};
 
@@ -35,7 +36,7 @@ public:
 		if (queue.empty() || deadline < queue.top().deadline) {
 			condition.notify_one();
 		}
-		queue.push({ deadline, std::make_shared<std::function<void (void)>>(std::forward<T>(task)) });
+		queue.push({ deadline, std::forward<T>(task) });
 	}
 
 	template <typename T>

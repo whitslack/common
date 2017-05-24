@@ -13,8 +13,10 @@ uint32_t murmur3_32(const void *data, size_t data_size, uint32_t seed) {
 	switch (data_rem) {
 		case 3:
 			tail |= static_cast<const uint8_t *>(data)[2] << 16;
+			_fallthrough;
 		case 2:
 			tail |= static_cast<const uint8_t *>(data)[1] << 8;
+			_fallthrough;
 		case 1:
 			tail |= static_cast<const uint8_t *>(data)[0];
 			hash ^= rotl(tail * 0xcc9e2d51, 15) * 0x1b873593;

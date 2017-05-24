@@ -57,6 +57,7 @@ Source & _varint_ops<4>::read_signed(Source &source, int32_t &value) {
 					break;
 				}
 			}
+			_fallthrough;
 		}
 		default:
 			throw std::ios_base::failure("value is too large");
@@ -146,6 +147,7 @@ Source & _varint_ops<4>::read_unsigned(Source &source, uint32_t &value) {
 					break;
 				}
 			}
+			_fallthrough;
 		}
 		default:
 			throw std::ios_base::failure("value is too large");
@@ -239,6 +241,7 @@ Source & _varint_ops<8>::read_signed(Source &source, int64_t &value) {
 			if (value < 0 ? (value -= INT64_C(0x0081020408102040)) < 0 : (value += INT64_C(0x0081020408102040)) >= 0) {
 				break;
 			}
+			_fallthrough;
 		default:
 			throw std::ios_base::failure("value is too large");
 	}
@@ -381,6 +384,7 @@ Source & _varint_ops<8>::read_unsigned(Source &source, uint64_t &value) {
 				value += UINT64_C(0x0102040810204080);
 				break;
 			}
+			_fallthrough;
 		default:
 			throw std::ios_base::failure("value is too large");
 	}

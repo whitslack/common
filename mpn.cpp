@@ -1,5 +1,8 @@
 #include "mpn.h"
 
+#include "compiler.h"
+
+
 void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) {
 	if (n == 0) {
 		return;
@@ -26,20 +29,27 @@ void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) {
 #if GMP_LIMB_BITS >= 64
 		case 8:
 			limb |= static_cast<mp_limb_t>(bytes[n - 8]) << 56;
+			_fallthrough;
 		case 7:
 			limb |= static_cast<mp_limb_t>(bytes[n - 7]) << 48;
+			_fallthrough;
 		case 6:
 			limb |= static_cast<mp_limb_t>(bytes[n - 6]) << 40;
+			_fallthrough;
 		case 5:
 			limb |= static_cast<mp_limb_t>(bytes[n - 5]) << 32;
+			_fallthrough;
 #endif
 #if GMP_LIMB_BITS >= 32
 		case 4:
 			limb |= static_cast<mp_limb_t>(bytes[n - 4]) << 24;
+			_fallthrough;
 		case 3:
 			limb |= static_cast<mp_limb_t>(bytes[n - 3]) << 16;
+			_fallthrough;
 		case 2:
 			limb |= static_cast<mp_limb_t>(bytes[n - 2]) << 8;
+			_fallthrough;
 		case 1:
 			limb |= static_cast<mp_limb_t>(bytes[n - 1]);
 #endif
@@ -72,20 +82,27 @@ void mpn_to_bytes(uint8_t bytes[], const mp_limb_t mpn[], size_t n) {
 #if GMP_LIMB_BITS >= 64
 		case 8:
 			bytes[n - 8] = static_cast<uint8_t>(limb >> 56);
+			_fallthrough;
 		case 7:
 			bytes[n - 7] = static_cast<uint8_t>(limb >> 48);
+			_fallthrough;
 		case 6:
 			bytes[n - 6] = static_cast<uint8_t>(limb >> 40);
+			_fallthrough;
 		case 5:
 			bytes[n - 5] = static_cast<uint8_t>(limb >> 32);
+			_fallthrough;
 #endif
 #if GMP_LIMB_BITS >= 32
 		case 4:
 			bytes[n - 4] = static_cast<uint8_t>(limb >> 24);
+			_fallthrough;
 		case 3:
 			bytes[n - 3] = static_cast<uint8_t>(limb >> 16);
+			_fallthrough;
 		case 2:
 			bytes[n - 2] = static_cast<uint8_t>(limb >> 8);
+			_fallthrough;
 		case 1:
 			bytes[n - 1] = static_cast<uint8_t>(limb);
 #endif

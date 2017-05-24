@@ -85,7 +85,7 @@ bool Periodic<Clock>::schedule(scheduler_t *scheduler, time_point_t deadline) {
 }
 
 template <typename Clock>
-std::function<void (void) noexcept> Periodic<Clock>::make_task(unsigned long seq) {
+std::function<void (void) /* noexcept */> Periodic<Clock>::make_task(unsigned long seq) {
 	return [this, seq]() noexcept {
 		if (sched_seq == seq) {
 			scheduler_t *scheduler = this->scheduler;

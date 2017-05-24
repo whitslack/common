@@ -145,7 +145,7 @@ protected:
 		try {
 			Arg converted;
 			convert(converted, arg); // unqualified call invokes argument-dependent lookup
-			return this->args.emplace_back(std::move(converted));
+			this->args.emplace_back(std::move(converted));
 		}
 		catch (const std::exception &e) {
 			throw OptionException(e.what(), *this);

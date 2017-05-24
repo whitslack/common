@@ -1,5 +1,6 @@
 #include "progress.h"
 
+#include <functional>
 #include <iomanip>
 #include <sstream>
 
