@@ -109,7 +109,7 @@ static inline bool futex_wait(int *uaddr, int expect, std::chrono::steady_clock:
 
 bool futex_wait_bitset(int *uaddr, int expect, unsigned mask, const struct timespec *deadline = nullptr);
 
-bool futex_wait_bitset(int *uaddr, int expect, std::chrono::system_clock::time_point deadline);
+bool futex_wait_bitset(int *uaddr, int expect, unsigned mask, std::chrono::system_clock::time_point deadline);
 
 static inline bool futex_wait_bitset(int *uaddr, int expect, unsigned mask, std::chrono::steady_clock::time_point deadline) {
 	struct timespec ts;
