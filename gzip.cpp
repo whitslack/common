@@ -4,8 +4,8 @@
 
 #include "narrow.h"
 
-using z_size_t = decltype(z_stream::avail_in);
-static_assert(std::is_same<decltype(z_stream::avail_out), z_size_t>::value, "");
+using z_avail_t = decltype(z_stream::avail_in);
+static_assert(std::is_same<decltype(z_stream::avail_out), z_avail_t>::value, "");
 
 
 GZipSource::GZipSource(Source &source) : source(source) {
@@ -28,11 +28,11 @@ ssize_t GZipSource::read(void *buf, size_t n) {
 	if ((d = ibuf + sizeof ibuf - iend) > 0) {
 		ssize_t r = source.read(iend, d);
 		if (r > 0) {
-			stream.avail_in += static_cast<z_size_t>(r);
+			stream.avail_in += static_cast<z_avail_t>(r);
 		}
 	}
 	stream.next_out = static_cast<uint8_t *>(buf);
-	n = stream.avail_out = saturate<z_size_t>(n);
+	n = stream.avail_out = saturate<z_avail_t>(n);
 	int error;
 	if ((error = ::inflate(&stream, Z_NO_FLUSH)) != Z_OK && error != Z_STREAM_END) {
 		throw std::ios_base::failure(stream.msg);
@@ -72,19 +72,19 @@ bool GZipSink::flush() {
 int GZipSink::write(const void *buf, size_t &n, int flush) {
 	uint8_t *obegin = stream.next_out;
 	stream.next_out += stream.avail_out;
-	stream.avail_out = static_cast<z_size_t>(obuf + sizeof obuf - stream.next_out);
+	stream.avail_out = static_cast<z_avail_t>(obuf + sizeof obuf - stream.next_out);
 	stream.next_in = static_cast<const uint8_t *>(buf);
-	n = stream.avail_in = saturate<z_size_t>(n);
+	n = stream.avail_in = saturate<z_avail_t>(n);
 	int error;
 	if ((error = ::deflate(&stream, flush)) != Z_OK && error != Z_STREAM_END) {
 		throw std::ios_base::failure(stream.msg);
 	}
 	n -= stream.avail_in;
-	stream.avail_out = static_cast<z_size_t>(stream.next_out - obegin);
+	stream.avail_out = static_cast<z_avail_t>(stream.next_out - obegin);
 	stream.next_out = obegin;
 	if (stream.avail_out > 0) {
 		size_t w = sink.write(stream.next_out, stream.avail_out);
-		if ((stream.avail_out -= static_cast<z_size_t>(w)) == 0) {
+		if ((stream.avail_out -= static_cast<z_avail_t>(w)) == 0) {
 			stream.next_out = obuf;
 		}
 		else {
