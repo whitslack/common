@@ -9,12 +9,85 @@
 
 namespace json {
 
+static std::ostream & format_string(std::ostream &os, const std::string &str);
+
+
+Object & _noreturn Value::as_object() {
+	throw std::invalid_argument("expected object");
+}
+
+const Object & _noreturn Value::as_object() const {
+	throw std::invalid_argument("expected object");
+}
+
+Array & _noreturn Value::as_array() {
+	throw std::invalid_argument("expected array");
+}
+
+const Array & _noreturn Value::as_array() const {
+	throw std::invalid_argument("expected array");
+}
+
+Number & _noreturn Value::as_number() {
+	throw std::invalid_argument("expected number");
+}
+
+const Number & _noreturn Value::as_number() const {
+	throw std::invalid_argument("expected number");
+}
+
+Integer & _noreturn Value::as_integer() {
+	throw std::invalid_argument("expected integer");
+}
+
+const Integer & _noreturn Value::as_integer() const {
+	throw std::invalid_argument("expected integer");
+}
+
+String & _noreturn Value::as_string() {
+	throw std::invalid_argument("expected string");
+}
+
+const String & _noreturn Value::as_string() const {
+	throw std::invalid_argument("expected string");
+}
+
+Boolean & _noreturn Value::as_boolean() {
+	throw std::invalid_argument("expected boolean");
+}
+
+const Boolean & _noreturn Value::as_boolean() const {
+	throw std::invalid_argument("expected boolean");
+}
+
+
+const Value * Object::find(const std::string &key) const {
+	auto itr = map.find(key);
+	return itr == map.end() ? nullptr : itr->second.get();
+}
+
+const Value & Object::get(const std::string &key) const {
+	auto ptr = this->find(key);
+	if (!ptr) {
+		throw std::invalid_argument(key + " missing");
+	}
+	return *ptr;
+}
+
+Object & Object::as_object() {
+	return *this;
+}
+
+const Object & Object::as_object() const {
+	return *this;
+}
+
 std::ostream & Object::format(std::ostream &os) const {
 	os.put('{');
 	auto it = map.begin();
 	if (it != map.end()) {
 		for (;;) {
-			String(it->first).format(os).put(':') << it->second;
+			format_string(os, it->first).put(':') << it->second;
 			if (++it == map.end()) {
 				break;
 			}
@@ -24,6 +97,14 @@ std::ostream & Object::format(std::ostream &os) const {
 	return os.put('}');
 }
 
+
+Array & Array::as_array() {
+	return *this;
+}
+
+const Array & Array::as_array() const {
+	return *this;
+}
 
 std::ostream & Array::format(std::ostream &os) const {
 	os.put('[');
@@ -41,28 +122,49 @@ std::ostream & Array::format(std::ostream &os) const {
 }
 
 
+Number & Number::as_number() {
+	return *this;
+}
+
+const Number & Number::as_number() const {
+	return *this;
+}
+
+
+Integer & Integer::as_integer() {
+	return *this;
+}
+
+const Integer & Integer::as_integer() const {
+	return *this;
+}
+
 std::ostream & Integer::format(std::ostream &os) const {
-	auto flags = os.flags(std::ios_base::dec);
-	return os << std::setw(0) << value << std::setiosflags(flags);
+	return os << value;
 }
 
 
 std::ostream & Real::format(std::ostream &os) const {
-	if (!std::isfinite(value)) {
-		return os << "null";
-	}
-	auto flags = os.flags(std::ios_base::dec);
-	auto precision = os.precision(std::numeric_limits<double>::digits10);
-	os << std::setw(0) << value << std::setiosflags(flags);
-	os.precision(precision);
-	return os;
+	return std::isfinite(value) ? os << value : os << "null";
 }
 
 
+String & String::as_string() {
+	return *this;
+}
+
+const String & String::as_string() const {
+	return *this;
+}
+
 std::ostream & String::format(std::ostream &os) const {
+	return format_string(os, string);
+}
+
+static std::ostream & format_string(std::ostream &os, const std::string &str) {
 	static const char HEX[] = "0123456789ABCDEF";
 	os.put('"');
-	for (char c : string) {
+	for (char c : str) {
 		switch (c) {
 			case 0x08: // backspace (U+0008)
 				os.put('\\').put('b');
@@ -99,9 +201,16 @@ std::ostream & String::format(std::ostream &os) const {
 }
 
 
+Boolean & Boolean::as_boolean() {
+	return *this;
+}
+
+const Boolean & Boolean::as_boolean() const {
+	return *this;
+}
+
 std::ostream & Boolean::format(std::ostream &os) const {
-	auto flags = os.flags(std::ios_base::boolalpha);
-	return os << std::setw(0) << value << std::setiosflags(flags);
+	return os << (value ? "true" : "false");
 }
 
 
@@ -252,15 +361,15 @@ static std::istream & parse_real(std::istream &is, double &value) {
 	return is >> value;
 }
 
-static std::istream & collect_digits(std::istream &is, std::string &str, size_t limit = std::numeric_limits<size_t>::max()) {
+static std::istream & copy_digits(std::ostream &os, std::istream &is, size_t limit = std::numeric_limits<size_t>::max()) {
 	if (!::isdigit(is.peek())) {
 		throw std::ios_base::failure("expected digit");
 	}
 	do {
-		if (str.size() > limit) {
+		if (limit-- == 0) {
 			throw std::ios_base::failure("too many digits");
 		}
-		str.push_back(std::istream::traits_type::to_char_type(is.get()));
+		os.put(std::istream::traits_type::to_char_type(is.get()));
 	} while (::isdigit(is.peek()));
 	return is;
 }
@@ -281,32 +390,30 @@ std::istream & operator >> (std::istream &is, ValuePtr &value) {
 			return is;
 		}
 		case '-': case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': {
-			std::string str;
-			str.reserve(32);
+			std::stringstream ss;
 			if (is.peek() == '-') {
-				str.push_back(std::istream::traits_type::to_char_type(is.get()));
+				ss.put(std::istream::traits_type::to_char_type(is.get()));
 			}
 			if (is.peek() == '0') {
-				str.push_back(std::istream::traits_type::to_char_type(is.get()));
+				ss.put(std::istream::traits_type::to_char_type(is.get()));
 			}
 			else {
-				collect_digits(is, str, 32);
+				copy_digits(ss, is, 32);
 			}
 			bool fractional = false;
 			if (is.peek() == '.') {
-				str.push_back(std::istream::traits_type::to_char_type(is.get()));
+				ss.put(std::istream::traits_type::to_char_type(is.get()));
 				fractional = true;
-				collect_digits(is, str, 32);
+				copy_digits(ss, is, 32);
 			}
 			if ((is.peek() | 0x20) == 'e') {
-				str.push_back(std::istream::traits_type::to_char_type(is.get()));
+				ss.put(std::istream::traits_type::to_char_type(is.get()));
 				fractional = true;
 				if (is.peek() == '-' || is.peek() == '+') {
-					str.push_back(std::istream::traits_type::to_char_type(is.get()));
+					ss.put(std::istream::traits_type::to_char_type(is.get()));
 				}
-				collect_digits(is, str, 32);
+				copy_digits(ss, is, 32);
 			}
-			std::stringstream ss(str);
 			if (fractional) {
 				Real real;
 				parse_real(ss, *real);
@@ -317,6 +424,7 @@ std::istream & operator >> (std::istream &is, ValuePtr &value) {
 				parse_integer(ss, *integer);
 				value.reset(new Integer(std::move(integer)));
 			}
+			is.setstate(ss.rdstate() & ~std::ios_base::eofbit);
 			return is;
 		}
 		case '"': {
@@ -351,73 +459,17 @@ std::istream & operator >> (std::istream &is, ValuePtr &value) {
 }
 
 std::ostream & operator << (std::ostream &os, const Value &value) {
-	return value.format(os);
+	auto orig_flags = os.flags(std::ios_base::dec);
+	auto orig_precision = os.precision(std::numeric_limits<double>::digits10);
+	os.width(0);
+	value.format(os);
+	os.flags(orig_flags);
+	os.precision(orig_precision);
+	return os;
 }
 
 std::ostream & operator << (std::ostream &os, const ValuePtr &value) {
-	return value ? value->format(os) : os << "null";
-}
-
-
-const Value * find(const Object &object, const std::string &key) {
-	auto it = object->find(key);
-	return it == object->end() ? nullptr : it->second.get();
-}
-
-const Value & get(const Object &object, const std::string &key) {
-	auto ptr = find(object, key);
-	if (!ptr) {
-		throw std::invalid_argument(key + " missing");
-	}
-	return *ptr;
-}
-
-const Object & as_object(const Value &value) {
-	auto object_ptr = dynamic_cast<const Object *>(&value);
-	if (!object_ptr) {
-		throw std::invalid_argument("expected object");
-	}
-	return *object_ptr;
-}
-
-const Array & as_array(const Value &value) {
-	auto array_ptr = dynamic_cast<const Array *>(&value);
-	if (!array_ptr) {
-		throw std::invalid_argument("expected array");
-	}
-	return *array_ptr;
-}
-
-const Number & as_number(const Value &value) {
-	auto number_ptr = dynamic_cast<const Number *>(&value);
-	if (!number_ptr) {
-		throw std::invalid_argument("expected number");
-	}
-	return *number_ptr;
-}
-
-const Integer & as_integer(const Value &value) {
-	auto integer_ptr = dynamic_cast<const Integer *>(&value);
-	if (!integer_ptr) {
-		throw std::invalid_argument("expected integer");
-	}
-	return *integer_ptr;
-}
-
-const String & as_string(const Value &value) {
-	auto string_ptr = dynamic_cast<const String *>(&value);
-	if (!string_ptr) {
-		throw std::invalid_argument("expected string");
-	}
-	return *string_ptr;
-}
-
-const Boolean & as_boolean(const Value &value) {
-	auto boolean_ptr = dynamic_cast<const Boolean *>(&value);
-	if (!boolean_ptr) {
-		throw std::invalid_argument("expected boolean");
-	}
-	return *boolean_ptr;
+	return value ? os << *value : os << "null";
 }
 
 } // namespace json
