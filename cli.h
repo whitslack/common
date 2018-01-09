@@ -63,6 +63,10 @@ static inline void convert(long double &out, const char str[]) {
 	out = strto(std::strtold, str);
 }
 
+static inline void convert(const char *&out, const char str[]) {
+	out = str;
+}
+
 
 class AbstractOption {
 	friend int parse(int, char *[], AbstractOption * const [], size_t);
