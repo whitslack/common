@@ -11,7 +11,7 @@ private:
 	uint8_t buf;
 
 public:
-	HexEncoder() : buf_full() { }
+	HexEncoder() : buf_full(), buf() { }
 
 public:
 	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);
@@ -27,7 +27,7 @@ private:
 	uint8_t buf;
 
 public:
-	HexDecoder() : buf_full() { }
+	HexDecoder() : buf_full(), buf() { }
 
 public:
 	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);
