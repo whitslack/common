@@ -11,13 +11,24 @@
 class Source {
 
 public:
+	struct BufferPointer {
+		void *ptr;
+		size_t size;
+	};
+
+public:
 	virtual ~Source() { }
 
 public:
 	virtual ssize_t read(void *buf, size_t n) = 0;
+	virtual ssize_t read(const BufferPointer bufs[], size_t count);
 	virtual size_t avail() { return 0; }
 
 	void read_fully(void *buf, size_t n);
+	void read_fully(const BufferPointer bufs[], size_t count);
+
+	ssize_t read(std::initializer_list<BufferPointer> bufs) { return this->read(bufs.begin(), bufs.size()); }
+	void read_fully(std::initializer_list<BufferPointer> bufs) { return this->read_fully(bufs.begin(), bufs.size()); }
 
 };
 
@@ -25,14 +36,25 @@ public:
 class Sink {
 
 public:
+	struct BufferPointer {
+		const void *ptr;
+		size_t size;
+	};
+
+public:
 	virtual ~Sink() { }
 
 public:
 	virtual size_t write(const void *buf, size_t n) = 0;
+	virtual size_t write(const BufferPointer bufs[], size_t count);
 	virtual bool flush() { return true; }
 
 	void write_fully(const void *buf, size_t n);
+	void write_fully(const BufferPointer bufs[], size_t count);
 	void flush_fully();
+
+	size_t write(std::initializer_list<BufferPointer> bufs) { return this->write(bufs.begin(), bufs.size()); }
+	void write_fully(std::initializer_list<BufferPointer> bufs) { return this->write_fully(bufs.begin(), bufs.size()); }
 
 };
 

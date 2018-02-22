@@ -6,6 +6,23 @@
 #include "narrow.h"
 
 
+ssize_t Source::read(const BufferPointer bufs[], size_t count) {
+	ssize_t ret = 0;
+	for (size_t i = 0; i < count; ++i) {
+		void *buf = bufs[i].ptr;
+		size_t n = bufs[i].size;
+		while (n > 0) {
+			ssize_t r = this->read(buf, n);
+			if (r <= 0) {
+				return ret == 0 ? r : ret;
+			}
+			ret += r;
+			buf = static_cast<uint8_t *>(buf) + r, n -= r;
+		}
+	}
+	return ret;
+}
+
 void Source::read_fully(void *buf, size_t n) {
 	while (n > 0) {
 		ssize_t r = this->read(buf, n);
@@ -21,12 +38,69 @@ void Source::read_fully(void *buf, size_t n) {
 	}
 }
 
+void Source::read_fully(const BufferPointer bufs[], size_t count) {
+	while (count > 0) {
+		ssize_t r = this->read(bufs, count);
+		if (r > 0) {
+			while ((r -= bufs[0].size) > 0) {
+				++bufs, --count;
+			}
+			if (r < 0) {
+				this->read_fully(static_cast<uint8_t *>(bufs[0].ptr) + bufs[0].size + r, -r);
+			}
+			++bufs, --count;
+		}
+		else if (r < 0) {
+			throw std::ios_base::failure("premature EOF");
+		}
+		else {
+			throw std::logic_error("non-blocking read in blocking context");
+		}
+	}
+}
+
+
+size_t Sink::write(const BufferPointer bufs[], size_t count) {
+	size_t ret = 0;
+	for (size_t i = 0; i < count; ++i) {
+		const void *buf = bufs[i].ptr;
+		size_t n = bufs[i].size;
+		while (n > 0) {
+			size_t w = this->write(buf, n);
+			if (w == 0) {
+				return ret;
+			}
+			ret += w;
+			buf = static_cast<const uint8_t *>(buf) + w, n -= w;
+		}
+	}
+	return ret;
+}
 
 void Sink::write_fully(const void *buf, size_t n) {
 	while (n > 0) {
 		size_t w = this->write(buf, n);
 		if (w > 0) {
 			buf = static_cast<const uint8_t *>(buf) + w, n -= w;
+		}
+		else {
+			throw std::logic_error("non-blocking write in blocking context");
+		}
+	}
+}
+
+void Sink::write_fully(const BufferPointer bufs[], size_t count) {
+	while (count > 0) {
+		size_t w = this->write(bufs, count);
+		if (w > 0) {
+			while (w > bufs[0].size) {
+				w -= bufs[0].size;
+				++bufs, --count;
+			}
+			if (w < bufs[0].size) {
+				this->write_fully(static_cast<const uint8_t *>(bufs[0].ptr) + w, bufs[0].size - w);
+			}
+			++bufs, --count;
 		}
 		else {
 			throw std::logic_error("non-blocking write in blocking context");

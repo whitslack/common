@@ -167,11 +167,16 @@ private:
 public:
 	operator int () const { return fd; }
 
+	using Source::read;
+	using Sink::write;
+
 	void creat(const char *path, mode_t mode = 0666) { *this = FileDescriptor(posix::creat(path, mode)); }
 	void open(const char *path, int oflag = O_RDONLY | O_CLOEXEC, mode_t mode = 0666) { *this = FileDescriptor(path, oflag, mode); }
 	void close() { posix::close(fd), fd = -1; }
 	ssize_t read(void *buf, size_t n) override { return posix::read(fd, buf, n); }
 	size_t write(const void *buf, size_t n) override { return posix::write(fd, buf, n); }
+	ssize_t read(const Source::BufferPointer bufs[], size_t count) override { return this->readv(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
+	size_t write(const Sink::BufferPointer bufs[], size_t count) override { return this->writev(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
 	ssize_t readv(const struct iovec iov[], int iovcnt) { return posix::readv(fd, iov, iovcnt); }
 	size_t writev(const struct iovec iov[], int iovcnt) { return posix::writev(fd, iov, iovcnt); }
 	ssize_t pread(void *buf, size_t nbyte, off_t offset) const { return posix::pread(fd, buf, nbyte, offset); }
