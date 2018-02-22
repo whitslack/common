@@ -22,9 +22,9 @@ void chdir(const char *path);
 void chmod(const char *path, mode_t mode);
 void chown(const char *path, uid_t owner, gid_t group);
 void close(int fildes);
-int creat(const char *path, mode_t mode = 0666);
-int dup(int fildes);
-int dup2(int fildes, int fildes2);
+_nodiscard int creat(const char *path, mode_t mode = 0666);
+_nodiscard int dup(int fildes);
+_nodiscard int dup2(int fildes, int fildes2);
 void faccessat(int fd, const char *path, int amode, int flag = 0);
 void fadvise(int fd, off_t offset, off_t len, int advice);
 void fallocate(int fd, off_t offset, off_t len);
@@ -63,16 +63,16 @@ void * mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
 void mprotect(void *addr, size_t len, int prot);
 void msync(void *addr, size_t len, int flags);
 void munmap(void *addr, size_t len);
-int open(const char *path, int oflag, mode_t mode = 0666);
-int openat(int fd, const char *path, int oflag, mode_t mode = 0666);
+_nodiscard int open(const char *path, int oflag, mode_t mode = 0666);
+_nodiscard int openat(int fd, const char *path, int oflag, mode_t mode = 0666);
 void pipe(int fildes[2]);
 unsigned poll(struct pollfd fds[], nfds_t nfds, int timeout = -1);
-ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
-ssize_t preadv(int fd, const struct iovec iov[], int iovcnt, off_t offset);
-size_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
-size_t pwritev(int fd, const struct iovec iov[], int iovcnt, off_t offset);
-ssize_t read(int fildes, void *buf, size_t nbyte);
-ssize_t readv(int fildes, const struct iovec iov[], int iovcnt);
+_nodiscard ssize_t pread(int fildes, void *buf, size_t nbyte, off_t offset);
+_nodiscard ssize_t preadv(int fd, const struct iovec iov[], int iovcnt, off_t offset);
+_nodiscard size_t pwrite(int fildes, const void *buf, size_t nbyte, off_t offset);
+_nodiscard size_t pwritev(int fd, const struct iovec iov[], int iovcnt, off_t offset);
+_nodiscard ssize_t read(int fildes, void *buf, size_t nbyte);
+_nodiscard ssize_t readv(int fildes, const struct iovec iov[], int iovcnt);
 size_t readlink(const char * _restrict path, char * _restrict buf, size_t bufsize);
 size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize);
 void rename(const char *oldpath, const char *newpath);
@@ -87,8 +87,8 @@ void unlink(const char *path);
 void unlinkat(int fd, const char *path, int flag = 0);
 void utimensat(int fd, const char *path, const struct timespec times[2], int flag = 0);
 void utimes(const char *path, const struct timeval times[2]);
-size_t write(int fildes, const void *buf, size_t nbyte);
-size_t writev(int fildes, const struct iovec iov[], int iovcnt);
+_nodiscard size_t write(int fildes, const void *buf, size_t nbyte);
+_nodiscard size_t writev(int fildes, const struct iovec iov[], int iovcnt);
 
 static inline unsigned select(int nfds, fd_set * _restrict readfds, fd_set * _restrict writefds, fd_set * _restrict errorfds, std::chrono::microseconds timeout) {
 	struct timeval tv;
@@ -173,16 +173,16 @@ public:
 	void creat(const char *path, mode_t mode = 0666) { *this = FileDescriptor(posix::creat(path, mode)); }
 	void open(const char *path, int oflag = O_RDONLY | O_CLOEXEC, mode_t mode = 0666) { *this = FileDescriptor(path, oflag, mode); }
 	void close() { posix::close(fd), fd = -1; }
-	ssize_t read(void *buf, size_t n) override { return posix::read(fd, buf, n); }
-	size_t write(const void *buf, size_t n) override { return posix::write(fd, buf, n); }
-	ssize_t read(const Source::BufferPointer bufs[], size_t count) override { return this->readv(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
-	size_t write(const Sink::BufferPointer bufs[], size_t count) override { return this->writev(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
-	ssize_t readv(const struct iovec iov[], int iovcnt) { return posix::readv(fd, iov, iovcnt); }
-	size_t writev(const struct iovec iov[], int iovcnt) { return posix::writev(fd, iov, iovcnt); }
-	ssize_t pread(void *buf, size_t nbyte, off_t offset) const { return posix::pread(fd, buf, nbyte, offset); }
-	size_t pwrite(const void *buf, size_t nbyte, off_t offset) { return posix::pwrite(fd, buf, nbyte, offset); }
-	ssize_t preadv(const struct iovec iov[], int iovcnt, off_t offset) const { return posix::preadv(fd, iov, iovcnt, offset); }
-	size_t pwritev(const struct iovec iov[], int iovcnt, off_t offset) { return posix::pwritev(fd, iov, iovcnt, offset); }
+	_nodiscard ssize_t read(void *buf, size_t n) override { return posix::read(fd, buf, n); }
+	_nodiscard size_t write(const void *buf, size_t n) override { return posix::write(fd, buf, n); }
+	_nodiscard ssize_t read(const Source::BufferPointer bufs[], size_t count) override { return this->readv(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
+	_nodiscard size_t write(const Sink::BufferPointer bufs[], size_t count) override { return this->writev(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
+	_nodiscard ssize_t readv(const struct iovec iov[], int iovcnt) { return posix::readv(fd, iov, iovcnt); }
+	_nodiscard size_t writev(const struct iovec iov[], int iovcnt) { return posix::writev(fd, iov, iovcnt); }
+	_nodiscard ssize_t pread(void *buf, size_t nbyte, off_t offset) const { return posix::pread(fd, buf, nbyte, offset); }
+	_nodiscard size_t pwrite(const void *buf, size_t nbyte, off_t offset) { return posix::pwrite(fd, buf, nbyte, offset); }
+	_nodiscard ssize_t preadv(const struct iovec iov[], int iovcnt, off_t offset) const { return posix::preadv(fd, iov, iovcnt, offset); }
+	_nodiscard size_t pwritev(const struct iovec iov[], int iovcnt, off_t offset) { return posix::pwritev(fd, iov, iovcnt, offset); }
 	void lockf(int function, off_t size) { posix::lockf(fd, function, size); }
 	int fcntl(int cmd) { return posix::fcntl(fd, cmd); }
 	int fcntl(int cmd, int arg) { return posix::fcntl(fd, cmd, arg); }
@@ -253,26 +253,26 @@ public:
 #	define UTIME_OMIT ((1L << 30) - 2L)
 #endif
 extern "C" {
-	int faccessat(int fd, const char *path, int amode, int flag) _weak;
-	int fchmodat(int fd, const char *path, mode_t mode, int flag) _weak;
-	int fchownat(int fd, const char *path, uid_t owner, gid_t group, int flag) _weak;
-	int fstatat(int fd, const char * _restrict path, struct stat * _restrict buf, int flag) _weak;
-	int futimens(int fd, const struct timespec times[2]) _weak;
-	int linkat(int fd1, const char *path1, int fd2, const char *path2, int flag) _weak;
-	int mkdirat(int fd, const char *path, mode_t mode) _weak;
-	int mkfifoat(int fd, const char *path, mode_t mode) _weak;
-	int mknodat(int fd, const char *path, mode_t mode, dev_t dev) _weak;
-	int openat(int fd, const char *path, int oflag, ...) _weak;
-	ssize_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize) _weak;
-	int renameat(int oldfd, const char *oldpath, int newfd, const char *newpath) _weak;
-	int symlinkat(const char *path1, int fd, const char *path2) _weak;
-	int unlinkat(int fd, const char *path, int flag) _weak;
-	int utimensat(int fd, const char *path, const struct timespec times[2], int flag) _weak;
+	_nodiscard int faccessat(int fd, const char *path, int amode, int flag) _weak;
+	_nodiscard int fchmodat(int fd, const char *path, mode_t mode, int flag) _weak;
+	_nodiscard int fchownat(int fd, const char *path, uid_t owner, gid_t group, int flag) _weak;
+	_nodiscard int fstatat(int fd, const char * _restrict path, struct stat * _restrict buf, int flag) _weak;
+	_nodiscard int futimens(int fd, const struct timespec times[2]) _weak;
+	_nodiscard int linkat(int fd1, const char *path1, int fd2, const char *path2, int flag) _weak;
+	_nodiscard int mkdirat(int fd, const char *path, mode_t mode) _weak;
+	_nodiscard int mkfifoat(int fd, const char *path, mode_t mode) _weak;
+	_nodiscard int mknodat(int fd, const char *path, mode_t mode, dev_t dev) _weak;
+	_nodiscard int openat(int fd, const char *path, int oflag, ...) _weak;
+	_nodiscard ssize_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize) _weak;
+	_nodiscard int renameat(int oldfd, const char *oldpath, int newfd, const char *newpath) _weak;
+	_nodiscard int symlinkat(const char *path1, int fd, const char *path2) _weak;
+	_nodiscard int unlinkat(int fd, const char *path, int flag) _weak;
+	_nodiscard int utimensat(int fd, const char *path, const struct timespec times[2], int flag) _weak;
 }
 #endif // _POSIX_VERSION < 200809L
 
 #if _POSIX_SYNCHRONIZED_IO <= 0
-static int fdatasync(int fildes) _weakref("fsync");
+_nodiscard static int fdatasync(int fildes) _weakref("fsync");
 #endif
 
 #ifndef POSIX_FADV_NORMAL
@@ -282,13 +282,13 @@ static int fdatasync(int fildes) _weakref("fsync");
 #	define POSIX_FADV_WILLNEED 3
 #	define POSIX_FADV_DONTNEED 4
 #	define POSIX_FADV_NOREUSE 5
-extern "C" int posix_fadvise(int fd, off_t offset, off_t len, int advice) _weak;
+extern "C" _nodiscard int posix_fadvise(int fd, off_t offset, off_t len, int advice) _weak;
 #endif // !defined(POSIX_FADV_NORMAL)
 
 #ifdef __APPLE__
 extern "C" {
-	int posix_fallocate(int fd, off_t offset, off_t len) _weak;
-	ssize_t preadv(int fd, const struct iovec iov[], int iovcnt, off_t offset) _weak;
-	ssize_t pwritev(int fd, const struct iovec iov[], int iovcnt, off_t offset) _weak;
+	_nodiscard int posix_fallocate(int fd, off_t offset, off_t len) _weak;
+	_nodiscard ssize_t preadv(int fd, const struct iovec iov[], int iovcnt, off_t offset) _weak;
+	_nodiscard ssize_t pwritev(int fd, const struct iovec iov[], int iovcnt, off_t offset) _weak;
 }
 #endif // defined(__APPLE__)

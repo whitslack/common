@@ -20,14 +20,14 @@ public:
 	virtual ~Source() { }
 
 public:
-	virtual ssize_t read(void *buf, size_t n) = 0;
-	virtual ssize_t read(const BufferPointer bufs[], size_t count);
+	_nodiscard virtual ssize_t read(void *buf, size_t n) = 0;
+	_nodiscard virtual ssize_t read(const BufferPointer bufs[], size_t count);
 	virtual size_t avail() { return 0; }
 
 	void read_fully(void *buf, size_t n);
 	void read_fully(const BufferPointer bufs[], size_t count);
 
-	ssize_t read(std::initializer_list<BufferPointer> bufs) { return this->read(bufs.begin(), bufs.size()); }
+	_nodiscard ssize_t read(std::initializer_list<BufferPointer> bufs) { return this->read(bufs.begin(), bufs.size()); }
 	void read_fully(std::initializer_list<BufferPointer> bufs) { return this->read_fully(bufs.begin(), bufs.size()); }
 
 };
@@ -45,15 +45,15 @@ public:
 	virtual ~Sink() { }
 
 public:
-	virtual size_t write(const void *buf, size_t n) = 0;
-	virtual size_t write(const BufferPointer bufs[], size_t count);
+	_nodiscard virtual size_t write(const void *buf, size_t n) = 0;
+	_nodiscard virtual size_t write(const BufferPointer bufs[], size_t count);
 	virtual bool flush() { return true; }
 
 	void write_fully(const void *buf, size_t n);
 	void write_fully(const BufferPointer bufs[], size_t count);
 	void flush_fully();
 
-	size_t write(std::initializer_list<BufferPointer> bufs) { return this->write(bufs.begin(), bufs.size()); }
+	_nodiscard size_t write(std::initializer_list<BufferPointer> bufs) { return this->write(bufs.begin(), bufs.size()); }
 	void write_fully(std::initializer_list<BufferPointer> bufs) { return this->write_fully(bufs.begin(), bufs.size()); }
 
 };
@@ -69,7 +69,7 @@ public:
 	explicit IteratorSource(Itr itr) : itr(itr) { }
 
 public:
-	ssize_t read(void *buf, size_t n) override {
+	_nodiscard ssize_t read(void *buf, size_t n) override {
 		auto out_ptr = static_cast<E *>(buf), out_eptr = out_ptr + n / sizeof(E);
 		while (out_ptr < out_eptr) {
 			*out_ptr++ = *itr++;
@@ -90,7 +90,7 @@ public:
 	explicit IteratorSink(Itr itr) : itr(itr) { }
 
 public:
-	size_t write(const void *buf, size_t n) override {
+	_nodiscard size_t write(const void *buf, size_t n) override {
 		auto in_ptr = static_cast<const E *>(buf), in_eptr = in_ptr + n / sizeof(E);
 		while (in_ptr < in_eptr) {
 			*itr++ = *in_ptr++;
@@ -113,7 +113,7 @@ public:
 	LimitedSource(Source &source, size_t remaining) : remaining(remaining), source(source) { }
 
 public:
-	ssize_t read(void *buf, size_t n) override;
+	_nodiscard ssize_t read(void *buf, size_t n) override;
 	size_t avail() override { return remaining; }
 
 };
@@ -131,7 +131,7 @@ public:
 	LimitedSink(Sink &sink, size_t remaining) : remaining(remaining), sink(sink) { }
 
 public:
-	size_t write(const void *buf, size_t n) override;
+	_nodiscard size_t write(const void *buf, size_t n) override;
 	size_t avail() { return remaining; }
 
 };
@@ -209,7 +209,7 @@ protected:
 	BufferedSourceBase(Source &source, uint8_t *buf_bptr, uint8_t *buf_eptr) : source(source), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
 
 public:
-	ssize_t read(void *buf, size_t n) override;
+	_nodiscard ssize_t read(void *buf, size_t n) override;
 	size_t avail() override { return buf_pptr - buf_gptr; }
 
 };
@@ -225,7 +225,7 @@ protected:
 	BufferedSinkBase(Sink &sink, uint8_t *buf_bptr, uint8_t *buf_eptr) : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_eptr), buf_pptr(buf_eptr), buf_eptr(buf_eptr) { }
 
 public:
-	size_t write(const void *buf, size_t n) override;
+	_nodiscard size_t write(const void *buf, size_t n) override;
 	bool flush() override;
 
 };
@@ -268,7 +268,7 @@ public:
 
 public:
 	void reset() { delim_ptr = delim_begin; }
-	ssize_t read(void *buf, size_t n) override;
+	_nodiscard ssize_t read(void *buf, size_t n) override;
 
 };
 
@@ -283,7 +283,7 @@ public:
 	Tap(Source &source, Sink &sink) : source(source), sink(sink) { }
 
 public:
-	ssize_t read(void *buf, size_t n) override;
+	_nodiscard ssize_t read(void *buf, size_t n) override;
 	size_t avail() override { return source.avail(); }
 
 };
@@ -302,7 +302,7 @@ public:
 	explicit Tee(Args&&... args) : sinks({ args... }) { }
 
 public:
-	size_t write(const void *buf, size_t n) override {
+	_nodiscard size_t write(const void *buf, size_t n) override {
 		for (auto sink : sinks) {
 			sink->write_fully(buf, n);
 		}
@@ -329,10 +329,10 @@ public:
 	explicit StreamBufSourceSink(std::streambuf &sb) : sb(sb) { }
 
 public:
-	ssize_t read(void *buf, size_t n) override;
+	_nodiscard ssize_t read(void *buf, size_t n) override;
 	size_t avail() override;
 
-	size_t write(const void *buf, size_t n) override;
+	_nodiscard size_t write(const void *buf, size_t n) override;
 	bool flush() override { return sb.pubsync() == 0; }
 
 };

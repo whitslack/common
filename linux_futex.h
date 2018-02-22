@@ -9,20 +9,20 @@
 
 #if defined(__GNUC__) && defined(__OPTIMIZE__) && defined(__amd64__)
 
-static inline _always_inline int futex(int *uaddr, int futex_op, int val) {
+_nodiscard static inline _always_inline int futex(int *uaddr, int futex_op, int val) {
 	register long rax __asm__ ("rax") = SYS_futex;
 	__asm__ volatile ("syscall" : "+a" (rax) : "D" (uaddr), "S" (long(futex_op)), "d" (long(val)) : "rcx", "r11", "cc", "memory");
 	return rax < 0 ? errno = static_cast<int>(-rax), -1 : static_cast<int>(rax);
 }
 
-static inline _always_inline int futex(int *uaddr, int futex_op, int val, const struct timespec *timeout) {
+_nodiscard static inline _always_inline int futex(int *uaddr, int futex_op, int val, const struct timespec *timeout) {
 	register long rax __asm__ ("rax") = SYS_futex;
 	register const struct timespec *r10 __asm__ ("r10") = timeout;
 	__asm__ volatile ("syscall" : "+a" (rax) : "D" (uaddr), "S" (long(futex_op)), "d" (long(val)), "r" (r10) : "rcx", "r11", "cc", "memory");
 	return rax < 0 ? errno = static_cast<int>(-rax), -1 : static_cast<int>(rax);
 }
 
-static inline _always_inline int futex(int *uaddr, int futex_op, int val, const struct timespec *timeout, int val3) {
+_nodiscard static inline _always_inline int futex(int *uaddr, int futex_op, int val, const struct timespec *timeout, int val3) {
 	register long rax __asm__ ("rax") = SYS_futex;
 	register const struct timespec *r10 __asm__ ("r10") = timeout;
 	register long r9 __asm__ ("r9") = val3;
@@ -30,7 +30,7 @@ static inline _always_inline int futex(int *uaddr, int futex_op, int val, const 
 	return rax < 0 ? errno = static_cast<int>(-rax), -1 : static_cast<int>(rax);
 }
 
-static inline _always_inline int futex(int *uaddr, int futex_op, int val, uint32_t val2, int *uaddr2) {
+_nodiscard static inline _always_inline int futex(int *uaddr, int futex_op, int val, uint32_t val2, int *uaddr2) {
 	register long rax __asm__ ("rax") = SYS_futex;
 	register unsigned long r10 __asm__ ("r10") = val2;
 	register int *r8 __asm__ ("r8") = uaddr2;
@@ -38,7 +38,7 @@ static inline _always_inline int futex(int *uaddr, int futex_op, int val, uint32
 	return rax < 0 ? errno = static_cast<int>(-rax), -1 : static_cast<int>(rax);
 }
 
-static inline _always_inline int futex(int *uaddr, int futex_op, int val, uint32_t val2, int *uaddr2, int val3) {
+_nodiscard static inline _always_inline int futex(int *uaddr, int futex_op, int val, uint32_t val2, int *uaddr2, int val3) {
 	register long rax __asm__ ("rax") = SYS_futex;
 	register long r10 __asm__ ("r10") = val2;
 	register int *r8 __asm__ ("r8") = uaddr2;
@@ -47,7 +47,7 @@ static inline _always_inline int futex(int *uaddr, int futex_op, int val, uint32
 	return rax < 0 ? errno = static_cast<int>(-rax), -1 : static_cast<int>(rax);
 }
 
-static inline _always_inline int futex(int *uaddr, int futex_op, int val, int val3) {
+_nodiscard static inline _always_inline int futex(int *uaddr, int futex_op, int val, int val3) {
 	register long rax __asm__ ("rax") = SYS_futex;
 	register long r9 __asm__ ("r9") = val3;
 	__asm__ volatile ("syscall" : "+a" (rax) : "D" (uaddr), "S" (long(futex_op)), "d" (long(val)), "r" (r9) : "rcx", "r11", "cc", "memory");
@@ -59,32 +59,32 @@ static inline _always_inline int futex(int *uaddr, int futex_op, int val, int va
 #include <unistd.h>
 
 // FUTEX_WAKE, FUTEX_FD
-static inline int futex(int *uaddr, int futex_op, int val) {
+_nodiscard static inline int futex(int *uaddr, int futex_op, int val) {
 	return static_cast<int>(::syscall(SYS_futex, uaddr, futex_op, val));
 }
 
 // FUTEX_WAIT
-static inline int futex(int *uaddr, int futex_op, int val, const struct timespec *timeout) {
+_nodiscard static inline int futex(int *uaddr, int futex_op, int val, const struct timespec *timeout) {
 	return static_cast<int>(::syscall(SYS_futex, uaddr, futex_op, val, timeout));
 }
 
 // FUTEX_WAIT_BITSET
-static inline int futex(int *uaddr, int futex_op, int val, const struct timespec *timeout, int val3) {
+_nodiscard static inline int futex(int *uaddr, int futex_op, int val, const struct timespec *timeout, int val3) {
 	return static_cast<int>(::syscall(SYS_futex, uaddr, futex_op, val, timeout, nullptr, val3));
 }
 
 // FUTEX_REQUEUE
-static inline int futex(int *uaddr, int futex_op, int val, uint32_t val2, int *uaddr2) {
+_nodiscard static inline int futex(int *uaddr, int futex_op, int val, uint32_t val2, int *uaddr2) {
 	return static_cast<int>(::syscall(SYS_futex, uaddr, futex_op, val, val2, uaddr2));
 }
 
 // FUTEX_CMP_REQUEUE, FUTEX_WAKE_OP
-static inline int futex(int *uaddr, int futex_op, int val, uint32_t val2, int *uaddr2, int val3) {
+_nodiscard static inline int futex(int *uaddr, int futex_op, int val, uint32_t val2, int *uaddr2, int val3) {
 	return static_cast<int>(::syscall(SYS_futex, uaddr, futex_op, val, val2, uaddr2, val3));
 }
 
 // FUTEX_WAKE_BITSET
-static inline int futex(int *uaddr, int futex_op, int val, int val3) {
+_nodiscard static inline int futex(int *uaddr, int futex_op, int val, int val3) {
 	return static_cast<int>(::syscall(SYS_futex, uaddr, futex_op, val, nullptr, nullptr, val3));
 }
 

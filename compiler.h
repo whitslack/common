@@ -16,16 +16,18 @@
 #define _visible __attribute__ ((__visibility__ ("default")))
 #define _weak __attribute__ ((__weak__))
 #define _weakref(...) __attribute__ ((__weakref__ (__VA_ARGS__)))
-#define _wur __attribute__ ((__warn_usused_result__))
 
 #if __GNUC__ >= 7
 #	if __cplusplus >= 201500L
 #		define _fallthrough [[fallthrough]]
+#		define _nodiscard [[nodiscard]]
 #	else
 #		define _fallthrough [[gnu::fallthrough]]
+#		define _nodiscard __attribute__ ((__warn_unused_result__))
 #	endif
 #else
 #	define _fallthrough
+#	define _nodiscard __attribute__ ((__warn_unused_result__))
 #endif
 
 #define _restrict __restrict
@@ -94,9 +96,9 @@ static constexpr unsigned __int128 _const bswap(unsigned __int128 v) { return __
 #define _pure
 #define _unused
 #define _visible
-#define _wur
 
 #define _fallthrough
+#define _nodiscard
 
 #define _restrict
 

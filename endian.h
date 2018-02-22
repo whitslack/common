@@ -77,10 +77,10 @@ struct le_explicit : public le<T> {
 
 template <typename T> static constexpr be<T> & _const as_be(T &v) { return reinterpret_cast<be<T> &>(v); }
 template <typename T> static constexpr const be<T> & _const as_be(const T &v) { return reinterpret_cast<const be<T> &>(v); }
-template <typename T> static constexpr be_explicit<T> _pure htobe(const T &v) { return v; }
-template <typename T> static constexpr T _pure betoh(const be<T> &v) { return v; }
+template <typename T> _nodiscard static constexpr be_explicit<T> _pure htobe(const T &v) { return v; }
+template <typename T> _nodiscard static constexpr T _pure betoh(const be<T> &v) { return v; }
 
 template <typename T> static constexpr le<T> & _const as_le(T &v) { return reinterpret_cast<le<T> &>(v); }
 template <typename T> static constexpr const le<T> & _const as_le(const T &v) { return reinterpret_cast<const le<T> &>(v); }
-template <typename T> static constexpr le_explicit<T> _pure htole(const T &v) { return v; }
-template <typename T> static constexpr T _pure letoh(const le<T> &v) { return v; }
+template <typename T> _nodiscard static constexpr le_explicit<T> _pure htole(const T &v) { return v; }
+template <typename T> _nodiscard static constexpr T _pure letoh(const le<T> &v) { return v; }
