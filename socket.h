@@ -17,10 +17,10 @@ void getpeername(int socket, struct sockaddr * _restrict address, socklen_t * _r
 void getsockname(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len);
 void getsockopt(int socket, int level, int option_name, void * _restrict option_value, socklen_t * _restrict option_len);
 void listen(int socket, int backlog = 0);
-_nodiscard ssize_t recv(int socket, void *buffer, size_t length, int flags = 0);
+_nodiscard ssize_t recv(int socket, void *buffer, size_t length, int flags);
 _nodiscard ssize_t recvfrom(int socket, void * _restrict buffer, size_t length, int flags, struct sockaddr * _restrict address, socklen_t * _restrict address_len);
 _nodiscard ssize_t recvmsg(int socket, struct msghdr *message, int flags = 0);
-_nodiscard size_t send(int socket, const void *buffer, size_t length, int flags = 0);
+_nodiscard size_t send(int socket, const void *buffer, size_t length, int flags);
 _nodiscard size_t sendmsg(int socket, const struct msghdr *message, int flags = 0);
 _nodiscard size_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len);
 void setsockopt(int socket, int level, int option_name, const void *option_value, socklen_t option_len);
@@ -66,9 +66,9 @@ public:
 	Socket accept(sockaddr *addr = nullptr, socklen_t *addrlen = nullptr, int flags = SOCK_CLOEXEC);
 
 	void listen(int backlog = SOMAXCONN) { posix::listen(fd, backlog); }
-	_nodiscard ssize_t recv(void *buffer, size_t length, int flags = 0) { return posix::recv(fd, buffer, length, flags); }
+	_nodiscard ssize_t recv(void *buffer, size_t length, int flags) { return posix::recv(fd, buffer, length, flags); }
 	_nodiscard size_t send(const void *, size_t, bool) = delete;
-	_nodiscard size_t send(const void *buffer, size_t length, int flags = 0) { return posix::send(fd, buffer, length, flags); }
+	_nodiscard size_t send(const void *buffer, size_t length, int flags) { return posix::send(fd, buffer, length, flags); }
 
 	size_t avail() override;
 	bool flush() override;

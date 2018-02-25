@@ -157,7 +157,7 @@ static std::string make_accept_field_value(const std::string &key) {
 
 bool WebSocketServerHandshake::ready() {
 	ssize_t r;
-	if ((r = socket.recv(request_buf.data() + request_pos, request_buf.size() - request_pos)) < 0) {
+	if ((r = socket.read(request_buf.data() + request_pos, request_buf.size() - request_pos)) < 0) {
 		return false;
 	}
 	if ((request_pos += r) > 4 && ::memcmp(&request_buf[request_pos - 4], "\r\n\r\n", 4) == 0) {
