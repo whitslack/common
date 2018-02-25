@@ -7,143 +7,208 @@
 #include "base64.h"
 #include "codec.h"
 #include "connect.h"
+#include "endian.h"
 #include "memory.h"
 #include "sha.h"
 
 
-void WebSocket::send(WebSocket::Opcode opcode, bool mask, const void *buf, size_t n, bool more) {
-	uint8_t header[14], *p = header;
-	*p++ = static_cast<uint8_t>(more ? opcode : 1 << 7 | opcode);
-	if (n <= 125) {
-		*p++ = static_cast<uint8_t>(mask ? 1 << 7 | n : n);
-	}
-	else if (n < 1 << 16) {
-		*p++ = static_cast<uint8_t>(mask ? 1 << 7 | 126 : 126);
-		*p++ = static_cast<uint8_t>(n >> 8);
-		*p++ = static_cast<uint8_t>(n);
-	}
-	else {
-		*p++ = static_cast<uint8_t>(mask ? 1 << 7 | 127 : 127);
-#if SIZE_MAX >= UINT64_MAX
-		*p++ = static_cast<uint8_t>(n >> 56);
-		*p++ = static_cast<uint8_t>(n >> 48);
-		*p++ = static_cast<uint8_t>(n >> 40);
-		*p++ = static_cast<uint8_t>(n >> 32);
+static void memxor32(void *buf, size_t n, uint32_t mask, size_t phase) {
+#ifdef __GNUC__
+	typedef uint32_t vec_t __attribute__ ((vector_size (16)));
 #else
-		*p++ = 0, *p++ = 0, *p++ = 0, *p++ = 0;
+	typedef uint32_t vec_t;
 #endif
-		*p++ = static_cast<uint8_t>(n >> 24);
-		*p++ = static_cast<uint8_t>(n >> 16);
-		*p++ = static_cast<uint8_t>(n >> 8);
-		*p++ = static_cast<uint8_t>(n);
+	union {
+		void *void_ptr;
+		uint8_t *uint8_ptr;
+		vec_t *vec_ptr;
+		uintptr_t uintptr;
+	} ptr;
+	ptr.void_ptr = buf;
+	uint32_t mask_le = rotr(as_le(mask), unsigned(phase * 8));
+	while (n > 0 && ptr.uintptr % sizeof(vec_t)) {
+		*ptr.uint8_ptr = static_cast<uint8_t>(*ptr.uint8_ptr ^ mask_le), ++ptr.uint8_ptr, --n;
+		mask_le = rotr(mask_le, 8);
 	}
-	if (mask) {
-		uint32_t mask = static_cast<uint32_t>(::mrand48());
-		*p++ = static_cast<uint8_t>(mask);
-		*p++ = static_cast<uint8_t>(mask >> 8);
-		*p++ = static_cast<uint8_t>(mask >> 16);
-		*p++ = static_cast<uint8_t>(mask >> 24);
-		auto masked = make_buffer(n);
-		for (size_t i = 0; i < n; ++i) {
-			masked[i] = static_cast<uint8_t>(static_cast<const uint8_t *>(buf)[i] ^ mask >> i % 4 * 8);
+	uint32_t mask_he = as_le(mask_le);
+	while (n >= sizeof(vec_t)) {
+		*ptr.vec_ptr ^= mask_he, ++ptr.vec_ptr, n -= sizeof(vec_t);
+	}
+	while (n > 0) {
+		*ptr.uint8_ptr = static_cast<uint8_t>(*ptr.uint8_ptr ^ mask_le), ++ptr.uint8_ptr, --n;
+		mask_le = rotr(mask_le, 8);
+	}
+}
+
+
+ssize_t WebSocket::receive(Opcode &opcode, void *buf, size_t n) {
+	if (static_cast<int8_t>(recv_hdr_pos) >= 0) {
+		if (recv_hdr_pos == 0) {
+			ssize_t r = socket.read(&recv_state, sizeof recv_state + sizeof recv_hdr_pos);
+			if (r <= 0) {
+				if (r < 0) {
+					opcode = End;
+					return r;
+				}
+				return 0;
+			}
+			if (recv_state & 0x70) {
+				throw std::ios_base::failure("received WebSocket frame with non-zero reserved bits");
+			}
+			opcode = static_cast<Opcode>(recv_state & 0xF);
+			switch (opcode) {
+				case Continuation:
+				case Text:
+				case Binary:
+					break;
+				case Close:
+				case Ping:
+				case Pong:
+					if (!(recv_state & 0x80)) {
+						throw std::ios_base::failure("received fragmented WebSocket control frame");
+					}
+					break;
+				default:
+					throw std::ios_base::failure("received WebSocket frame with unrecognized opcode");
+			}
+			if (r == 1) {
+				recv_hdr_pos = 1;
+				return 0;
+			}
+			recv_mask = recv_hdr_pos & 0x80;
+			recv_state = static_cast<uint8_t>(recv_hdr_pos & 0x7F | recv_state & 0x80);
+			recv_hdr_pos = 2;
 		}
-		this->send(header, p - header, true);
-		this->send(masked.get(), n, more);
+		else if (recv_hdr_pos == 1) {
+			ssize_t r = socket.read(&recv_hdr_pos, sizeof recv_hdr_pos);
+			if (r <= 0) {
+				if (r < 0) {
+					opcode = End;
+					return r;
+				}
+				return 0;
+			}
+			recv_mask = recv_hdr_pos & 0x80;
+			recv_state = static_cast<uint8_t>(recv_hdr_pos & 0x7F | recv_state & 0x80);
+			recv_hdr_pos = 2;
+		}
+		void *hdr_buf = &recv_mask;
+		size_t hdr_size = 2, payload_len = recv_state & 0x7F;
+		if (payload_len == 127) {
+			hdr_buf = static_cast<uint8_t *>(hdr_buf) - sizeof recv_data_rem;
+			hdr_size += sizeof recv_data_rem;
+		}
+		else if (payload_len == 126) {
+			hdr_buf = static_cast<uint8_t *>(hdr_buf) - sizeof(uint16_t);
+			hdr_size += sizeof(uint16_t);
+		}
+		if (recv_hdr_pos > hdr_size || recv_mask) {
+			hdr_size += sizeof recv_mask;
+		}
+		if ((hdr_size -= recv_hdr_pos) > 0) {
+			ssize_t r = socket.read(static_cast<uint8_t *>(hdr_buf) - 2 + recv_hdr_pos, hdr_size);
+			if (r <= 0) {
+				if (r < 0) {
+					opcode = End;
+					return r;
+				}
+				return 0;
+			}
+			recv_hdr_pos = static_cast<uint8_t>(recv_hdr_pos + r);
+			if (static_cast<size_t>(r) < hdr_size) {
+				return 0;
+			}
+		}
+		if (payload_len > 125) {
+			recv_data_rem = as_be(recv_data_rem);
+		}
+		else {
+			recv_data_rem = payload_len;
+		}
+		recv_hdr_pos = ~0;
+	}
+	if (recv_data_rem == 0) {
+		recv_hdr_pos = 0;
+		return -1; // end of frame
+	}
+	if (n == 0) {
+		return 0;
+	}
+	ssize_t r = socket.read(buf, std::min(n, recv_data_rem));
+	if (r <= 0) {
+		if (r < 0) {
+			opcode = End;
+			return r;
+		}
+		return 0;
+	}
+	recv_data_rem -= r;
+	if (recv_mask) {
+		memxor32(buf, r, recv_mask, ~recv_hdr_pos);
+		recv_hdr_pos = static_cast<uint8_t>(~((~recv_hdr_pos + r) % sizeof recv_mask));
+	}
+	return r;
+}
+
+bool WebSocket::send(Opcode opcode, const void *buf, size_t n, bool more) {
+	if (static_cast<int8_t>(send_hdr_pos) >= 0) {
+		uint8_t send_hdr[14];
+		size_t send_hdr_len = 2;
+		send_hdr[0] = opcode & 0xF;
+		if (!more) {
+			send_hdr[0] |= 0x80;
+		}
+		if (n >> 16) {
+			send_hdr[1] = 127;
+#if SIZE_MAX > UINT32_MAX
+			send_hdr[2] = static_cast<uint8_t>(n >> 56);
+			send_hdr[3] = static_cast<uint8_t>(n >> 48);
+			send_hdr[4] = static_cast<uint8_t>(n >> 40);
+			send_hdr[5] = static_cast<uint8_t>(n >> 32);
+#else
+			send_hdr[5] = send_hdr[4] = send_hdr[3] = send_hdr[2] = 0;
+#endif
+			send_hdr[6] = static_cast<uint8_t>(n >> 24);
+			send_hdr[7] = static_cast<uint8_t>(n >> 16);
+			send_hdr[8] = static_cast<uint8_t>(n >> 8);
+			send_hdr[9] = static_cast<uint8_t>(n);
+			send_hdr_len += 8;
+		}
+		else if (n > 125) {
+			send_hdr[1] = 126;
+			send_hdr[2] = static_cast<uint8_t>(n >> 8);
+			send_hdr[3] = static_cast<uint8_t>(n);
+			send_hdr_len += 2;
+		}
+		else {
+			send_hdr[1] = static_cast<uint8_t>(n);
+		}
+		if (send_mask) {
+			send_hdr[1] |= 0x80;
+			// always send a null mask, as this lets us avoid XORing the data
+			std::memset(send_hdr + send_hdr_len, 0, sizeof(uint32_t));
+			send_hdr_len += sizeof(uint32_t);
+		}
+		size_t w = socket.write({ { send_hdr + send_hdr_pos, send_hdr_len -= send_hdr_pos }, { buf, send_data_rem = n } });
+		if (w < send_hdr_len) {
+			send_hdr_pos = static_cast<uint8_t>(send_hdr_pos + w);
+			return false;
+		}
+		w -= send_hdr_len;
+		if ((send_data_rem -= w) > 0) {
+			send_hdr_pos = ~0;
+			return false;
+		}
 	}
 	else {
-		this->send(header, p - header, true);
-		this->send(buf, n, more);
-	}
-}
-
-stdx::optional<MemorySource> WebSocket::receive(Opcode &opcode, bool masked) {
-	for (;;) {
-		if (header_pos < 2) {
-			if ((header_pos += this->recv(header_buf.data() + header_pos, 2 - header_pos)) < 2) {
-				return stdx::nullopt;
-			}
-			if (static_cast<int8_t>(header_buf[0]) >= 0) {
-				throw std::ios_base::failure("fragmented message received");
-			}
-			data_rem = header_buf[1] & (1 << 7) - 1;
-		}
-		if ((static_cast<int8_t>(header_buf[1]) < 0) != masked) {
-			throw std::ios_base::failure(masked ? "WebSocket frame from client was not masked" : "WebSocket frame from server was masked");
-		}
-		size_t header_len = masked ? 6 : 2, data_len = header_buf[1] & (1 << 7) - 1;
-		if (data_len > 125) {
-			if (data_len == 127) {
-				throw std::length_error("received frame exceeds size limit");
-			}
-			header_len += 2;
-			if (header_pos < header_len) {
-				if ((header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
-					return stdx::nullopt;
-				}
-				data_rem = header_buf[2] << 8 | header_buf[3];
-			}
-		}
-		else if (header_pos < header_len && (header_pos += this->recv(header_buf.data() + header_pos, header_len - header_pos)) < header_len) {
-			return stdx::nullopt;
-		}
-		if (data_rem > 0) {
-			size_t n = this->recv(data_buf.data() + data_pos, data_rem);
-			if (n == 0) {
-				return stdx::nullopt;
-			}
-			data_rem -= n;
-			if (masked) {
-				const uint8_t *mask = header_buf.data() + header_len - 4;
-				do {
-					data_buf[data_pos] ^= mask[data_pos % 4];
-					++data_pos;
-				} while (--n > 0);
-			}
-			else {
-				data_pos += n;
-			}
-		}
-		if (data_rem > 0) {
-			return stdx::nullopt;
-		}
-		size_t n = data_pos;
-		data_pos = header_pos = 0;
-		switch (opcode = static_cast<Opcode>(header_buf[0] & (1 << 4) - 1)) {
-			case Text:
-			case Binary:
-			case Pong:
-				return MemorySource(data_buf.data(), n);
-			case Close:
-				if (n >= 2) {
-					this->send(Close, !masked, data_buf.data(), 2, false);
-				}
-				else {
-					this->send(Close, !masked, nullptr, 0, false);
-				}
-				socket.shutdown(SHUT_RDWR);
-				return stdx::nullopt;
-			case Ping:
-				this->send(Pong, !masked, data_buf.data(), n, false);
-				break;
-			default:
-				throw std::ios_base::failure("unsupported opcode");
+		if ((send_data_rem -= socket.write(static_cast<const uint8_t *>(buf) + n - send_data_rem, send_data_rem)) > 0) {
+			return false;
 		}
 	}
-}
-
-void WebSocket::send(const void *buf, size_t n, bool more) {
-	socket.write_fully(buf, n);
 	if (!more) {
-		socket.flush_fully();
+		socket.flush();
 	}
-}
-
-size_t WebSocket::recv(void *buf, size_t n) {
-	ssize_t r;
-	if ((r = socket.recv(buf, n, MSG_DONTWAIT)) < 0) {
-		throw std::ios_base::failure("connection terminated");
-	}
-	return static_cast<size_t>(r);
+	return true;
 }
 
 
@@ -307,14 +372,16 @@ void WebSocketClientHandshake::validate_response_headers(const HttpResponseHeade
 }
 
 
-WebSocketBuf::WebSocketBuf(WebSocket *ws, bool mask, WebSocket::Opcode opcode) : ws(ws), mask(mask), opcode(opcode) {
+WebSocketBuf::WebSocketBuf(WebSocket *ws, WebSocket::Opcode opcode) : ws(ws), opcode(opcode) {
 	this->setp(buf.data(), buf.data() + buf.size());
 }
 
 int WebSocketBuf::sync(bool more) {
 	char_type *pbase = this->pbase(), *pptr = this->pptr();
 	if (pptr > pbase) {
-		ws->send(opcode, mask, pbase, pptr - pbase, more);
+		if (!ws->send(opcode, pbase, pptr - pbase, more)) {
+			return -1;
+		}
 		opcode = WebSocket::Continuation;
 		this->setp(buf.data(), buf.data() + buf.size());
 	}
