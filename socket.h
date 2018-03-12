@@ -68,8 +68,12 @@ public:
 
 	void listen(int backlog = SOMAXCONN) { posix::listen(fd, backlog); }
 	_nodiscard ssize_t recv(void *buffer, size_t length, int flags) { return posix::recv(fd, buffer, length, flags); }
+	_nodiscard ssize_t recvfrom(void * _restrict buffer, size_t length, int flags, struct sockaddr * _restrict address, socklen_t * _restrict address_len) { return posix::recvfrom(fd, buffer, length, flags, address, address_len); }
+	_nodiscard ssize_t recvmsg(struct msghdr *message, int flags = 0) { return posix::recvmsg(fd, message, flags); }
 	_nodiscard size_t send(const void *, size_t, bool) = delete;
 	_nodiscard size_t send(const void *buffer, size_t length, int flags) { return posix::send(fd, buffer, length, flags); }
+	_nodiscard size_t sendmsg(const struct msghdr *message, int flags = 0) { return posix::sendmsg(fd, message, flags); }
+	_nodiscard size_t sendto(const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len) { return posix::sendto(fd, message, length, flags, dest_addr, dest_len); }
 
 	size_t avail() override;
 	bool flush() override;
@@ -90,6 +94,9 @@ public:
 	void getpeername(A &address) const;
 	bool connect(const A &address);
 	T accept(A *address = nullptr, int flags = SOCK_CLOEXEC);
+
+	_nodiscard ssize_t recvfrom(void * _restrict buffer, size_t length, int flags, A &address);
+	_nodiscard size_t sendto(const void *message, size_t length, int flags, const A &address);
 
 };
 

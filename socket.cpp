@@ -243,6 +243,19 @@ T SocketBase<T, A>::accept(A *address, int flags) {
 	return T(this->Socket::accept(reinterpret_cast<struct sockaddr *>(address), address ? &address_len : nullptr, flags));
 }
 
+template <typename T, typename A>
+ssize_t SocketBase<T, A>::recvfrom(void * _restrict buffer, size_t length, int flags, A &address) {
+	socklen_t address_len = static_cast<socklen_t>(sizeof address);
+	ssize_t ret = this->Socket::recvfrom(buffer, length, flags, reinterpret_cast<struct sockaddr *>(&address), &address_len);
+	assert(address_len == sizeof address);
+	return ret;
+}
+
+template <typename T, typename A>
+size_t SocketBase<T, A>::sendto(const void *message, size_t length, int flags, const A &address) {
+	return this->Socket::sendto(message, length, flags, reinterpret_cast<const struct sockaddr *>(&address), static_cast<socklen_t>(sizeof address));
+}
+
 template class SocketBase<Socket4, struct sockaddr_in>;
 template class SocketBase<Socket6, struct sockaddr_in6>;
 
