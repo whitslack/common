@@ -170,8 +170,8 @@ void socketpair(int domain, int type, int protocol, int socket_vector[2]) {
 } // namespace posix
 
 
-bool Socket::connect(const sockaddr *addr, socklen_t addrlen) {
-	bool ret = posix::connect(fd, addr, addrlen);
+bool Socket::connect(const struct sockaddr *address, socklen_t address_len) {
+	bool ret = posix::connect(fd, address, address_len);
 #ifdef TCP_CORK
 	this->setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
 	this->setsockopt(IPPROTO_TCP, TCP_CORK, 1);
@@ -182,8 +182,8 @@ bool Socket::connect(const sockaddr *addr, socklen_t addrlen) {
 	return ret;
 }
 
-Socket Socket::accept(sockaddr *addr, socklen_t *addrlen, int flags) {
-	Socket socket(FileDescriptor(posix::accept(fd, addr, addrlen, flags)));
+Socket Socket::accept(struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags) {
+	Socket socket(FileDescriptor(posix::accept(fd, address, address_len, flags)));
 #ifdef TCP_CORK
 	socket.setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
 	socket.setsockopt(IPPROTO_TCP, TCP_CORK, 1);
@@ -214,40 +214,40 @@ bool Socket::flush() {
 
 
 template <typename T, typename A>
-void SocketBase<T, A>::getsockname(A &addr) const {
-	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
-	this->Socket::getsockname(reinterpret_cast<sockaddr *>(&addr), &addrlen);
-	assert(addrlen == sizeof addr);
+void SocketBase<T, A>::getsockname(A &address) const {
+	socklen_t address_len = static_cast<socklen_t>(sizeof address);
+	this->Socket::getsockname(reinterpret_cast<struct sockaddr *>(&address), &address_len);
+	assert(address_len == sizeof address);
 }
 
 template <typename T, typename A>
-void SocketBase<T, A>::bind(const A &addr) {
-	this->Socket::bind(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr));
+void SocketBase<T, A>::bind(const A &address) {
+	this->Socket::bind(reinterpret_cast<const struct sockaddr *>(&address), static_cast<socklen_t>(sizeof address));
 }
 
 template <typename T, typename A>
-void SocketBase<T, A>::getpeername(A &addr) const {
-	socklen_t addrlen = static_cast<socklen_t>(sizeof addr);
-	this->Socket::getpeername(reinterpret_cast<sockaddr *>(&addr), &addrlen);
-	assert(addrlen == sizeof addr);
+void SocketBase<T, A>::getpeername(A &address) const {
+	socklen_t address_len = static_cast<socklen_t>(sizeof address);
+	this->Socket::getpeername(reinterpret_cast<struct sockaddr *>(&address), &address_len);
+	assert(address_len == sizeof address);
 }
 
 template <typename T, typename A>
-bool SocketBase<T, A>::connect(const A &addr) {
-	return this->Socket::connect(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr));
+bool SocketBase<T, A>::connect(const A &address) {
+	return this->Socket::connect(reinterpret_cast<const struct sockaddr *>(&address), static_cast<socklen_t>(sizeof address));
 }
 
 template <typename T, typename A>
-T SocketBase<T, A>::accept(A *addr, int flags) {
-	socklen_t addrlen = static_cast<socklen_t>(sizeof *addr);
-	return T(this->Socket::accept(reinterpret_cast<sockaddr *>(addr), addr ? &addrlen : nullptr, flags));
+T SocketBase<T, A>::accept(A *address, int flags) {
+	socklen_t address_len = static_cast<socklen_t>(sizeof *address);
+	return T(this->Socket::accept(reinterpret_cast<struct sockaddr *>(address), address ? &address_len : nullptr, flags));
 }
 
-template class SocketBase<Socket4, sockaddr_in>;
-template class SocketBase<Socket6, sockaddr_in6>;
+template class SocketBase<Socket4, struct sockaddr_in>;
+template class SocketBase<Socket6, struct sockaddr_in6>;
 
 
-std::ostream & operator << (std::ostream &os, const in_addr &addr) {
+std::ostream & operator << (std::ostream &os, const struct in_addr &addr) {
 	char buf[INET_ADDRSTRLEN];
 	if (!::inet_ntop(AF_INET, &addr, buf, sizeof buf)) {
 		throw std::system_error(errno, std::system_category(), "inet_ntop");
@@ -255,7 +255,7 @@ std::ostream & operator << (std::ostream &os, const in_addr &addr) {
 	return os << buf;
 }
 
-std::ostream & operator << (std::ostream &os, const in6_addr &addr) {
+std::ostream & operator << (std::ostream &os, const struct in6_addr &addr) {
 	char buf[INET6_ADDRSTRLEN];
 	if (!::inet_ntop(AF_INET6, &addr, buf, sizeof buf)) {
 		throw std::system_error(errno, std::system_category(), "inet_ntop");

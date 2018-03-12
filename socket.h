@@ -3,6 +3,7 @@
 #include <iosfwd>
 
 #include <netinet/in.h>
+#include <sys/socket.h>
 
 #include "fd.h"
 
@@ -16,7 +17,7 @@ bool connect(int socket, const struct sockaddr *address, socklen_t address_len);
 void getpeername(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len);
 void getsockname(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len);
 void getsockopt(int socket, int level, int option_name, void * _restrict option_value, socklen_t * _restrict option_len);
-void listen(int socket, int backlog = 0);
+void listen(int socket, int backlog = SOMAXCONN);
 _nodiscard ssize_t recv(int socket, void *buffer, size_t length, int flags);
 _nodiscard ssize_t recvfrom(int socket, void * _restrict buffer, size_t length, int flags, struct sockaddr * _restrict address, socklen_t * _restrict address_len);
 _nodiscard ssize_t recvmsg(int socket, struct msghdr *message, int flags = 0);
@@ -47,23 +48,23 @@ class Socket : public FileDescriptor {
 
 public:
 	Socket() { }
-	Socket(int domain, int type, int protocol = 0) : FileDescriptor(posix::socket(domain, type, protocol)) { }
+	explicit Socket(int domain, int type, int protocol = 0) : FileDescriptor(posix::socket(domain, type, protocol)) { }
 	explicit Socket(FileDescriptor &&move) : FileDescriptor(std::move(move)) { }
 
 public:
 	void open(int domain, int type, int protocol = 0) { *this = Socket(domain, type, protocol); }
 	void shutdown(int how = SHUT_RDWR) { posix::shutdown(fd, how); }
 
-	void getsockopt(int level, int optname, void *optval, socklen_t *optlen) const { posix::getsockopt(fd, level, optname, optval, optlen); }
-	void setsockopt(int level, int optname, const void *optval, socklen_t optlen) { posix::setsockopt(fd, level, optname, optval, optlen); }
-	template <typename T> void setsockopt(int level, int optname, const T &optval) { this->setsockopt(level, optname, &optval, static_cast<socklen_t>(sizeof optval)); }
+	void getsockopt(int level, int option_name, void * _restrict option_value, socklen_t * _restrict option_len) const { posix::getsockopt(fd, level, option_name, option_value, option_len); }
+	void setsockopt(int level, int option_name, const void *option_value, socklen_t option_len) { posix::setsockopt(fd, level, option_name, option_value, option_len); }
+	template <typename T> void setsockopt(int level, int option_name, const T &option_value) { this->setsockopt(level, option_name, &option_value, static_cast<socklen_t>(sizeof option_value)); }
 
-	void getsockname(sockaddr *addr, socklen_t *addrlen) const { posix::getsockname(fd, addr, addrlen); }
-	void bind(const sockaddr *addr, socklen_t addrlen) { posix::bind(fd, addr, addrlen); }
+	void getsockname(struct sockaddr * _restrict address, socklen_t * _restrict address_len) const { posix::getsockname(fd, address, address_len); }
+	void bind(const struct sockaddr *address, socklen_t address_len) { posix::bind(fd, address, address_len); }
 
-	void getpeername(sockaddr *addr, socklen_t *addrlen) const { posix::getpeername(fd, addr, addrlen); }
-	bool connect(const sockaddr *addr, socklen_t addrlen);
-	Socket accept(sockaddr *addr = nullptr, socklen_t *addrlen = nullptr, int flags = SOCK_CLOEXEC);
+	void getpeername(struct sockaddr * _restrict address, socklen_t * _restrict address_len) const { posix::getpeername(fd, address, address_len); }
+	bool connect(const struct sockaddr *address, socklen_t address_len);
+	Socket accept(struct sockaddr * _restrict address = nullptr, socklen_t * _restrict address_len = nullptr, int flags = SOCK_CLOEXEC);
 
 	void listen(int backlog = SOMAXCONN) { posix::listen(fd, backlog); }
 	_nodiscard ssize_t recv(void *buffer, size_t length, int flags) { return posix::recv(fd, buffer, length, flags); }
@@ -83,22 +84,22 @@ protected:
 	using Socket::Socket;
 
 public:
-	void getsockname(A &addr) const;
-	void bind(const A &addr);
+	void getsockname(A &address) const;
+	void bind(const A &address);
 
-	void getpeername(A &addr) const;
-	bool connect(const A &addr);
-	T accept(A *addr = nullptr, int flags = SOCK_CLOEXEC);
+	void getpeername(A &address) const;
+	bool connect(const A &address);
+	T accept(A *address = nullptr, int flags = SOCK_CLOEXEC);
 
 };
 
 
-class Socket4 : public SocketBase<Socket4, sockaddr_in> {
+class Socket4 : public SocketBase<Socket4, struct sockaddr_in> {
 
 public:
 	Socket4() { }
 	explicit Socket4(int type, int protocol = 0, int flags = SOCK_CLOEXEC) : SocketBase(AF_INET, type | flags, protocol) { }
-	explicit Socket4(FileDescriptor &&move) : SocketBase<Socket4, sockaddr_in>(std::move(move)) { }
+	explicit Socket4(FileDescriptor &&move) : SocketBase<Socket4, struct sockaddr_in>(std::move(move)) { }
 
 public:
 	void open(int type = SOCK_STREAM, int protocol = 0, int flags = SOCK_CLOEXEC) { *this = Socket4(type, protocol, flags); }
@@ -106,12 +107,12 @@ public:
 };
 
 
-class Socket6 : public SocketBase<Socket6, sockaddr_in6> {
+class Socket6 : public SocketBase<Socket6, struct sockaddr_in6> {
 
 public:
 	Socket6() { }
 	explicit Socket6(int type, int protocol = 0, int flags = SOCK_CLOEXEC) : SocketBase(AF_INET6, type | flags, protocol) { }
-	explicit Socket6(FileDescriptor &&move) : SocketBase<Socket6, sockaddr_in6>(std::move(move)) { }
+	explicit Socket6(FileDescriptor &&move) : SocketBase<Socket6, struct sockaddr_in6>(std::move(move)) { }
 
 public:
 	void open(int type = SOCK_STREAM, int protocol = 0, int flags = SOCK_CLOEXEC) { *this = Socket6(type, protocol, flags); }
@@ -119,8 +120,8 @@ public:
 };
 
 
-std::ostream & operator << (std::ostream &os, const in_addr &addr);
-std::ostream & operator << (std::ostream &os, const in6_addr &addr);
+std::ostream & operator << (std::ostream &os, const struct in_addr &addr);
+std::ostream & operator << (std::ostream &os, const struct in6_addr &addr);
 
 
 #if __NEED_SOCKET_POLYFILL
