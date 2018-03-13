@@ -5,6 +5,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
+#include "endian.h"
 #include "fd.h"
 
 
@@ -126,6 +127,70 @@ public:
 
 };
 
+
+static constexpr bool _pure operator == (const struct in_addr &addr1, const struct in_addr &addr2) noexcept {
+	return std::memcmp(&addr1, &addr2, sizeof(struct in_addr)) == 0;
+}
+
+static constexpr bool _pure operator != (const struct in_addr &addr1, const struct in_addr &addr2) noexcept {
+	return std::memcmp(&addr1, &addr2, sizeof(struct in_addr)) != 0;
+}
+
+static constexpr bool _pure operator == (const struct in6_addr &addr1, const struct in6_addr &addr2) noexcept {
+	return std::memcmp(&addr1, &addr2, sizeof(struct in6_addr)) == 0;
+}
+
+static constexpr bool _pure operator != (const struct in6_addr &addr1, const struct in6_addr &addr2) noexcept {
+	return std::memcmp(&addr1, &addr2, sizeof(struct in6_addr)) != 0;
+}
+
+static constexpr bool _pure operator == (const struct sockaddr_in &addr1, const struct sockaddr_in &addr2) noexcept {
+	return std::memcmp(&addr1, &addr2, sizeof(struct sockaddr_in)) == 0;
+}
+
+static constexpr bool _pure operator != (const struct sockaddr_in &addr1, const struct sockaddr_in &addr2) noexcept {
+	return std::memcmp(&addr1, &addr2, sizeof(struct sockaddr_in)) != 0;
+}
+
+static constexpr bool _pure operator == (const struct sockaddr_in6 &addr1, const struct sockaddr_in6 &addr2) noexcept {
+	return std::memcmp(&addr1, &addr2, sizeof(struct sockaddr_in6)) == 0;
+}
+
+static constexpr bool _pure operator != (const struct sockaddr_in6 &addr1, const struct sockaddr_in6 &addr2) noexcept {
+	return std::memcmp(&addr1, &addr2, sizeof(struct sockaddr_in6)) != 0;
+}
+
+template <>
+struct std::hash<struct in_addr> {
+	constexpr size_t _pure operator () (const struct in_addr &addr) const noexcept {
+		return addr.s_addr;
+	}
+};
+
+template <>
+struct std::hash<struct in6_addr> {
+	constexpr size_t _pure operator () (const struct in6_addr &addr) const noexcept {
+		size_t hash { }, len = sizeof addr.s6_addr;
+		for (const uint8_t *ptr = addr.s6_addr; len >= sizeof hash; ptr += sizeof hash, len -= sizeof hash) {
+			hash ^= *reinterpret_cast<const size_t *>(ptr);
+		}
+		return as_be(hash);
+	}
+};
+
+template <>
+struct std::hash<struct sockaddr_in> {
+	constexpr size_t _pure operator () (const struct sockaddr_in &addr) const noexcept {
+		return hash<struct in_addr>()(addr.sin_addr) ^ as_be(addr.sin_port);
+	}
+};
+
+template <>
+struct std::hash<struct sockaddr_in6> {
+	constexpr size_t _pure operator () (const struct sockaddr_in6 &addr) const noexcept {
+		return hash<struct in6_addr>()(addr.sin6_addr) ^ as_be(addr.sin6_port);
+	}
+};
 
 std::ostream & operator << (std::ostream &os, const struct in_addr &addr);
 std::ostream & operator << (std::ostream &os, const struct in6_addr &addr);
