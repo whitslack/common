@@ -2,6 +2,7 @@
 
 #include <poll.h>
 
+
 namespace {
 struct GnuTLS_Global_Init {
 	GnuTLS_Global_Init() {
@@ -256,17 +257,17 @@ void TLSSession::set_server_name(const char server_name[], size_t len) {
 	}
 }
 
-std::vector<uint8_t> TLSSession::get_session_data() {
+Buffer TLSSession::get_session_data() {
 	int error;
 	size_t size = 0;
 	if ((error = ::gnutls_session_get_data(session, nullptr, &size)) != GNUTLS_E_SUCCESS && error != GNUTLS_E_SHORT_MEMORY_BUFFER) {
 		throw TLSError(error, "gnutls_session_get_data");
 	}
-	std::vector<uint8_t> session_data;
-	session_data.resize(size);
-	if ((error = ::gnutls_session_get_data(session, session_data.data(), &size)) != GNUTLS_E_SUCCESS) {
+	Buffer session_data(size);
+	if ((error = ::gnutls_session_get_data(session, session_data.pptr, &size)) != GNUTLS_E_SUCCESS) {
 		throw TLSError(error, "gnutls_session_get_data");
 	}
+	session_data.ppos(size);
 	return session_data;
 }
 

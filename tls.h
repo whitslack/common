@@ -4,6 +4,7 @@
 
 #include <gnutls/gnutls.h>
 
+#include "buffer.h"
 #include "compiler.h"
 #include "socket.h"
 
@@ -239,7 +240,7 @@ public:
 */
 	std::string get_server_name();
 	void set_server_name(const char server_name[], size_t len);
-	std::vector<uint8_t> get_session_data();
+	Buffer get_session_data();
 	void set_session_data(const void *session_data, size_t session_data_size);
 	unsigned int verify_peers(const char hostname[] = nullptr);
 	bool handshake();
