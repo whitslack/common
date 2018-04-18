@@ -252,7 +252,7 @@ size_t StreamBufSourceSink::write(const void *buf, size_t n) {
 }
 
 
-SourceBuf::SourceBuf(Source &source) : source(source) {
+SourceBuf::SourceBuf(Source &source) noexcept : source(source) {
 	this->setbuf(&gbuf, 1);
 }
 

@@ -127,7 +127,7 @@ template <size_t Key_Size>
 constexpr size_t AESBase<Key_Size>::sched_size;
 
 template <size_t Key_Size>
-size_t AESEncrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[], size_t n _unused) {
+size_t AESEncrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[], size_t n _unused) noexcept {
 	assert(n == 16);
 	uint32_t s0 = reinterpret_cast<const be<uint32_t> *>(in)[0] ^ this->key_schedule[0];
 	uint32_t s1 = reinterpret_cast<const be<uint32_t> *>(in)[1] ^ this->key_schedule[1];
@@ -216,7 +216,7 @@ size_t AESEncrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[
 
 
 template <size_t Key_Size>
-AESDecrypterBase<Key_Size>::AESDecrypterBase(const AESEncrypterBase<Key_Size> &encrypter) {
+AESDecrypterBase<Key_Size>::AESDecrypterBase(const AESEncrypterBase<Key_Size> &encrypter) noexcept {
 	for (size_t i = 0; i < 4; ++i) {
 		this->key_schedule[i] = encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 + i];
 	}
@@ -235,7 +235,7 @@ AESDecrypterBase<Key_Size>::AESDecrypterBase(const AESEncrypterBase<Key_Size> &e
 }
 
 template <size_t Key_Size>
-size_t AESDecrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[], size_t n _unused) {
+size_t AESDecrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[], size_t n _unused) noexcept {
 	assert(n == 16);
 	uint32_t s0 = reinterpret_cast<const be<uint32_t> *>(in)[0] ^ this->key_schedule[0];
 	uint32_t s1 = reinterpret_cast<const be<uint32_t> *>(in)[1] ^ this->key_schedule[1];
@@ -323,7 +323,7 @@ size_t AESDecrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[
 }
 
 
-AES128Encrypter::AES128Encrypter(const uint8_t (&key)[16]) {
+AES128Encrypter::AES128Encrypter(const uint8_t (&key)[16]) noexcept {
 	for (size_t i = 0; i < 4; ++i) {
 		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[4]>(key)[i];
 	}
@@ -342,7 +342,7 @@ AES128Encrypter::AES128Encrypter(const uint8_t (&key)[16]) {
 }
 
 
-AES192Encrypter::AES192Encrypter(const uint8_t (&key)[24]) {
+AES192Encrypter::AES192Encrypter(const uint8_t (&key)[24]) noexcept {
 	for (size_t i = 0; i < 6; ++i) {
 		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[6]>(key)[i];
 	}
@@ -366,7 +366,7 @@ AES192Encrypter::AES192Encrypter(const uint8_t (&key)[24]) {
 }
 
 
-AES256Encrypter::AES256Encrypter(const uint8_t (&key)[32]) {
+AES256Encrypter::AES256Encrypter(const uint8_t (&key)[32]) noexcept {
 	for (size_t i = 0; i < 8; ++i) {
 		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[8]>(key)[i];
 	}

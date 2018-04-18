@@ -29,7 +29,7 @@ private:
 	HttpResponseHeaders response_headers;
 
 protected:
-	HttpConnectionBase(Source &source, Sink &sink) : source(source), sink(sink), limited_source(source, 0), chunked_source(source), chunked_sink(sink), read_source(), write_sink(), read_chunked(), response_headers_read() { }
+	HttpConnectionBase(Source &source, Sink &sink) noexcept : source(source), sink(sink), limited_source(source, 0), chunked_source(source), chunked_sink(sink), read_source(), write_sink(), read_chunked(), response_headers_read() { }
 
 public:
 	void request(HttpRequestHeaders &request_headers);
@@ -52,7 +52,7 @@ private:
 	BufferedSink<1500> buffered_sink;
 
 public:
-	HttpConnection(Socket &&socket);
+	HttpConnection(Socket &&socket) noexcept;
 
 };
 

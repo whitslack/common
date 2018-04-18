@@ -3,7 +3,7 @@
 #include "endian.h"
 
 
-uint32_t murmur3_32(const void *data, size_t data_size, uint32_t seed) {
+uint32_t murmur3_32(const void *data, size_t data_size, uint32_t seed) noexcept {
 	uint32_t hash = seed;
 	size_t data_rem = data_size;
 	for (; data_rem >= sizeof(uint32_t); data_rem -= sizeof(uint32_t)) {

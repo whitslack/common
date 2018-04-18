@@ -76,12 +76,12 @@ public:
 	const char short_form;
 
 public:
-	explicit AbstractOption(const char long_form[], char short_form = '\0') : long_form(long_form), short_form(short_form) { }
+	explicit AbstractOption(const char long_form[], char short_form = '\0') noexcept : long_form(long_form), short_form(short_form) { }
 
-	virtual ~AbstractOption() { }
+	virtual ~AbstractOption() = default;
 
 protected:
-	virtual int takes_arg() const _pure = 0;
+	virtual int takes_arg() const noexcept _pure = 0;
 
 	virtual void parse(char arg[]) = 0;
 
@@ -98,19 +98,19 @@ public:
 	std::vector<argument_type> args;
 
 public:
-	explicit _pure operator bool () const {
+	explicit _pure operator bool () const noexcept {
 		return !args.empty();
 	}
 
-	const argument_type & _pure value() const {
+	const argument_type & _pure value() const noexcept {
 		return args.back();
 	}
 
-	size_t _pure count() const {
+	size_t _pure count() const noexcept {
 		return args.size();
 	}
 
-	const argument_type & _pure operator [] (size_t i) const {
+	const argument_type & _pure operator [] (size_t i) const noexcept {
 		return args[i];
 	}
 
@@ -140,7 +140,7 @@ public:
 	}
 
 protected:
-	int _pure takes_arg() const override { return 1; }
+	int _pure takes_arg() const noexcept override { return 1; }
 
 	void parse(char arg[]) override {
 		if (!arg) {
@@ -172,7 +172,7 @@ public:
 	}
 
 protected:
-	int _pure takes_arg() const override { return -1; }
+	int _pure takes_arg() const noexcept override { return -1; }
 
 	void parse(char arg[]) override {
 		if (!arg) {
@@ -204,16 +204,16 @@ public:
 	using AbstractOption::AbstractOption;
 
 public:
-	explicit _pure operator bool () const {
+	explicit _pure operator bool () const noexcept {
 		return occurrences;
 	}
 
-	size_t _pure count() const {
+	size_t _pure count() const noexcept {
 		return occurrences;
 	}
 
 protected:
-	int _pure takes_arg() const override { return 0; }
+	int _pure takes_arg() const noexcept override { return 0; }
 
 	void parse(char arg[]) override {
 		if (arg) {

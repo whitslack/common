@@ -8,10 +8,7 @@ class HexDumpEncoder {
 
 private:
 	uint8_t buf[16];
-	unsigned out_addr, state;
-
-public:
-	HexDumpEncoder() : out_addr(), state() { }
+	unsigned out_addr = 0, state = 0;
 
 public:
 	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);

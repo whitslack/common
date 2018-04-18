@@ -11,6 +11,7 @@
 #include <sys/stat.h>
 #include <sys/uio.h>
 
+#include "compiler.h"
 #include "io.h"
 
 
@@ -104,19 +105,19 @@ private:
 	fd_set set;
 
 public:
-	FDSet() { this->clear(); }
-	FDSet(std::initializer_list<int> fds) { this->clear(); for (int fd : fds) *this += fd; }
+	FDSet() noexcept { this->clear(); }
+	FDSet(std::initializer_list<int> fds) noexcept { this->clear(); for (int fd : fds) *this += fd; }
 
 public:
-	operator const fd_set & () const { return set; }
-	operator fd_set & () { return set; }
-	operator const fd_set * () const { return &set; }
-	operator fd_set * () { return &set; }
+	_pure operator const fd_set & () const noexcept { return set; }
+	_pure operator fd_set & () noexcept { return set; }
+	_pure operator const fd_set * () const noexcept { return &set; }
+	_pure operator fd_set * () noexcept { return &set; }
 
-	void clear() { FD_ZERO(&set); }
-	FDSet & operator += (int fd) { FD_SET(fd, &set); return *this; }
-	FDSet & operator -= (int fd) { FD_CLR(fd, &set); return *this; }
-	bool operator & (int fd) const { return FD_ISSET(fd, &set); }
+	void clear() noexcept { FD_ZERO(&set); }
+	FDSet & operator += (int fd) noexcept { FD_SET(fd, &set); return *this; }
+	FDSet & operator -= (int fd) noexcept { FD_CLR(fd, &set); return *this; }
+	bool _pure operator & (int fd) const noexcept { return FD_ISSET(fd, &set); }
 
 };
 
@@ -133,17 +134,20 @@ public:
 		void *addr;
 		size_t len;
 	public:
-		MemoryMapping(MemoryMapping &&move) : addr(move.addr), len(move.len) { move.addr = MAP_FAILED; }
-		MemoryMapping & operator = (MemoryMapping &&move) { std::swap(addr, move.addr); std::swap(len, move.len); return *this; }
+		MemoryMapping() noexcept : addr(MAP_FAILED), len() { }
+		MemoryMapping(MemoryMapping &&move) noexcept : addr(move.addr), len(move.len) { move.addr = MAP_FAILED; }
+		MemoryMapping & operator = (MemoryMapping &&move) noexcept { return this->swap(move), *this; }
 		~MemoryMapping() { if (addr != MAP_FAILED) posix::munmap(addr, len); }
 	private:
-		MemoryMapping(void *addr, size_t len) : addr(addr), len(len) { }
+		MemoryMapping(void *addr, size_t len) noexcept : addr(addr), len(len) { }
 		MemoryMapping(const MemoryMapping &) = delete;
 		MemoryMapping & operator = (const MemoryMapping &) = delete;
 	public:
-		_pure operator void * () const { return addr; }
-		void * _pure data() const { return addr; }
-		size_t _pure size() const { return len; }
+		void swap(MemoryMapping &other) noexcept { using std::swap; swap(addr, other.addr), swap(len, other.len); }
+		friend void swap(MemoryMapping &lhs, MemoryMapping &rhs) noexcept { lhs.swap(rhs); }
+		_pure operator void * () const noexcept { return addr; }
+		void * _pure data() const noexcept { return addr; }
+		size_t _pure size() const noexcept { return len; }
 		void madvise(size_t offset, size_t len, int advice) { posix::madvise(static_cast<uint8_t *>(addr) + offset, len, advice); }
 		void mprotect(size_t offset, size_t len, int prot) { posix::mprotect(static_cast<uint8_t *>(addr) + offset, len, prot); }
 		void msync(size_t offset, size_t len, int flags = MS_ASYNC) { posix::msync(static_cast<uint8_t *>(addr) + offset, len, flags); }
@@ -153,19 +157,21 @@ protected:
 	int fd;
 
 public:
-	FileDescriptor() : fd(-1) { }
-	explicit FileDescriptor(int fd) : fd(fd) { }
+	FileDescriptor() noexcept : fd(-1) { }
+	explicit FileDescriptor(int fd) noexcept : fd(fd) { }
 	explicit FileDescriptor(const char *path, int oflag = O_RDONLY | O_CLOEXEC, mode_t mode = 0666) : fd(posix::open(path, oflag, mode)) { }
-	FileDescriptor(FileDescriptor &&move) : fd(move.fd) { move.fd = -1; }
-	FileDescriptor & operator = (FileDescriptor &&move) { std::swap(fd, move.fd); return *this; }
+	FileDescriptor(FileDescriptor &&move) noexcept : fd(move.fd) { move.fd = -1; }
+	FileDescriptor & operator = (FileDescriptor &&move) noexcept { return this->swap(move), *this; }
 	virtual ~FileDescriptor() { if (fd >= 0) posix::close(fd); }
+	void swap(FileDescriptor &other) noexcept { using std::swap; swap(fd, other.fd); }
+	friend void swap(FileDescriptor &lhs, FileDescriptor &rhs) noexcept { lhs.swap(rhs); }
 
 private:
 	FileDescriptor(const FileDescriptor &) = delete;
 	FileDescriptor & operator = (const FileDescriptor &) = delete;
 
 public:
-	operator int () const { return fd; }
+	_pure operator int () const noexcept { return fd; }
 
 	using Source::read;
 	using Sink::write;

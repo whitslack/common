@@ -18,7 +18,7 @@ private:
 	Selector &selector;
 
 public:
-	Handshake(Socket &&socket, WebSocketServer &server, Selector &selector, bool add = true) : WebSocketServerHandshake(std::move(socket)), server(server), selector(selector) {
+	Handshake(Socket &&socket, WebSocketServer &server, Selector &selector, bool add = true) noexcept : WebSocketServerHandshake(std::move(socket)), server(server), selector(selector) {
 		if (add) {
 			selector.add(this->socket, this, Selector::Flags::READABLE);
 		}

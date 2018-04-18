@@ -5,7 +5,7 @@
 
 static const uint32_t ripemd160_init[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
 
-RIPEMD160::RIPEMD160() : Hash(ripemd160_init) {
+RIPEMD160::RIPEMD160() noexcept : Hash(ripemd160_init) {
 }
 
 void RIPEMD160::update(const uint8_t (&block)[64]) {

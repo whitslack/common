@@ -372,7 +372,7 @@ void WebSocketClientHandshake::validate_response_headers(const HttpResponseHeade
 }
 
 
-WebSocketBuf::WebSocketBuf(WebSocket *ws, WebSocket::Opcode opcode) : ws(ws), opcode(opcode) {
+WebSocketBuf::WebSocketBuf(WebSocket *ws, WebSocket::Opcode opcode) noexcept : ws(ws), opcode(opcode) {
 	this->setp(buf.data(), buf.data() + buf.size());
 }
 

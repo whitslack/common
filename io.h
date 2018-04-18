@@ -17,7 +17,7 @@ public:
 	};
 
 public:
-	virtual ~Source() { }
+	virtual ~Source() = default;
 
 public:
 	_nodiscard virtual ssize_t read(void *buf, size_t n) = 0;
@@ -42,7 +42,7 @@ public:
 	};
 
 public:
-	virtual ~Sink() { }
+	virtual ~Sink() = default;
 
 public:
 	_nodiscard virtual size_t write(const void *buf, size_t n) = 0;
@@ -110,7 +110,7 @@ private:
 	Source &source;
 
 public:
-	LimitedSource(Source &source, size_t remaining) : remaining(remaining), source(source) { }
+	LimitedSource(Source &source, size_t remaining) noexcept : remaining(remaining), source(source) { }
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
@@ -128,7 +128,7 @@ private:
 	Sink &sink;
 
 public:
-	LimitedSink(Sink &sink, size_t remaining) : remaining(remaining), sink(sink) { }
+	LimitedSink(Sink &sink, size_t remaining) noexcept : remaining(remaining), sink(sink) { }
 
 public:
 	_nodiscard size_t write(const void *buf, size_t n) override;
@@ -143,9 +143,9 @@ private:
 	IteratorSource<const uint8_t *> source;
 
 public:
-	MemorySource(const void *buf, size_t n) : LimitedSource(source, n), source(static_cast<const uint8_t *>(buf)) { }
-	MemorySource(const MemorySource &copy) : LimitedSource(source, copy.remaining), source(copy.source) { }
-	MemorySource(MemorySource &&move) : LimitedSource(source, move.remaining), source(std::move(move.source)) { }
+	MemorySource(const void *buf, size_t n) noexcept : LimitedSource(source, n), source(static_cast<const uint8_t *>(buf)) { }
+	MemorySource(const MemorySource &copy) noexcept : LimitedSource(source, copy.remaining), source(copy.source) { }
+	MemorySource(MemorySource &&move) noexcept : LimitedSource(source, move.remaining), source(std::move(move.source)) { }
 
 public:
 	const void * data() const { return source.itr; }
@@ -159,9 +159,9 @@ private:
 	IteratorSink<uint8_t *> sink;
 
 public:
-	MemorySink(void *buf, size_t n) : LimitedSink(sink, n), sink(static_cast<uint8_t *>(buf)) { }
-	MemorySink(const MemorySink &copy) : LimitedSink(sink, copy.remaining), sink(copy.sink) { }
-	MemorySink(MemorySink &&move) : LimitedSink(sink, move.remaining), sink(std::move(move.sink)) { }
+	MemorySink(void *buf, size_t n) noexcept : LimitedSink(sink, n), sink(static_cast<uint8_t *>(buf)) { }
+	MemorySink(const MemorySink &copy) noexcept : LimitedSink(sink, copy.remaining), sink(copy.sink) { }
+	MemorySink(MemorySink &&move) noexcept : LimitedSink(sink, move.remaining), sink(std::move(move.sink)) { }
 
 public:
 	void * data() const { return sink.itr; }
@@ -206,7 +206,7 @@ private:
 	uint8_t * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
 
 protected:
-	BufferedSourceBase(Source &source, uint8_t *buf_bptr, uint8_t *buf_eptr) : source(source), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
+	explicit BufferedSourceBase(Source &source, uint8_t *buf_bptr, uint8_t *buf_eptr) noexcept : source(source), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
@@ -222,7 +222,7 @@ private:
 	uint8_t * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
 
 protected:
-	BufferedSinkBase(Sink &sink, uint8_t *buf_bptr, uint8_t *buf_eptr) : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_eptr), buf_pptr(buf_eptr), buf_eptr(buf_eptr) { }
+	explicit BufferedSinkBase(Sink &sink, uint8_t *buf_bptr, uint8_t *buf_eptr) noexcept : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_eptr), buf_pptr(buf_eptr), buf_eptr(buf_eptr) { }
 
 public:
 	_nodiscard size_t write(const void *buf, size_t n) override;
@@ -238,7 +238,7 @@ private:
 	std::array<uint8_t, Buffer_Size> buffer;
 
 public:
-	explicit BufferedSource(Source &source) : BufferedSourceBase(source, &*buffer.begin(), &*buffer.end()) { }
+	explicit BufferedSource(Source &source) noexcept : BufferedSourceBase(source, &*buffer.begin(), &*buffer.end()) { }
 
 };
 
@@ -250,7 +250,7 @@ private:
 	std::array<uint8_t, Buffer_Size> buffer;
 
 public:
-	explicit BufferedSink(Sink &sink) : BufferedSinkBase(sink, &*buffer.begin(), &*buffer.end()) { }
+	explicit BufferedSink(Sink &sink) noexcept : BufferedSinkBase(sink, &*buffer.begin(), &*buffer.end()) { }
 
 };
 
@@ -263,11 +263,11 @@ private:
 	const char *delim_ptr;
 
 public:
-	DelimitedSource(Source &source, const char delimiter[], const char *delim_end) : source(source), delim_begin(delimiter), delim_end(delim_end), delim_ptr(delimiter) { }
-	DelimitedSource(Source &source, const char delimiter[]) : DelimitedSource(source, delimiter, delimiter + std::strlen(delimiter)) { }
+	DelimitedSource(Source &source, const char delimiter[], const char *delim_end) noexcept : source(source), delim_begin(delimiter), delim_end(delim_end), delim_ptr(delimiter) { }
+	DelimitedSource(Source &source, const char delimiter[]) noexcept : DelimitedSource(source, delimiter, delimiter + std::strlen(delimiter)) { }
 
 public:
-	void reset() { delim_ptr = delim_begin; }
+	void reset() noexcept { delim_ptr = delim_begin; }
 	_nodiscard ssize_t read(void *buf, size_t n) override;
 
 };
@@ -280,7 +280,7 @@ private:
 	Sink &sink;
 
 public:
-	Tap(Source &source, Sink &sink) : source(source), sink(sink) { }
+	Tap(Source &source, Sink &sink) noexcept : source(source), sink(sink) { }
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
@@ -296,10 +296,10 @@ private:
 	const std::array<Sink *, N> sinks;
 
 public:
-	explicit Tee(const std::array<Sink *, N> &sinks) : sinks(sinks) { }
+	explicit Tee(const std::array<Sink *, N> &sinks) noexcept : sinks(sinks) { }
 
 	template <typename... Args>
-	explicit Tee(Args&&... args) : sinks({ args... }) { }
+	explicit Tee(Args&&... args) noexcept : sinks({ std::forward<Args>(args)... }) { }
 
 public:
 	_nodiscard size_t write(const void *buf, size_t n) override {
@@ -326,7 +326,7 @@ private:
 	std::streambuf &sb;
 
 public:
-	explicit StreamBufSourceSink(std::streambuf &sb) : sb(sb) { }
+	explicit StreamBufSourceSink(std::streambuf &sb) noexcept : sb(sb) { }
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
@@ -347,7 +347,7 @@ private:
 	char_type gbuf;
 
 public:
-	explicit SourceBuf(Source &source);
+	explicit SourceBuf(Source &source) noexcept;
 	SourceBuf(const SourceBuf &) = delete;
 	SourceBuf & operator = (const SourceBuf &) = delete;
 	SourceBuf(SourceBuf &&) = default;
@@ -368,7 +368,7 @@ protected:
 	Sink &sink;
 
 public:
-	explicit SinkBuf(Sink &sink) : sink(sink) { }
+	explicit SinkBuf(Sink &sink) noexcept : sink(sink) { }
 	SinkBuf(const SinkBuf &) = delete;
 	SinkBuf & operator = (const SinkBuf &) = delete;
 	SinkBuf(SinkBuf &&) = default;
@@ -390,9 +390,9 @@ class SourceSinkBuf : public SourceBuf, public SinkBuf {
 
 public:
 	template <typename T>
-	explicit SourceSinkBuf(T &source_sink) : SourceBuf(source_sink), SinkBuf(source_sink) { }
+	explicit SourceSinkBuf(T &source_sink) noexcept : SourceBuf(source_sink), SinkBuf(source_sink) { }
 
-	SourceSinkBuf(Source &source, Sink &sink) : SourceBuf(source), SinkBuf(sink) { }
+	SourceSinkBuf(Source &source, Sink &sink) noexcept : SourceBuf(source), SinkBuf(sink) { }
 
 protected:
 	std::streambuf * setbuf(char_type s[], std::streamsize n) override;

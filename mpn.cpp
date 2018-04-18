@@ -3,7 +3,7 @@
 #include "compiler.h"
 
 
-void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) {
+void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) noexcept {
 	if (n == 0) {
 		return;
 	}
@@ -57,7 +57,7 @@ void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) {
 	*mpn = limb;
 }
 
-void mpn_to_bytes(uint8_t bytes[], const mp_limb_t mpn[], size_t n) {
+void mpn_to_bytes(uint8_t bytes[], const mp_limb_t mpn[], size_t n) noexcept {
 	if (n == 0) {
 		return;
 	}

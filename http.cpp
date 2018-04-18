@@ -271,7 +271,7 @@ std::string rfc2822_date(const struct std::tm &tm) {
 	return oss.str();
 }
 
-static int _pure digits_to_int(const char * begin, const char * end) {
+static int _pure digits_to_int(const char * begin, const char * end) noexcept {
 	int ret = 0;
 	while (begin < end) {
 		ret = ret * 10 + (*begin++ - '0');
@@ -279,7 +279,7 @@ static int _pure digits_to_int(const char * begin, const char * end) {
 	return ret;
 }
 
-static int _pure str_to_wday(const char str[]) {
+static int _pure str_to_wday(const char str[]) noexcept {
 	switch (str[0]) {
 		case 'F':
 			if (str[1] == 'r' && str[2] == 'i') { // Fri
@@ -328,7 +328,7 @@ static int _pure str_to_wday(const char str[]) {
 	return -1;
 }
 
-static int _pure str_to_month(const char str[]) {
+static int _pure str_to_month(const char str[]) noexcept {
 	switch (str[0]) {
 		case 'A':
 			switch (str[1]) {
@@ -400,7 +400,7 @@ static int _pure str_to_month(const char str[]) {
 	return -1;
 }
 
-static int _pure str_to_offset(const char str[]) {
+static int _pure str_to_offset(const char str[]) noexcept {
 	switch (str[0]) {
 		case '+':
 			return digits_to_int(str + 1, str + 3) * 3600 + digits_to_int(str + 3, str + 5) * 60;

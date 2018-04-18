@@ -6,7 +6,7 @@
 
 static const uint32_t sha1_init[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x10325476, 0xc3d2e1f0 };
 
-SHA1::SHA1() : Hash(sha1_init) {
+SHA1::SHA1() noexcept : Hash(sha1_init) {
 }
 
 void SHA1::update(const uint8_t (&block)[64]) {
@@ -73,7 +73,7 @@ static const uint32_t sha256_init[8] = {
 	0x6a09e667, 0xbb67ae85, 0x3c6ef372, 0xa54ff53a, 0x510e527f, 0x9b05688c, 0x1f83d9ab, 0x5be0cd19
 };
 
-SHA256::SHA256() : SHA256Base(sha256_init) {
+SHA256::SHA256() noexcept : SHA256Base(sha256_init) {
 }
 
 
@@ -81,7 +81,7 @@ static const uint32_t sha224_init[8] = {
 	0xc1059ed8, 0x367cd507, 0x3070dd17, 0xf70e5939, 0xffc00b31, 0x68581511, 0x64f98fa7, 0xbefa4fa4
 };
 
-SHA224::SHA224() : SHA256Base(sha224_init) {
+SHA224::SHA224() noexcept : SHA256Base(sha224_init) {
 }
 
 
@@ -133,7 +133,7 @@ static const uint64_t sha512_init[8] = {
 	UINT64_C(0x510e527fade682d1), UINT64_C(0x9b05688c2b3e6c1f), UINT64_C(0x1f83d9abfb41bd6b), UINT64_C(0x5be0cd19137e2179)
 };
 
-SHA512::SHA512() : SHA512Base(sha512_init) {
+SHA512::SHA512() noexcept : SHA512Base(sha512_init) {
 }
 
 
@@ -142,7 +142,7 @@ static const uint64_t sha384_init[8] = {
 	UINT64_C(0x67332667ffc00b31), UINT64_C(0x8eb44a8768581511), UINT64_C(0xdb0c2e0d64f98fa7), UINT64_C(0x47b5481dbefa4fa4)
 };
 
-SHA384::SHA384() : SHA512Base(sha384_init) {
+SHA384::SHA384() noexcept : SHA512Base(sha384_init) {
 }
 
 

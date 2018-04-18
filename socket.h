@@ -48,9 +48,9 @@ void socketpair(int domain, int type, int protocol, int socket_vector[2]);
 class Socket : public FileDescriptor {
 
 public:
-	Socket() { }
+	Socket() = default;
 	explicit Socket(int domain, int type, int protocol = 0) : FileDescriptor(posix::socket(domain, type, protocol)) { }
-	explicit Socket(FileDescriptor &&move) : FileDescriptor(std::move(move)) { }
+	explicit Socket(FileDescriptor &&move) noexcept : FileDescriptor(std::move(move)) { }
 
 public:
 	void open(int domain, int type, int protocol = 0) { *this = Socket(domain, type, protocol); }
@@ -105,7 +105,7 @@ public:
 class Socket4 : public SocketBase<Socket4, struct sockaddr_in> {
 
 public:
-	Socket4() { }
+	Socket4() = default;
 	explicit Socket4(int type, int protocol = 0, int flags = SOCK_CLOEXEC) : SocketBase(AF_INET, type | flags, protocol) { }
 	explicit Socket4(FileDescriptor &&move) : SocketBase<Socket4, struct sockaddr_in>(std::move(move)) { }
 
@@ -118,7 +118,7 @@ public:
 class Socket6 : public SocketBase<Socket6, struct sockaddr_in6> {
 
 public:
-	Socket6() { }
+	Socket6() = default;
 	explicit Socket6(int type, int protocol = 0, int flags = SOCK_CLOEXEC) : SocketBase(AF_INET6, type | flags, protocol) { }
 	explicit Socket6(FileDescriptor &&move) : SocketBase<Socket6, struct sockaddr_in6>(std::move(move)) { }
 
@@ -198,13 +198,13 @@ std::ostream & operator << (std::ostream &os, const struct in6_addr &addr);
 
 #if __NEED_SOCKET_POLYFILL
 extern "C" {
-	_nodiscard int __accept4_polyfill(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags);
-	_nodiscard extern inline _always_inline int accept4(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags) {
+	_nodiscard int __accept4_polyfill(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags) noexcept;
+	_nodiscard extern inline _always_inline int accept4(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags) noexcept {
 		return __builtin_constant_p(flags) && flags == 0 ? ::accept(socket, address, address_len) : ::__accept4_polyfill(socket, address, address_len, flags);
 	}
 	_nodiscard int __socket(int domain, int type, int protocol) __asm__ (__USER_LABEL_PREFIX_STR__ "socket");
-	_nodiscard int __socket_polyfill(int domain, int type, int protocol);
-	_nodiscard extern inline _always_inline int socket(int domain, int type, int protocol) {
+	_nodiscard int __socket_polyfill(int domain, int type, int protocol) noexcept;
+	_nodiscard extern inline _always_inline int socket(int domain, int type, int protocol) noexcept {
 		return __builtin_constant_p(type) && !(type & (SOCK_NONBLOCK | SOCK_CLOEXEC)) ? ::__socket(domain, type, protocol) : ::__socket_polyfill(domain, type, protocol);
 	}
 }

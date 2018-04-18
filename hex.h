@@ -7,15 +7,12 @@
 class HexEncoder {
 
 private:
-	bool buf_full;
-	uint8_t buf;
+	bool buf_full = false;
+	uint8_t buf = 0;
 
 public:
-	HexEncoder() : buf_full(), buf() { }
-
-public:
-	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);
-	bool finish(uint8_t *&out, size_t n_out);
+	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) noexcept;
+	bool finish(uint8_t *&out, size_t n_out) noexcept;
 
 };
 
@@ -23,11 +20,8 @@ public:
 class HexDecoder {
 
 private:
-	bool buf_full;
-	uint8_t buf;
-
-public:
-	HexDecoder() : buf_full(), buf() { }
+	bool buf_full = false;
+	uint8_t buf = 0;
 
 public:
 	bool process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in);

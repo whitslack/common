@@ -26,12 +26,12 @@ protected:
 	word_type state[state_size / sizeof(word_type)];
 
 private:
-	length_type length;
+	length_type length = 0;
 	uint8_t buffer[block_size];
-	size_t buffer_pos;
+	size_t buffer_pos = 0;
 
 protected:
-	Hash(const word_type (&init)[state_size / sizeof(word_type)]) : length(), buffer_pos() {
+	explicit Hash(const word_type (&init)[state_size / sizeof(word_type)]) noexcept {
 		std::memcpy(state, init, state_size);
 	}
 

@@ -19,7 +19,7 @@ private:
 	struct Work {
 		time_point_t deadline;
 		std::function<void (void) /* noexcept */> task;
-		bool operator > (const Work &other) const { return deadline > other.deadline; }
+		bool _pure operator > (const Work &other) const noexcept { return deadline > other.deadline; }
 	};
 
 private:

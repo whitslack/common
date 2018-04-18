@@ -340,47 +340,47 @@ int Socket::genl_ctrl_resolve_grp(const char family_name[], const char grp_name[
 	return gid;
 }
 
-enum nl_cb_action Socket::valid(Message &&) noexcept {
+enum nl_cb_action _const Socket::valid(Message &&) noexcept {
 	return NL_OK;
 }
 
-enum nl_cb_action Socket::finish(Message &&) noexcept {
+enum nl_cb_action _const Socket::finish(Message &&) noexcept {
 	return NL_STOP;
 }
 
-enum nl_cb_action Socket::overrun(Message &&) noexcept {
+enum nl_cb_action _const Socket::overrun(Message &&) noexcept {
 	return NL_STOP;
 }
 
-enum nl_cb_action Socket::skipped(Message &&) noexcept {
+enum nl_cb_action _const Socket::skipped(Message &&) noexcept {
 	return NL_SKIP;
 }
 
-enum nl_cb_action Socket::ack(Message &&) noexcept {
+enum nl_cb_action _const Socket::ack(Message &&) noexcept {
 	return NL_STOP;
 }
 
-enum nl_cb_action Socket::msg_in(Message &&) noexcept {
+enum nl_cb_action _const Socket::msg_in(Message &&) noexcept {
 	return NL_OK;
 }
 
-int Socket::msg_out(Message &&) noexcept {
+int _const Socket::msg_out(Message &&) noexcept {
 	return NL_OK;
 }
 
-enum nl_cb_action Socket::invalid(Message &&) noexcept {
+enum nl_cb_action _const Socket::invalid(Message &&) noexcept {
 	return NL_STOP;
 }
 
-enum nl_cb_action Socket::seq_check(Message &&) noexcept {
+enum nl_cb_action _const Socket::seq_check(Message &&) noexcept {
 	return NL_OK;
 }
 
-enum nl_cb_action Socket::send_ack(Message &&) noexcept {
+enum nl_cb_action _const Socket::send_ack(Message &&) noexcept {
 	return NL_OK;
 }
 
-int Socket::err(const struct sockaddr_nl *, const struct nlmsgerr *) noexcept {
+int _const Socket::err(const struct sockaddr_nl *, const struct nlmsgerr *) noexcept {
 	return NL_OK;
 }
 

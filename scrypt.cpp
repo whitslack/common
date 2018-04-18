@@ -10,7 +10,7 @@
 #include "sha.h"
 
 
-static void salsa20_8_core(void * _restrict out, const void * _restrict in) {
+static void salsa20_8_core(void * _restrict out, const void * _restrict in) noexcept {
 	auto outw = reinterpret_cast<uint32_t *>(out);
 	auto inw = reinterpret_cast<const uint32_t *>(in);
 	for (size_t i = 0; i < 16; ++i) {
@@ -39,7 +39,7 @@ static void salsa20_8_core(void * _restrict out, const void * _restrict in) {
 	}
 }
 
-static void scrypt_block_mix(void * _restrict out, const void * _restrict in, size_t r) {
+static void scrypt_block_mix(void * _restrict out, const void * _restrict in, size_t r) noexcept {
 	auto outb = reinterpret_cast<uint8_t (*)[64]>(out);
 	auto inb = reinterpret_cast<const uint8_t (*)[64]>(in);
 	auto p = inb[2 * r - 1];

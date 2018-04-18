@@ -8,7 +8,7 @@ const char * GAICategory::name() const noexcept {
 	return "GAI";
 }
 
-std::string GAICategory::message(int condition) const noexcept {
+std::string GAICategory::message(int condition) const {
 	return ::gai_strerror(condition);
 }
 

@@ -31,7 +31,7 @@ public:
 	std::string protocol_version;
 
 public:
-	HttpRequestHeaders() { }
+	HttpRequestHeaders() = default;
 	HttpRequestHeaders(const std::string &method, const std::string &request_uri, const std::string &protocol_version) : method(method), request_uri(request_uri), protocol_version(protocol_version) { }
 
 };
@@ -48,7 +48,7 @@ public:
 	std::string reason_phrase;
 
 public:
-	HttpResponseHeaders() { }
+	HttpResponseHeaders() = default;
 	HttpResponseHeaders(const std::string &protocol_version, unsigned status_code, const std::string &reason_phrase) : protocol_version(protocol_version), status_code(status_code), reason_phrase(reason_phrase) { }
 
 };
@@ -69,10 +69,10 @@ private:
 	enum { Size, Size_CR, Extensions, Extensions_CR, Data, Data_End, Data_CR, End } state;
 
 public:
-	explicit ChunkedSource(Source &source) : source(source), chunk_rem(), state() { }
+	explicit ChunkedSource(Source &source) noexcept : source(source), chunk_rem(), state() { }
 
 public:
-	void reset() { chunk_rem = 0, state = Size; }
+	void reset() noexcept { chunk_rem = 0, state = Size; }
 	ssize_t read(void *buf, size_t n) override;
 	size_t avail() override;
 
@@ -87,10 +87,10 @@ private:
 	enum { Idle, Size, Size_CR, Size_LF, Data, Data_CR, Data_LF, End } state;
 
 public:
-	explicit ChunkedSink(Sink &sink) : sink(sink), write_size(), state() { }
+	explicit ChunkedSink(Sink &sink) noexcept : sink(sink), write_size(), state() { }
 
 public:
-	void reset() { write_size = 0, state = Idle; }
+	void reset() noexcept { write_size = 0, state = Idle; }
 	size_t write(const void *buf, size_t n) override;
 	bool flush() override;
 

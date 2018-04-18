@@ -3,28 +3,28 @@
 #include <stdexcept>
 #include <utility>
 
-mp_limb_t * fp_add(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_add(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) noexcept {
 	if (mpn_add_n(r, n1, n2, l) || mpn_cmp(r, p, l) >= 0) {
 		mpn_sub_n(r, r, p, l);
 	}
 	return r;
 }
 
-mp_limb_t * fp_sub(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_sub(mp_limb_t r[], const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) noexcept {
 	if (mpn_sub_n(r, n1, n2, l)) {
 		mpn_add_n(r, r, p, l);
 	}
 	return r;
 }
 
-mp_limb_t * fp_dbl(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_dbl(mp_limb_t r[], const mp_limb_t n[], const mp_limb_t p[], size_t l) noexcept {
 	if (mpn_lshift(r, n, l, 1) || mpn_cmp(r, p, l) >= 0) {
 		mpn_sub_n(r, r, p, l);
 	}
 	return r;
 }
 
-mp_limb_t * fp_mul(mp_limb_t * _restrict r, const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_mul(mp_limb_t * _restrict r, const mp_limb_t n1[], const mp_limb_t n2[], const mp_limb_t p[], size_t l) noexcept {
 	mpn_zero(r, l);
 	bool active = false;
 	for (size_t i = l; i > 0;) {
@@ -43,7 +43,7 @@ mp_limb_t * fp_mul(mp_limb_t * _restrict r, const mp_limb_t n1[], const mp_limb_
 	return r;
 }
 
-mp_limb_t * fp_mul_1(mp_limb_t * _restrict r, const mp_limb_t n1[], mp_limb_t n2, const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_mul_1(mp_limb_t * _restrict r, const mp_limb_t n1[], mp_limb_t n2, const mp_limb_t p[], size_t l) noexcept {
 	mpn_zero(r, l);
 	bool active = false;
 	for (size_t j = sizeof(mp_limb_t) * 8; j > 0; --j) {
@@ -59,11 +59,11 @@ mp_limb_t * fp_mul_1(mp_limb_t * _restrict r, const mp_limb_t n1[], mp_limb_t n2
 	return r;
 }
 
-mp_limb_t * fp_sqr(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_sqr(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t p[], size_t l) noexcept {
 	return fp_mul(r, n, n, p, l);
 }
 
-mp_limb_t * fp_pow(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t e[], const mp_limb_t p[], size_t l) {
+mp_limb_t * fp_pow(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t e[], const mp_limb_t p[], size_t l) noexcept {
 	if (mpn_zero_p(e, l)) {
 		mpn_zero(r, l), r[0] = 1;
 		return r;

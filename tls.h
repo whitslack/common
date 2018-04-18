@@ -12,7 +12,7 @@ class TLSCategory : public std::error_category {
 
 public:
 	const char * name() const noexcept override _const;
-	std::string message(int condition) const noexcept override _const;
+	std::string message(int condition) const override _const;
 
 };
 
@@ -32,12 +32,14 @@ private:
 	gnutls_priority_t pcache;
 
 public:
-	TLSPriority() : pcache() { }
+	TLSPriority() noexcept : pcache() { }
 	explicit TLSPriority(const char priorities[], const char **err_pos = nullptr);
-	TLSPriority(TLSPriority &&move) : pcache(move.pcache) { move.pcache = nullptr; }
-	TLSPriority & operator = (TLSPriority &&move) { std::swap(pcache, move.pcache); return *this; }
+	TLSPriority(TLSPriority &&move) noexcept : pcache(move.pcache) { move.pcache = nullptr; }
+	TLSPriority & operator = (TLSPriority &&move) noexcept { return this->swap(move), *this; }
 	~TLSPriority() { if (pcache) ::gnutls_priority_deinit(pcache); }
-	operator gnutls_priority_t () const { return pcache; }
+	void swap(TLSPriority &other) noexcept { using std::swap; swap(pcache, other.pcache); }
+	friend void swap(TLSPriority &lhs, TLSPriority &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_priority_t () const noexcept { return pcache; }
 
 private:
 	TLSPriority(const TLSPriority &) = delete;
@@ -60,10 +62,12 @@ private:
 
 public:
 	TLSCertificateCredentials();
-	TLSCertificateCredentials(TLSCertificateCredentials &&move) : cred(move.cred) { move.cred = nullptr; }
-	TLSCertificateCredentials & operator = (TLSCertificateCredentials &&move) { std::swap(cred, move.cred); return *this; }
+	TLSCertificateCredentials(TLSCertificateCredentials &&move) noexcept : cred(move.cred) { move.cred = nullptr; }
+	TLSCertificateCredentials & operator = (TLSCertificateCredentials &&move) noexcept { return this->swap(move), *this; }
 	~TLSCertificateCredentials() { if (cred) ::gnutls_certificate_free_credentials(cred); }
-	operator gnutls_certificate_credentials_t () const { return cred; }
+	void swap(TLSCertificateCredentials &other) noexcept { using std::swap; swap(cred, other.cred); }
+	friend void swap(TLSCertificateCredentials &lhs, TLSCertificateCredentials &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_certificate_credentials_t () const noexcept { return cred; }
 
 private:
 	TLSCertificateCredentials(const TLSCertificateCredentials &) = delete;
@@ -84,10 +88,12 @@ private:
 
 public:
 	TLSSRPServerCredentials();
-	TLSSRPServerCredentials(TLSSRPServerCredentials &&move) : cred(move.cred) { move.cred = nullptr; }
-	TLSSRPServerCredentials & operator = (TLSSRPServerCredentials &&move) { std::swap(cred, move.cred); return *this; }
+	TLSSRPServerCredentials(TLSSRPServerCredentials &&move) noexcept : cred(move.cred) { move.cred = nullptr; }
+	TLSSRPServerCredentials & operator = (TLSSRPServerCredentials &&move) noexcept { return this->swap(move), *this; }
 	~TLSSRPServerCredentials() { if (cred) ::gnutls_srp_free_server_credentials(cred); }
-	operator gnutls_srp_server_credentials_t () const { return cred; }
+	void swap(TLSSRPServerCredentials &other) noexcept { using std::swap; swap(cred, other.cred); }
+	friend void swap(TLSSRPServerCredentials &lhs, TLSSRPServerCredentials &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_srp_server_credentials_t () const noexcept { return cred; }
 
 private:
 	TLSSRPServerCredentials(const TLSSRPServerCredentials &) = delete;
@@ -103,10 +109,12 @@ private:
 
 public:
 	TLSSRPClientCredentials();
-	TLSSRPClientCredentials(TLSSRPClientCredentials &&move) : cred(move.cred) { move.cred = nullptr; }
-	TLSSRPClientCredentials & operator = (TLSSRPClientCredentials &&move) { std::swap(cred, move.cred); return *this; }
+	TLSSRPClientCredentials(TLSSRPClientCredentials &&move) noexcept : cred(move.cred) { move.cred = nullptr; }
+	TLSSRPClientCredentials & operator = (TLSSRPClientCredentials &&move) noexcept { return this->swap(move), *this; }
 	~TLSSRPClientCredentials() { if (cred) ::gnutls_srp_free_client_credentials(cred); }
-	operator gnutls_srp_client_credentials_t () const { return cred; }
+	void swap(TLSSRPClientCredentials &other) noexcept { using std::swap; swap(cred, other.cred); }
+	friend void swap(TLSSRPClientCredentials &lhs, TLSSRPClientCredentials &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_srp_client_credentials_t () const noexcept { return cred; }
 
 private:
 	TLSSRPClientCredentials(const TLSSRPClientCredentials &) = delete;
@@ -122,10 +130,12 @@ private:
 
 public:
 	TLSPSKServerCredentials();
-	TLSPSKServerCredentials(TLSPSKServerCredentials &&move) : cred(move.cred) { move.cred = nullptr; }
-	TLSPSKServerCredentials & operator = (TLSPSKServerCredentials &&move) { std::swap(cred, move.cred); return *this; }
+	TLSPSKServerCredentials(TLSPSKServerCredentials &&move) noexcept : cred(move.cred) { move.cred = nullptr; }
+	TLSPSKServerCredentials & operator = (TLSPSKServerCredentials &&move) noexcept { return this->swap(move), *this; }
 	~TLSPSKServerCredentials() { if (cred) ::gnutls_psk_free_server_credentials(cred); }
-	operator gnutls_psk_server_credentials_t () const { return cred; }
+	void swap(TLSPSKServerCredentials &other) noexcept { using std::swap; swap(cred, other.cred); }
+	friend void swap(TLSPSKServerCredentials &lhs, TLSPSKServerCredentials &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_psk_server_credentials_t () const noexcept { return cred; }
 
 private:
 	TLSPSKServerCredentials(const TLSPSKServerCredentials &) = delete;
@@ -141,10 +151,12 @@ private:
 
 public:
 	TLSPSKClientCredentials();
-	TLSPSKClientCredentials(TLSPSKClientCredentials &&move) : cred(move.cred) { move.cred = nullptr; }
-	TLSPSKClientCredentials & operator = (TLSPSKClientCredentials &&move) { std::swap(cred, move.cred); return *this; }
+	TLSPSKClientCredentials(TLSPSKClientCredentials &&move) noexcept : cred(move.cred) { move.cred = nullptr; }
+	TLSPSKClientCredentials & operator = (TLSPSKClientCredentials &&move) noexcept { return this->swap(move), *this; }
 	~TLSPSKClientCredentials() { if (cred) ::gnutls_psk_free_client_credentials(cred); }
-	operator gnutls_psk_client_credentials_t () const { return cred; }
+	void swap(TLSPSKClientCredentials &other) noexcept { using std::swap; swap(cred, other.cred); }
+	friend void swap(TLSPSKClientCredentials &lhs, TLSPSKClientCredentials &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_psk_client_credentials_t () const noexcept { return cred; }
 
 private:
 	TLSPSKClientCredentials(const TLSPSKClientCredentials &) = delete;
@@ -160,10 +172,12 @@ private:
 
 public:
 	TLSAnonServerCredentials();
-	TLSAnonServerCredentials(TLSAnonServerCredentials &&move) : cred(move.cred) { move.cred = nullptr; }
-	TLSAnonServerCredentials & operator = (TLSAnonServerCredentials &&move) { std::swap(cred, move.cred); return *this; }
+	TLSAnonServerCredentials(TLSAnonServerCredentials &&move) noexcept : cred(move.cred) { move.cred = nullptr; }
+	TLSAnonServerCredentials & operator = (TLSAnonServerCredentials &&move) noexcept { return this->swap(move), *this; }
 	~TLSAnonServerCredentials() { if (cred) ::gnutls_anon_free_server_credentials(cred); }
-	operator gnutls_anon_server_credentials_t () const { return cred; }
+	void swap(TLSAnonServerCredentials &other) noexcept { using std::swap; swap(cred, other.cred); }
+	friend void swap(TLSAnonServerCredentials &lhs, TLSAnonServerCredentials &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_anon_server_credentials_t () const noexcept { return cred; }
 
 private:
 	TLSAnonServerCredentials(const TLSAnonServerCredentials &) = delete;
@@ -179,10 +193,12 @@ private:
 
 public:
 	TLSAnonClientCredentials();
-	TLSAnonClientCredentials(TLSAnonClientCredentials &&move) : cred(move.cred) { move.cred = nullptr; }
-	TLSAnonClientCredentials & operator = (TLSAnonClientCredentials &&move) { std::swap(cred, move.cred); return *this; }
+	TLSAnonClientCredentials(TLSAnonClientCredentials &&move) noexcept : cred(move.cred) { move.cred = nullptr; }
+	TLSAnonClientCredentials & operator = (TLSAnonClientCredentials &&move) noexcept { return this->swap(move), *this; }
 	~TLSAnonClientCredentials() { if (cred) ::gnutls_anon_free_client_credentials(cred); }
-	operator gnutls_anon_client_credentials_t () const { return cred; }
+	void swap(TLSAnonClientCredentials &other) noexcept { using std::swap; swap(cred, other.cred); }
+	friend void swap(TLSAnonClientCredentials &lhs, TLSAnonClientCredentials &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_anon_client_credentials_t () const noexcept { return cred; }
 
 private:
 	TLSAnonClientCredentials(const TLSAnonClientCredentials &) = delete;
@@ -201,10 +217,12 @@ private:
 
 public:
 	TLSSession();
-	TLSSession(TLSSession &&move);
-	TLSSession & operator = (TLSSession &&move);
+	TLSSession(TLSSession &&move) noexcept;
+	TLSSession & operator = (TLSSession &&move) noexcept { return this->swap(move), *this; }
 	virtual ~TLSSession() { if (session) ::gnutls_deinit(session); }
-	operator gnutls_session_t () const { return session; }
+	void swap(TLSSession &other) noexcept;
+	friend void swap(TLSSession &lhs, TLSSession &rhs) noexcept { lhs.swap(rhs); }
+	_pure operator gnutls_session_t () const noexcept { return session; }
 
 private:
 	TLSSession(const TLSSession &) = delete;
@@ -256,7 +274,7 @@ protected:
 	Socket socket;
 
 public:
-	TLSSocket() { }
+	TLSSocket() = default;
 	TLSSocket(std::string host_name, Socket &&socket);
 
 protected:

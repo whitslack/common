@@ -52,7 +52,7 @@ public:
 	static void _noreturn pump(Selector &selector);
 
 public:
-	virtual ~Selectable() { }
+	virtual ~Selectable() = default;
 
 protected:
 	virtual void selected(Selector &selector, Selector::Flags flags) noexcept = 0;

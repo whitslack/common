@@ -3,8 +3,8 @@
 
 namespace posix {
 
-static inline speed_t cfgetispeed(const struct termios &termios_r) { return ::cfgetispeed(&termios_r); }
-static inline speed_t cfgetospeed(const struct termios &termios_r) { return ::cfgetospeed(&termios_r); }
+static inline speed_t cfgetispeed(const struct termios &termios_r) noexcept { return ::cfgetispeed(&termios_r); }
+static inline speed_t cfgetospeed(const struct termios &termios_r) noexcept { return ::cfgetospeed(&termios_r); }
 void cfsetispeed(struct termios &termios_r, speed_t speed);
 void cfsetospeed(struct termios &termios_r, speed_t speed);
 void tcdrain(int fildes);

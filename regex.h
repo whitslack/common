@@ -13,8 +13,8 @@ private:
 public:
 	Regex(const char regex[], int cflags = REG_EXTENDED);
 	~Regex() { ::regfree(&regex); }
-	operator regex_t * () { return &regex; }
-	operator const regex_t * () const { return &regex; }
+	_pure operator regex_t * () noexcept { return &regex; }
+	_pure operator const regex_t * () const noexcept { return &regex; }
 
 	bool exec(const char string[], size_t nmatch, regmatch_t pmatch[], int eflags = 0) const;
 
@@ -31,7 +31,7 @@ private:
 	const regex_t *regex;
 
 public:
-	RegexCategory(const Regex &regex) : regex(regex) { }
+	RegexCategory(const Regex &regex) noexcept : regex(regex) { }
 	const char * name() const noexcept override _const;
 	std::string message(int condition) const override _pure;
 

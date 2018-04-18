@@ -64,7 +64,7 @@ private:
 	size_t send_data_rem = 0;
 
 public:
-	WebSocket(Socket &&socket, bool send_mask) : socket(std::move(socket)), send_mask(send_mask) { }
+	explicit WebSocket(Socket &&socket, bool send_mask) noexcept : socket(std::move(socket)), send_mask(send_mask) { }
 
 public:
 	/**
@@ -73,14 +73,14 @@ public:
 	 * This should be called only after at least one byte of payload data has been received.
 	 * Typically it will be called after \ref receive has indicated the end of the frame.
 	 */
-	bool is_final() const { return static_cast<int8_t>(recv_state) < 0; }
+	bool _pure is_final() const noexcept { return static_cast<int8_t>(recv_state) < 0; }
 
 	/**
 	 * @brief Returns whether the current frame has been fully received.
 	 *
 	 * If this function returns \c true, then @ref receive is guaranteed to return negative without blocking.
 	 */
-	bool is_frame_fully_received() const { return static_cast<int8_t>(recv_hdr_pos) < 0 && recv_data_rem == 0; }
+	bool _pure is_frame_fully_received() const noexcept { return static_cast<int8_t>(recv_hdr_pos) < 0 && recv_data_rem == 0; }
 
 	/**
 	 * @brief Receives (part of) a WebSocket frame.
@@ -124,7 +124,7 @@ private:
 	size_t request_pos;
 
 public:
-	WebSocketServerHandshake(Socket &&socket) : socket(std::move(socket)), request_pos() { }
+	WebSocketServerHandshake(Socket &&socket) noexcept : socket(std::move(socket)), request_pos() { }
 
 public:
 	bool ready();
@@ -152,7 +152,7 @@ private:
 	size_t response_pos;
 
 public:
-	WebSocketClientHandshake(Socket &&socket) : socket(std::move(socket)), delimited_source(this->socket, "\r\n\r\n"), response_pos() { }
+	WebSocketClientHandshake(Socket &&socket) noexcept : socket(std::move(socket)), delimited_source(this->socket, "\r\n\r\n"), response_pos() { }
 
 public:
 	void start(const char host[], in_port_t port = 0, const char request_uri[] = "/");
@@ -174,7 +174,7 @@ protected:
 	std::array<char_type, 1 << 12> buf;
 
 public:
-	WebSocketBuf(WebSocket *ws, WebSocket::Opcode opcode = WebSocket::Text);
+	WebSocketBuf(WebSocket *ws, WebSocket::Opcode opcode = WebSocket::Text) noexcept;
 
 protected:
 	virtual int sync(bool more);

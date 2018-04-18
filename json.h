@@ -61,10 +61,10 @@ private:
 	map_t map;
 
 public:
-	operator map_t * () { return &map; }
-	operator const map_t * () const { return &map; }
-	map_t * operator -> () { return &map; }
-	const map_t * operator -> () const { return &map; }
+	_pure operator map_t * () noexcept { return &map; }
+	_pure operator const map_t * () const noexcept { return &map; }
+	map_t * _pure operator -> () noexcept { return &map; }
+	const map_t * _pure operator -> () const noexcept { return &map; }
 
 	const Value * find(const std::string &key) const _pure;
 	const Value & get(const std::string &key) const _pure;
@@ -95,10 +95,10 @@ private:
 	vector_t vector;
 
 public:
-	operator vector_t * () { return &vector; }
-	operator const vector_t * () const { return &vector; }
-	vector_t * operator -> () { return &vector; }
-	const vector_t * operator -> () const { return &vector; }
+	_pure operator vector_t * () noexcept { return &vector; }
+	_pure operator const vector_t * () const noexcept { return &vector; }
+	vector_t * _pure operator -> () noexcept { return &vector; }
+	const vector_t * _pure operator -> () const noexcept { return &vector; }
 
 	void insert(std::nullptr_t) {
 		vector.emplace_back(nullptr);
@@ -120,7 +120,7 @@ protected:
 class Number : public Value {
 
 public:
-	virtual operator double () const = 0;
+	virtual operator double () const noexcept _pure = 0;
 
 	Number & as_number() override final _const;
 	const Number & as_number() const override final _const;
@@ -134,12 +134,11 @@ private:
 	intmax_t value;
 
 public:
-	Integer() : value() { }
-	Integer(intmax_t value) : value(value) { }
+	Integer(intmax_t value = 0) noexcept : value(value) { }
 
-	operator intmax_t * () { return &value; }
-	operator const intmax_t * () const { return &value; }
-	operator double () const override { return static_cast<double>(value); }
+	_pure operator intmax_t * () noexcept { return &value; }
+	_pure operator const intmax_t * () const noexcept { return &value; }
+	_pure operator double () const noexcept override { return static_cast<double>(value); }
 
 	Integer & as_integer() override final _const;
 	const Integer & as_integer() const override final _const;
@@ -156,12 +155,11 @@ private:
 	double value;
 
 public:
-	Real() : value() { }
-	Real(double value) : value(value) { }
+	Real(double value = 0) noexcept : value(value) { }
 
-	operator double * () { return &value; }
-	operator const double * () const { return &value; }
-	operator double () const override { return value; }
+	_pure operator double * () noexcept { return &value; }
+	_pure operator const double * () const noexcept { return &value; }
+	_pure operator double () const noexcept override { return value; }
 
 protected:
 	std::ostream & format(std::ostream &) const override;
@@ -175,14 +173,14 @@ private:
 	std::string string;
 
 public:
-	String() { }
+	String() = default;
 	String(const std::string &string) : string(string) { }
-	String(std::string &&string) : string(std::move(string)) { }
+	String(std::string &&string) noexcept : string(std::move(string)) { }
 
-	operator std::string * () { return &string; }
-	operator const std::string * () const { return &string; }
-	std::string * operator -> () { return &string; }
-	const std::string * operator -> () const { return &string; }
+	_pure operator std::string * () noexcept { return &string; }
+	_pure operator const std::string * () const noexcept { return &string; }
+	std::string * _pure operator -> () noexcept { return &string; }
+	const std::string * _pure operator -> () const noexcept { return &string; }
 
 	String & as_string() override final _const;
 	const String & as_string() const override final _const;
@@ -199,11 +197,10 @@ private:
 	bool value;
 
 public:
-	Boolean() : value() { }
-	Boolean(bool value) : value(value) { }
+	Boolean(bool value = false) noexcept : value(value) { }
 
-	operator bool * () { return &value; }
-	operator const bool * () const { return &value; }
+	_pure operator bool * () noexcept { return &value; }
+	_pure operator const bool * () const noexcept { return &value; }
 
 	Boolean & as_boolean() override final _const;
 	const Boolean & as_boolean() const override final _const;

@@ -3,7 +3,7 @@
 #include <ios>
 
 
-bool HexEncoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
+bool HexEncoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) noexcept {
 	static constexpr char encode[16] = {
 		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
 	};
@@ -32,7 +32,7 @@ buf_full:
 	}
 }
 
-bool HexEncoder::finish(uint8_t *&out, size_t n_out) {
+bool HexEncoder::finish(uint8_t *&out, size_t n_out) noexcept {
 	const uint8_t *in = nullptr;
 	return this->process(out, n_out, in, 0);
 }

@@ -21,7 +21,7 @@ const char * TLSCategory::name() const noexcept {
 	return "GnuTLS";
 }
 
-std::string TLSCategory::message(int condition) const noexcept {
+std::string TLSCategory::message(int condition) const {
 	return ::gnutls_strerror(condition);
 }
 
@@ -167,18 +167,20 @@ TLSSession::TLSSession() {
 	::gnutls_transport_set_vec_push_function(session, &vec_push);
 }
 
-TLSSession::TLSSession(TLSSession &&move) : session(move.session), credentials(std::move(move.credentials)) {
+TLSSession::TLSSession(TLSSession &&move) noexcept : session(move.session), credentials(std::move(move.credentials)) {
 	move.session = nullptr;
 	::gnutls_session_set_ptr(session, this);
 	::gnutls_transport_set_ptr(session, this);
 }
 
-TLSSession & TLSSession::operator = (TLSSession &&move) {
-	std::swap(session, move.session);
-	std::swap(credentials, move.credentials);
+void TLSSession::swap(TLSSession &other) noexcept {
+	using std::swap;
+	swap(session, other.session);
+	swap(credentials, other.credentials);
 	::gnutls_session_set_ptr(session, this);
+	::gnutls_session_set_ptr(other.session, &other);
 	::gnutls_transport_set_ptr(session, this);
-	return *this;
+	::gnutls_transport_set_ptr(other.session, &other);
 }
 
 void TLSSession::set_priority(const TLSPriority &priority) {

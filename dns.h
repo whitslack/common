@@ -9,7 +9,7 @@ class GAICategory : public std::error_category {
 
 public:
 	const char * name() const noexcept override _const;
-	std::string message(int condition) const noexcept override _const;
+	std::string message(int condition) const override;
 
 };
 
@@ -23,34 +23,34 @@ public:
 	private:
 		addrinfo *ptr;
 	public:
-		Iterator() : ptr() { }
-		operator addrinfo * () const { return ptr; }
-		addrinfo * operator -> () const { return ptr; }
-		Iterator & operator ++ () {
+		Iterator() noexcept : ptr() { }
+		_pure operator addrinfo * () const noexcept { return ptr; }
+		addrinfo * _pure operator -> () const noexcept { return ptr; }
+		Iterator & operator ++ () noexcept {
 			ptr = ptr->ai_next;
 			return *this;
 		}
-		Iterator operator ++ (int) {
+		Iterator operator ++ (int) noexcept {
 			Iterator copy(*this);
 			ptr = ptr->ai_next;
 			return copy;
 		}
 	private:
-		explicit Iterator(addrinfo *ptr) : ptr(ptr) { }
+		explicit Iterator(addrinfo *ptr) noexcept : ptr(ptr) { }
 	};
 
 private:
 	addrinfo *res;
 
 public:
-	GAIResults(GAIResults &&move) : res(move.res) { move.res = nullptr; }
+	GAIResults(GAIResults &&move) noexcept : res(move.res) { move.res = nullptr; }
 	~GAIResults() { ::freeaddrinfo(res); }
 
-	Iterator begin() const { return Iterator(res); }
-	Iterator end() const { return Iterator(); }
+	Iterator _pure begin() const noexcept { return Iterator(res); }
+	Iterator _const end() const noexcept { return Iterator(); }
 
 private:
-	explicit GAIResults(addrinfo *res) : res(res) { }
+	explicit GAIResults(addrinfo *res) noexcept : res(res) { }
 	GAIResults(const GAIResults &) = delete;
 	GAIResults & operator = (const GAIResults &) = delete;
 

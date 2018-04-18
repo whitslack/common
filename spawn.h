@@ -2,6 +2,9 @@
 #include <spawn.h>
 #include <unistd.h>
 
+#include "compiler.h"
+
+
 namespace posix {
 
 
@@ -13,8 +16,8 @@ private:
 public:
 	SpawnFileActions();
 	~SpawnFileActions();
-	operator posix_spawn_file_actions_t * () { return &file_actions; }
-	operator const posix_spawn_file_actions_t * () const { return &file_actions; }
+	_pure operator posix_spawn_file_actions_t * () noexcept { return &file_actions; }
+	_pure operator const posix_spawn_file_actions_t * () const noexcept { return &file_actions; }
 
 private:
 	SpawnFileActions(const SpawnFileActions &) = delete;
@@ -36,8 +39,8 @@ private:
 public:
 	SpawnAttributes();
 	~SpawnAttributes();
-	operator posix_spawnattr_t * () { return &attr; }
-	operator const posix_spawnattr_t * () const { return &attr; }
+	_pure operator posix_spawnattr_t * () noexcept { return &attr; }
+	_pure operator const posix_spawnattr_t * () const noexcept { return &attr; }
 
 private:
 	SpawnAttributes(const SpawnAttributes &) = delete;

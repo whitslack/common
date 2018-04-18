@@ -36,7 +36,7 @@
 
 
 template <typename LIMB_T, size_t L>
-static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __add(std::array<LIMB_T, L> &sum, const std::array<LIMB_T, L> &augend, LIMB_T addend) {
+static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __add(std::array<LIMB_T, L> &sum, const std::array<LIMB_T, L> &augend, LIMB_T addend) noexcept {
 	intptr_t carry = addend;
 	for (size_t i = 0; i < L; ++i) {
 		sum[WORD(L, i)] = static_cast<LIMB_T>(carry += augend[WORD(L, i)]), carry >>= sizeof(LIMB_T) * 8;
@@ -44,7 +44,7 @@ static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __add(s
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __add(std::array<LIMB_T, L> &sum, const std::array<LIMB_T, L> &augend, const std::array<LIMB_T, L> &addend) {
+static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __add(std::array<LIMB_T, L> &sum, const std::array<LIMB_T, L> &augend, const std::array<LIMB_T, L> &addend) noexcept {
 	intptr_t carry = 0;
 	for (size_t i = 0; i < L; ++i) {
 		sum[WORD(L, i)] = static_cast<LIMB_T>((carry += augend[WORD(L, i)]) += addend[WORD(L, i)]), carry >>= sizeof(LIMB_T) * 8;
@@ -52,7 +52,7 @@ static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __add(s
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::array<LIMB_T, L> & operator += (std::array<LIMB_T, L> &augend, LIMB_T addend) {
+static inline std::array<LIMB_T, L> & operator += (std::array<LIMB_T, L> &augend, LIMB_T addend) noexcept {
 	if (addend != 0) {
 		__add(augend, augend, addend);
 	}
@@ -60,27 +60,27 @@ static inline std::array<LIMB_T, L> & operator += (std::array<LIMB_T, L> &augend
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::array<LIMB_T, L> & operator += (std::array<LIMB_T, L> &augend, const std::array<LIMB_T, L> &addend) {
+static inline std::array<LIMB_T, L> & operator += (std::array<LIMB_T, L> &augend, const std::array<LIMB_T, L> &addend) noexcept {
 	__add(augend, augend, addend);
 	return augend;
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::array<LIMB_T, L> _pure operator + (const std::array<LIMB_T, L> &augend, LIMB_T addend) {
+static inline std::array<LIMB_T, L> _pure operator + (const std::array<LIMB_T, L> &augend, LIMB_T addend) noexcept {
 	std::array<LIMB_T, L> sum;
 	__add(sum, augend, addend);
 	return sum;
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::array<LIMB_T, L> _pure operator + (const std::array<LIMB_T, L> &augend, const std::array<LIMB_T, L> &addend) {
+static inline std::array<LIMB_T, L> _pure operator + (const std::array<LIMB_T, L> &augend, const std::array<LIMB_T, L> &addend) noexcept {
 	std::array<LIMB_T, L> sum;
 	__add(sum, augend, addend);
 	return sum;
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __sub(std::array<LIMB_T, L> &difference, const std::array<LIMB_T, L> &minuend, LIMB_T subtrahend) {
+static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __sub(std::array<LIMB_T, L> &difference, const std::array<LIMB_T, L> &minuend, LIMB_T subtrahend) noexcept {
 	intptr_t borrow = -subtrahend;
 	for (size_t i = 0; i < L; ++i) {
 		difference[WORD(L, i)] = static_cast<LIMB_T>(borrow += minuend[WORD(L, i)]), borrow >>= sizeof(LIMB_T) * 8;
@@ -88,7 +88,7 @@ static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __sub(s
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __sub(std::array<LIMB_T, L> &difference, const std::array<LIMB_T, L> &minuend, const std::array<LIMB_T, L> &subtrahend) {
+static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __sub(std::array<LIMB_T, L> &difference, const std::array<LIMB_T, L> &minuend, const std::array<LIMB_T, L> &subtrahend) noexcept {
 	intptr_t borrow = 0;
 	for (size_t i = 0; i < L; ++i) {
 		difference[WORD(L, i)] = static_cast<LIMB_T>((borrow += minuend[WORD(L, i)]) -= subtrahend[WORD(L, i)]), borrow >>= sizeof(LIMB_T) * 8;
@@ -96,7 +96,7 @@ static inline std::enable_if_t<sizeof(LIMB_T) < sizeof(uintptr_t), void> __sub(s
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::array<LIMB_T, L> & operator -= (std::array<LIMB_T, L> &minuend, LIMB_T subtrahend) {
+static inline std::array<LIMB_T, L> & operator -= (std::array<LIMB_T, L> &minuend, LIMB_T subtrahend) noexcept {
 	if (subtrahend != 0) {
 		__sub(minuend, minuend, subtrahend);
 	}
@@ -104,27 +104,27 @@ static inline std::array<LIMB_T, L> & operator -= (std::array<LIMB_T, L> &minuen
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::array<LIMB_T, L> & operator -= (std::array<LIMB_T, L> &minuend, const std::array<LIMB_T, L> &subtrahend) {
+static inline std::array<LIMB_T, L> & operator -= (std::array<LIMB_T, L> &minuend, const std::array<LIMB_T, L> &subtrahend) noexcept {
 	__sub(minuend, minuend, subtrahend);
 	return minuend;
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::array<LIMB_T, L> _pure operator - (const std::array<LIMB_T, L> &minuend, LIMB_T subtrahend) {
+static inline std::array<LIMB_T, L> _pure operator - (const std::array<LIMB_T, L> &minuend, LIMB_T subtrahend) noexcept {
 	std::array<LIMB_T, L> difference;
 	__sub(difference, minuend, subtrahend);
 	return difference;
 }
 
 template <typename LIMB_T, size_t L>
-static inline std::array<LIMB_T, L> _pure operator - (const std::array<LIMB_T, L> &minuend, const std::array<LIMB_T, L> &subtrahend) {
+static inline std::array<LIMB_T, L> _pure operator - (const std::array<LIMB_T, L> &minuend, const std::array<LIMB_T, L> &subtrahend) noexcept {
 	std::array<LIMB_T, L> difference;
 	__sub(difference, minuend, subtrahend);
 	return difference;
 }
 
 template <typename WORD_T, size_t W>
-static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shln(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) {
+static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shln(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) noexcept {
 	unsigned offset = static_cast<unsigned>(shift / (sizeof(WORD_T) * 8));
 	if ((shift %= static_cast<unsigned>(sizeof(WORD_T) * 8)) == 0) {
 		for (size_t i = W - offset; i-- > 0;) {
@@ -143,7 +143,7 @@ static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shln(std
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> & operator <<= (std::array<WORD_T, W> &operand, unsigned shift) {
+static inline std::array<WORD_T, W> & operator <<= (std::array<WORD_T, W> &operand, unsigned shift) noexcept {
 	if (shift != 0) {
 		__shln(operand, operand, shift);
 	}
@@ -151,14 +151,14 @@ static inline std::array<WORD_T, W> & operator <<= (std::array<WORD_T, W> &opera
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> _pure operator << (const std::array<WORD_T, W> &operand, unsigned shift) {
+static inline std::array<WORD_T, W> _pure operator << (const std::array<WORD_T, W> &operand, unsigned shift) noexcept {
 	std::array<WORD_T, W> result;
 	__shln(result, operand, shift);
 	return result;
 }
 
 template <typename WORD_T, size_t W>
-static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shrn(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) {
+static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shrn(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) noexcept {
 	unsigned offset = static_cast<unsigned>(shift / (sizeof(WORD_T) * 8));
 	if ((shift %= static_cast<unsigned>(sizeof(WORD_T) * 8)) == 0) {
 		for (size_t i = 0; i < W - offset; ++i) {
@@ -177,7 +177,7 @@ static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shrn(std
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> & operator >>= (std::array<WORD_T, W> &operand, unsigned shift) {
+static inline std::array<WORD_T, W> & operator >>= (std::array<WORD_T, W> &operand, unsigned shift) noexcept {
 	if (shift != 0) {
 		__shrn(operand, operand, shift);
 	}
@@ -185,88 +185,88 @@ static inline std::array<WORD_T, W> & operator >>= (std::array<WORD_T, W> &opera
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> _pure operator >> (const std::array<WORD_T, W> &operand, unsigned shift) {
+static inline std::array<WORD_T, W> _pure operator >> (const std::array<WORD_T, W> &operand, unsigned shift) noexcept {
 	std::array<WORD_T, W> result;
 	__shrn(result, operand, shift);
 	return result;
 }
 
 template <typename WORD_T, size_t W>
-static inline void __com(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand) {
+static inline void __com(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand) noexcept {
 	for (size_t i = 0; i < W; ++i) {
 		result[WORD(W, i)] = ~operand[WORD(W, i)];
 	}
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> _pure operator ~ (const std::array<WORD_T, W> &operand) {
+static inline std::array<WORD_T, W> _pure operator ~ (const std::array<WORD_T, W> &operand) noexcept {
 	std::array<WORD_T, W> result;
 	__com(result, operand);
 	return result;
 }
 
 template <typename WORD_T, size_t W>
-static inline void __and(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline void __and(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	for (size_t i = 0; i < W; ++i) {
 		result[WORD(W, i)] = operand1[WORD(W, i)] & operand2[WORD(W, i)];
 	}
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> & operator &= (std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline std::array<WORD_T, W> & operator &= (std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	__and(operand1, operand1, operand2);
 	return operand1;
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> _pure operator & (const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline std::array<WORD_T, W> _pure operator & (const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	std::array<WORD_T, W> result;
 	__and(result, operand1, operand2);
 	return result;
 }
 
 template <typename WORD_T, size_t W>
-static inline void __or(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline void __or(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	for (size_t i = 0; i < W; ++i) {
 		result[WORD(W, i)] = operand1[WORD(W, i)] | operand2[WORD(W, i)];
 	}
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> & operator |= (std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline std::array<WORD_T, W> & operator |= (std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	__or(operand1, operand1, operand2);
 	return operand1;
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> _pure operator | (const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline std::array<WORD_T, W> _pure operator | (const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	std::array<WORD_T, W> result;
 	__or(result, operand1, operand2);
 	return result;
 }
 
 template <typename WORD_T, size_t W>
-static inline void __xor(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline void __xor(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	for (size_t i = 0; i < W; ++i) {
 		result[WORD(W, i)] = operand1[WORD(W, i)] ^ operand2[WORD(W, i)];
 	}
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> & operator ^= (std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline std::array<WORD_T, W> & operator ^= (std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	__xor(operand1, operand1, operand2);
 	return operand1;
 }
 
 template <typename WORD_T, size_t W>
-static inline std::array<WORD_T, W> _pure operator ^ (const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) {
+static inline std::array<WORD_T, W> _pure operator ^ (const std::array<WORD_T, W> &operand1, const std::array<WORD_T, W> &operand2) noexcept {
 	std::array<WORD_T, W> result;
 	__xor(result, operand1, operand2);
 	return result;
 }
 
 template <typename WORD_T, size_t W>
-static inline int _pure __cmp(const std::array<WORD_T, W> &lhs, const std::array<WORD_T, W> &rhs) {
+static inline int _pure __cmp(const std::array<WORD_T, W> &lhs, const std::array<WORD_T, W> &rhs) noexcept {
 	for (size_t i = W; i-- > 0;) {
 		auto lw = lhs[WORD(W, i)], rw = rhs[WORD(W, i)];
 		if (lw < rw) {
@@ -280,7 +280,7 @@ static inline int _pure __cmp(const std::array<WORD_T, W> &lhs, const std::array
 }
 
 template <typename WORD_T, size_t W>
-static inline size_t _pure __clz(const std::array<WORD_T, W> &operand) {
+static inline size_t _pure __clz(const std::array<WORD_T, W> &operand) noexcept {
 	size_t ret = 0;
 	for (size_t i = W; i > 0;) {
 		auto word = operand[WORD(W, --i)];
@@ -294,7 +294,7 @@ static inline size_t _pure __clz(const std::array<WORD_T, W> &operand) {
 }
 
 template <typename WORD_T, size_t W>
-static inline size_t _pure __ctz(const std::array<WORD_T, W> &operand) {
+static inline size_t _pure __ctz(const std::array<WORD_T, W> &operand) noexcept {
 	size_t ret = 0;
 	for (size_t i = 0; i < W; ++i) {
 		auto word = operand[WORD(W, i)];
@@ -308,7 +308,7 @@ static inline size_t _pure __ctz(const std::array<WORD_T, W> &operand) {
 }
 
 template <typename WORD_T, size_t W>
-static inline size_t _pure __popcount(const std::array<WORD_T, W> &operand) {
+static inline size_t _pure __popcount(const std::array<WORD_T, W> &operand) noexcept {
 	size_t ret = 0;
 	for (size_t i = 0; i < W; ++i) {
 		ret += _popcount(operand[WORD(W, i)]);
@@ -317,7 +317,7 @@ static inline size_t _pure __popcount(const std::array<WORD_T, W> &operand) {
 }
 
 template <typename WORD_T, size_t W>
-static inline size_t _pure __parity(const std::array<WORD_T, W> &operand) {
+static inline size_t _pure __parity(const std::array<WORD_T, W> &operand) noexcept {
 	size_t ret = 0;
 	for (size_t i = 0; i < W; ++i) {
 		ret ^= _parity(operand[WORD(W, i)]);
@@ -326,7 +326,7 @@ static inline size_t _pure __parity(const std::array<WORD_T, W> &operand) {
 }
 
 template <typename WORD_T, size_t W>
-static inline void __bswap(std::array<WORD_T, W> &operand) {
+static inline void __bswap(std::array<WORD_T, W> &operand) noexcept {
 	for (size_t i = 0; i < W / 2; ++i) {
 		auto temp = operand[i];
 		operand[i] = bswap(operand[W - i - 1]);
@@ -342,131 +342,131 @@ static inline void __bswap(std::array<WORD_T, W> &operand) {
 #define __IMPL(WORD_T, SUFFIX) \
 	\
 	template <size_t L> \
-	static inline void __adc(WORD_T augend[]) { \
+	static inline void __adc(WORD_T augend[]) noexcept { \
 		__asm__ ("adc" SUFFIX " $0, %[augend]" : [augend] "+rm" (augend[0]) : "X" (augend[-1]) : "cc"); \
 		__adc<L - 1>(augend + 1); \
 	} \
 	\
 	template <> \
-	inline void __adc<0>(WORD_T *) { \
+	inline void __adc<0>(WORD_T *) noexcept { \
 	} \
 	\
 	template <size_t L> \
-	static inline void __adc(WORD_T augend[], const WORD_T addend[]) { \
+	static inline void __adc(WORD_T augend[], const WORD_T addend[]) noexcept { \
 		__asm__ ("adc" SUFFIX " %[addend], %[augend]" : [augend] "+r,m" (augend[0]) : [addend] "irm,ir" (addend[0]), "X,X" (augend[-1]) : "cc"); \
 		__adc<L - 1>(augend + 1, addend + 1); \
 	} \
 	\
 	template <> \
-	inline void __adc<0>(WORD_T *, const WORD_T *) { \
+	inline void __adc<0>(WORD_T *, const WORD_T *) noexcept { \
 	} \
 	\
 	template <size_t L> \
-	static inline void __add(WORD_T augend[], WORD_T addend) { \
+	static inline void __add(WORD_T augend[], WORD_T addend) noexcept { \
 		__asm__ ("add" SUFFIX " %[addend], %[augend]" : [augend] "+r,m" (augend[0]) : [addend] "irm,ir" (addend) : "cc"); \
 		__adc<L - 1>(augend + 1); \
 	} \
 	\
 	template <size_t L> \
-	static inline void __add(WORD_T augend[], const WORD_T addend[]) { \
+	static inline void __add(WORD_T augend[], const WORD_T addend[]) noexcept { \
 		__asm__ ("add" SUFFIX " %[addend], %[augend]" : [augend] "+r,m" (augend[0]) : [addend] "irm,ir" (addend[0]) : "cc"); \
 		__adc<L - 1>(augend + 1, addend + 1); \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> & operator += (std::array<WORD_T, L> &augend, WORD_T addend) { \
+	static inline std::array<WORD_T, L> & operator += (std::array<WORD_T, L> &augend, WORD_T addend) noexcept { \
 		__add<L>(augend.data(), addend); \
 		return augend; \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> & operator += (std::array<WORD_T, L> &augend, const std::array<WORD_T, L> &addend) { \
+	static inline std::array<WORD_T, L> & operator += (std::array<WORD_T, L> &augend, const std::array<WORD_T, L> &addend) noexcept { \
 		__add<L>(augend.data(), addend.data()); \
 		return augend; \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> _pure operator + (std::array<WORD_T, L> augend, WORD_T addend) { \
+	static inline std::array<WORD_T, L> _pure operator + (std::array<WORD_T, L> augend, WORD_T addend) noexcept { \
 		return augend += addend; \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> _pure operator + (std::array<WORD_T, L> augend, const std::array<WORD_T, L> &addend) { \
+	static inline std::array<WORD_T, L> _pure operator + (std::array<WORD_T, L> augend, const std::array<WORD_T, L> &addend) noexcept { \
 		return augend += addend; \
 	} \
 	\
 	template <size_t L> \
-	static inline void __sbb(WORD_T minuend[]) { \
+	static inline void __sbb(WORD_T minuend[]) noexcept { \
 		__asm__ ("sbb" SUFFIX " $0, %[minuend]" : [minuend] "+rm" (minuend[0]) : "X" (minuend[-1]) : "cc"); \
 		__sbb<L - 1>(minuend + 1); \
 	} \
 	\
 	template <> \
-	inline void __sbb<0>(WORD_T *) { \
+	inline void __sbb<0>(WORD_T *) noexcept { \
 	} \
 	\
 	template <size_t L> \
-	static inline void __sbb(WORD_T minuend[], const WORD_T subtrahend[]) { \
+	static inline void __sbb(WORD_T minuend[], const WORD_T subtrahend[]) noexcept { \
 		__asm__ ("sbb" SUFFIX " %[subtrahend], %[minuend]" : [minuend] "+r,m" (minuend[0]) : [subtrahend] "irm,ir" (subtrahend[0]), "X,X" (minuend[-1]) : "cc"); \
 		__sbb<L - 1>(minuend + 1, subtrahend + 1); \
 	} \
 	\
 	template <> \
-	inline void __sbb<0>(WORD_T *, const WORD_T *) { \
+	inline void __sbb<0>(WORD_T *, const WORD_T *) noexcept { \
 	} \
 	\
 	template <size_t L> \
-	static inline void __sub(WORD_T minuend[], WORD_T subtrahend) { \
+	static inline void __sub(WORD_T minuend[], WORD_T subtrahend) noexcept { \
 		__asm__ ("sub" SUFFIX " %[subtrahend], %[minuend]" : [minuend] "+r,m" (minuend[0]) : [subtrahend] "irm,ir" (subtrahend) : "cc"); \
 		__sbb<L - 1>(minuend + 1); \
 	} \
 	\
 	template <size_t L> \
-	static inline void __sub(WORD_T minuend[], const WORD_T subtrahend[]) { \
+	static inline void __sub(WORD_T minuend[], const WORD_T subtrahend[]) noexcept { \
 		__asm__ ("sub" SUFFIX " %[subtrahend], %[minuend]" : [minuend] "+r,m" (minuend[0]) : [subtrahend] "irm,ir" (subtrahend[0]) : "cc"); \
 		__sbb<L - 1>(minuend + 1, subtrahend + 1); \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> & operator -= (std::array<WORD_T, L> &minuend, WORD_T subtrahend) { \
+	static inline std::array<WORD_T, L> & operator -= (std::array<WORD_T, L> &minuend, WORD_T subtrahend) noexcept { \
 		__sub<L>(minuend.data(), subtrahend); \
 		return minuend; \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> & operator -= (std::array<WORD_T, L> &minuend, const std::array<WORD_T, L> &subtrahend) { \
+	static inline std::array<WORD_T, L> & operator -= (std::array<WORD_T, L> &minuend, const std::array<WORD_T, L> &subtrahend) noexcept { \
 		__sub<L>(minuend.data(), subtrahend.data()); \
 		return minuend; \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> _pure operator - (std::array<WORD_T, L> minuend, WORD_T subtrahend) { \
+	static inline std::array<WORD_T, L> _pure operator - (std::array<WORD_T, L> minuend, WORD_T subtrahend) noexcept { \
 		return minuend -= subtrahend; \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> _pure operator - (std::array<WORD_T, L> minuend, const std::array<WORD_T, L> &subtrahend) { \
+	static inline std::array<WORD_T, L> _pure operator - (std::array<WORD_T, L> minuend, const std::array<WORD_T, L> &subtrahend) noexcept { \
 		return minuend -= subtrahend; \
 	} \
 	\
 	template <size_t L> \
-	static inline void __rcl(WORD_T operand[]) { \
+	static inline void __rcl(WORD_T operand[]) noexcept { \
 		__asm__ ("rcl" SUFFIX " %[operand]" : [operand] "+rm" (operand[0]) : "X" (operand[-1]) : "cc"); \
 		__rcl<L - 1>(operand + 1); \
 	} \
 	\
 	template <> \
-	inline void __rcl<0>(WORD_T *) { \
+	inline void __rcl<0>(WORD_T *) noexcept { \
 	} \
 	\
 	template <size_t L> \
-	static inline void __shl(WORD_T operand[]) { \
+	static inline void __shl(WORD_T operand[]) noexcept { \
 		__asm__ ("shl" SUFFIX " %[operand]" : [operand] "+rm" (operand[0]) : : "cc"); \
 		__rcl<L - 1>(operand + 1); \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> & operator <<= (std::array<WORD_T, L> &operand, unsigned shift) { \
+	static inline std::array<WORD_T, L> & operator <<= (std::array<WORD_T, L> &operand, unsigned shift) noexcept { \
 		if (shift == 1) { \
 			__shl<L>(operand.data()); \
 		} \
@@ -477,7 +477,7 @@ static inline void __bswap(std::array<WORD_T, W> &operand) {
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> _pure operator << (const std::array<WORD_T, L> &operand, unsigned shift) { \
+	static inline std::array<WORD_T, L> _pure operator << (const std::array<WORD_T, L> &operand, unsigned shift) noexcept { \
 		std::array<WORD_T, L> result; \
 		if (shift == 1) { \
 			__shl<L>((result = operand).data()); \
@@ -489,23 +489,23 @@ static inline void __bswap(std::array<WORD_T, W> &operand) {
 	} \
 	\
 	template <size_t L> \
-	static inline void __rcr(WORD_T operand[]) { \
+	static inline void __rcr(WORD_T operand[]) noexcept { \
 		__asm__ ("rcr" SUFFIX " %[operand]" : [operand] "+rm" (operand[L - 1]) : "X" (operand[L]) : "cc"); \
 		__rcr<L - 1>(operand); \
 	} \
 	\
 	template <> \
-	inline void __rcr<0>(WORD_T *) { \
+	inline void __rcr<0>(WORD_T *) noexcept { \
 	} \
 	\
 	template <size_t L> \
-	static inline void __shr(WORD_T operand[]) { \
+	static inline void __shr(WORD_T operand[]) noexcept { \
 		__asm__ ("shr" SUFFIX " %[operand]" : [operand] "+rm" (operand[L - 1]) : : "cc"); \
 		__rcr<L - 1>(operand); \
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> & operator >>= (std::array<WORD_T, L> &operand, unsigned shift) { \
+	static inline std::array<WORD_T, L> & operator >>= (std::array<WORD_T, L> &operand, unsigned shift) noexcept { \
 		if (shift == 1) { \
 			__shr<L>(operand.data()); \
 		} \
@@ -516,7 +516,7 @@ static inline void __bswap(std::array<WORD_T, W> &operand) {
 	} \
 	\
 	template <size_t L> \
-	static inline std::array<WORD_T, L> _pure operator >> (const std::array<WORD_T, L> &operand, unsigned shift) { \
+	static inline std::array<WORD_T, L> _pure operator >> (const std::array<WORD_T, L> &operand, unsigned shift) noexcept { \
 		std::array<WORD_T, L> result; \
 		if (shift == 1) { \
 			__shr<L>((result = operand).data()); \
@@ -541,116 +541,116 @@ __IMPL(uint32_t, "l")
 #define LIMB_T uint32_t
 
 template <size_t L>
-static inline void __adc(uint32_t sum[], const uint32_t augend[]) {
+static inline void __adc(uint32_t sum[], const uint32_t augend[]) noexcept {
 	__asm__ ("adcs %[sum], %[augend], #0" : [sum] "=r" (sum[0]) : [augend] "r" (augend[0]), "X" (sum[-1]) : "cc");
 	__adc<L - 1>(sum + 1, augend + 1);
 }
 
 template <>
-inline void __adc<0>(uint32_t *, const uint32_t *) {
+inline void __adc<0>(uint32_t *, const uint32_t *) noexcept {
 }
 
 template <size_t L>
-static inline void __adc(uint32_t sum[], const uint32_t augend[], const uint32_t addend[]) {
+static inline void __adc(uint32_t sum[], const uint32_t augend[], const uint32_t addend[]) noexcept {
 	__asm__ ("adcs %[sum], %[augend], %[addend]" : [sum] "=r" (sum[0]) : [augend] "r" (augend[0]), [addend] "Ir" (addend[0]), "X" (sum[-1]) : "cc");
 	__adc<L - 1>(sum + 1, augend + 1, addend + 1);
 }
 
 template <>
-inline void __adc<0>(uint32_t *, const uint32_t *, const uint32_t *) {
+inline void __adc<0>(uint32_t *, const uint32_t *, const uint32_t *) noexcept {
 }
 
 template <size_t L>
-static inline void __add(uint32_t sum[], const uint32_t augend[], uint32_t addend) {
+static inline void __add(uint32_t sum[], const uint32_t augend[], uint32_t addend) noexcept {
 	__asm__ ("adds %[sum], %[augend], %[addend]" : [sum] "=r" (sum[0]) : [augend] "r" (augend[0]), [addend] "Ir" (addend) : "cc");
 	__adc<L - 1>(sum + 1, augend + 1);
 }
 
 template <size_t L>
-static inline void __add(uint32_t sum[], const uint32_t augend[], const uint32_t addend[]) {
+static inline void __add(uint32_t sum[], const uint32_t augend[], const uint32_t addend[]) noexcept {
 	__asm__ ("adds %[sum], %[augend], %[addend]" : [sum] "=r" (sum[0]) : [augend] "r" (augend[0]), [addend] "Ir" (addend[0]) : "cc");
 	__adc<L - 1>(sum + 1, augend + 1, addend + 1);
 }
 
 template <size_t L>
-static inline std::array<uint32_t, L> & operator += (std::array<uint32_t, L> &augend, uint32_t addend) {
+static inline std::array<uint32_t, L> & operator += (std::array<uint32_t, L> &augend, uint32_t addend) noexcept {
 	__add<L>(augend.data(), augend.data(), addend);
 	return augend;
 }
 
 template <size_t L>
-static inline std::array<uint32_t, L> & operator += (std::array<uint32_t, L> &augend, const std::array<uint32_t, L> &addend) {
+static inline std::array<uint32_t, L> & operator += (std::array<uint32_t, L> &augend, const std::array<uint32_t, L> &addend) noexcept {
 	__add<L>(augend.data(), augend.data(), addend.data());
 	return augend;
 }
 
 template <size_t L>
-static inline std::array<uint32_t, L> _pure operator + (const std::array<uint32_t, L> &augend, uint32_t addend) {
+static inline std::array<uint32_t, L> _pure operator + (const std::array<uint32_t, L> &augend, uint32_t addend) noexcept {
 	std::array<uint32_t, L> sum;
 	__add<L>(sum.data(), augend.data(), addend);
 	return sum;
 }
 
 template <size_t L>
-static inline std::array<uint32_t, L> _pure operator + (const std::array<uint32_t, L> &augend, const std::array<uint32_t, L> &addend) {
+static inline std::array<uint32_t, L> _pure operator + (const std::array<uint32_t, L> &augend, const std::array<uint32_t, L> &addend) noexcept {
 	std::array<uint32_t, L> sum;
 	__add<L>(sum.data(), augend.data(), addend.data());
 	return sum;
 }
 
 template <size_t L>
-static inline void __sbc(uint32_t difference[], const uint32_t minuend[]) {
+static inline void __sbc(uint32_t difference[], const uint32_t minuend[]) noexcept {
 	__asm__ ("sbcs %[difference], %[minuend], #0" : [difference] "=r" (difference[0]) : [minuend] "r" (minuend[0]), "X" (difference[-1]) : "cc");
 	__sbc<L - 1>(difference + 1, minuend + 1);
 }
 
 template <>
-inline void __sbc<0>(uint32_t *, const uint32_t *) {
+inline void __sbc<0>(uint32_t *, const uint32_t *) noexcept {
 }
 
 template <size_t L>
-static inline void __sbc(uint32_t difference[], const uint32_t minuend[], const uint32_t subtrahend[]) {
+static inline void __sbc(uint32_t difference[], const uint32_t minuend[], const uint32_t subtrahend[]) noexcept {
 	__asm__ ("sbcs %[difference], %[minuend], %[subtrahend]" : [difference] "=r" (difference[0]) : [minuend] "r" (minuend[0]), [subtrahend] "Ir" (subtrahend[0]), "X" (difference[-1]) : "cc");
 	__sbc<L - 1>(difference + 1, minuend + 1, subtrahend + 1);
 }
 
 template <>
-inline void __sbc<0>(uint32_t *, const uint32_t *, const uint32_t *) {
+inline void __sbc<0>(uint32_t *, const uint32_t *, const uint32_t *) noexcept {
 }
 
 template <size_t L>
-static inline void __sub(uint32_t difference[], const uint32_t minuend[], uint32_t subtrahend) {
+static inline void __sub(uint32_t difference[], const uint32_t minuend[], uint32_t subtrahend) noexcept {
 	__asm__ ("subs %[difference], %[minuend], %[subtrahend]" : [difference] "=r" (difference[0]) : [minuend] "r" (minuend[0]), [subtrahend] "Ir" (subtrahend) : "cc");
 	__sbc<L - 1>(difference + 1, minuend + 1);
 }
 
 template <size_t L>
-static inline void __sub(uint32_t difference[], const uint32_t minuend[], const uint32_t subtrahend[]) {
+static inline void __sub(uint32_t difference[], const uint32_t minuend[], const uint32_t subtrahend[]) noexcept {
 	__asm__ ("subs %[difference], %[minuend], %[subtrahend]" : [difference] "=r" (difference[0]) : [minuend] "r" (minuend[0]), [subtrahend] "Ir" (subtrahend[0]) : "cc");
 	__sbc<L - 1>(difference + 1, minuend + 1, subtrahend + 1);
 }
 
 template <size_t L>
-static inline std::array<uint32_t, L> & operator -= (std::array<uint32_t, L> &minuend, uint32_t subtrahend) {
+static inline std::array<uint32_t, L> & operator -= (std::array<uint32_t, L> &minuend, uint32_t subtrahend) noexcept {
 	__sub<L>(minuend.data(), minuend.data(), subtrahend);
 	return minuend;
 }
 
 template <size_t L>
-static inline std::array<uint32_t, L> & operator -= (std::array<uint32_t, L> &minuend, const std::array<uint32_t, L> &subtrahend) {
+static inline std::array<uint32_t, L> & operator -= (std::array<uint32_t, L> &minuend, const std::array<uint32_t, L> &subtrahend) noexcept {
 	__sub<L>(minuend.data(), minuend.data(), subtrahend.data());
 	return minuend;
 }
 
 template <size_t L>
-static inline std::array<uint32_t, L> _pure operator - (const std::array<uint32_t, L> &minuend, uint32_t subtrahend) {
+static inline std::array<uint32_t, L> _pure operator - (const std::array<uint32_t, L> &minuend, uint32_t subtrahend) noexcept {
 	std::array<uint32_t, L> difference;
 	__sub<L>(difference.data(), minuend.data(), subtrahend);
 	return difference;
 }
 
 template <size_t L>
-static inline std::array<uint32_t, L> _pure operator - (const std::array<uint32_t, L> &minuend, const std::array<uint32_t, L> &subtrahend) {
+static inline std::array<uint32_t, L> _pure operator - (const std::array<uint32_t, L> &minuend, const std::array<uint32_t, L> &subtrahend) noexcept {
 	std::array<uint32_t, L> difference;
 	__sub<L>(difference.data(), minuend.data(), subtrahend.data());
 	return difference;
@@ -664,7 +664,7 @@ static inline std::array<uint32_t, L> _pure operator - (const std::array<uint32_
 #	define LIMB_T uint16_t
 #else
 #	define LIMB_T uint8_t
-static inline uint8_t bswap(uint8_t v) { return v; }
+static inline uint8_t _const bswap(uint8_t v) noexcept { return v; }
 #endif
 
 #endif
@@ -691,152 +691,152 @@ public:
 	};
 
 public:
-	explicit operator uintptr_t () const _pure {
+	_pure explicit operator uintptr_t () const noexcept {
 		return words[WORD(word_count, 0)];
 	}
 
-	BigUInt operator + (limb_t addend) const _pure {
+	BigUInt _pure operator + (limb_t addend) const noexcept {
 		BigUInt sum;
 		sum.limbs = limbs + addend;
 		return sum;
 	}
 
-	BigUInt operator + (const BigUInt &addend) const _pure {
+	BigUInt _pure operator + (const BigUInt &addend) const noexcept {
 		BigUInt sum;
 		sum.limbs = limbs + addend.limbs;
 		return sum;
 	}
 
-	BigUInt operator - (limb_t subtrahend) const _pure {
+	BigUInt _pure operator - (limb_t subtrahend) const noexcept {
 		BigUInt difference;
 		difference.limbs = limbs - subtrahend;
 		return difference;
 	}
 
-	BigUInt operator - (const BigUInt &subtrahend) const _pure {
+	BigUInt _pure operator - (const BigUInt &subtrahend) const noexcept {
 		BigUInt difference;
 		difference.limbs = limbs - subtrahend.limbs;
 		return difference;
 	}
 
-	BigUInt operator << (unsigned shift) const _pure {
+	BigUInt _pure operator << (unsigned shift) const noexcept {
 		BigUInt result;
 		result.words = words << shift;
 		return result;
 	}
 
-	BigUInt operator >> (unsigned shift) const _pure {
+	BigUInt _pure operator >> (unsigned shift) const noexcept {
 		BigUInt result;
 		result.words = words >> shift;
 		return result;
 	}
 
-	BigUInt operator ~ () const _pure {
+	BigUInt _pure operator ~ () const noexcept {
 		BigUInt complement;
 		complement.words = ~words;
 		return complement;
 	}
 
-	BigUInt operator & (const BigUInt &operand) const _pure {
+	BigUInt _pure operator & (const BigUInt &operand) const noexcept {
 		BigUInt result;
 		result.words = words & operand.words;
 		return result;
 	}
 
-	BigUInt operator | (const BigUInt &operand) const _pure {
+	BigUInt _pure operator | (const BigUInt &operand) const noexcept {
 		BigUInt result;
 		result.words = words | operand.words;
 		return result;
 	}
 
-	BigUInt operator ^ (const BigUInt &operand) const _pure {
+	BigUInt _pure operator ^ (const BigUInt &operand) const noexcept {
 		BigUInt result;
 		result.words = words ^ operand.words;
 		return result;
 	}
 
-	BigUInt & operator = (uintptr_t value) {
+	BigUInt & operator = (uintptr_t value) noexcept {
 		words.fill(0);
 		words[WORD(word_count, 0)] = value;
 		return *this;
 	}
 
-	BigUInt & operator += (limb_t addend) {
+	BigUInt & operator += (limb_t addend) noexcept {
 		limbs += addend;
 		return *this;
 	}
 
-	BigUInt & operator += (const BigUInt &addend) {
+	BigUInt & operator += (const BigUInt &addend) noexcept {
 		limbs += addend.limbs;
 		return *this;
 	}
 
-	BigUInt & operator -= (limb_t subtrahend) {
+	BigUInt & operator -= (limb_t subtrahend) noexcept {
 		limbs -= subtrahend;
 		return *this;
 	}
 
-	BigUInt & operator -= (const BigUInt &subtrahend) {
+	BigUInt & operator -= (const BigUInt &subtrahend) noexcept {
 		limbs -= subtrahend.limbs;
 		return *this;
 	}
 
-	BigUInt & operator <<= (unsigned shift) {
+	BigUInt & operator <<= (unsigned shift) noexcept {
 		words <<= shift;
 		return *this;
 	}
 
-	BigUInt & operator >>= (unsigned shift) {
+	BigUInt & operator >>= (unsigned shift) noexcept {
 		words >>= shift;
 		return *this;
 	}
 
-	BigUInt & operator &= (const BigUInt &operand) {
+	BigUInt & operator &= (const BigUInt &operand) noexcept {
 		words &= operand.words;
 		return *this;
 	}
 
-	BigUInt & operator |= (const BigUInt &operand) {
+	BigUInt & operator |= (const BigUInt &operand) noexcept {
 		words |= operand.words;
 		return *this;
 	}
 
-	BigUInt & operator ^= (const BigUInt &operand) {
+	BigUInt & operator ^= (const BigUInt &operand) noexcept {
 		words ^= operand.words;
 		return *this;
 	}
 
-	bool operator == (const BigUInt &rhs) const _pure { return __cmp(words, rhs.words) == 0; }
-	bool operator != (const BigUInt &rhs) const _pure { return __cmp(words, rhs.words) != 0; }
-	bool operator < (const BigUInt &rhs) const _pure { return __cmp(words, rhs.words) < 0; }
-	bool operator <= (const BigUInt &rhs) const _pure { return __cmp(words, rhs.words) <= 0; }
-	bool operator > (const BigUInt &rhs) const _pure { return __cmp(words, rhs.words) > 0; }
-	bool operator >= (const BigUInt &rhs) const _pure { return __cmp(words, rhs.words) >= 0; }
+	bool _pure operator == (const BigUInt &rhs) const noexcept { return __cmp(words, rhs.words) == 0; }
+	bool _pure operator != (const BigUInt &rhs) const noexcept { return __cmp(words, rhs.words) != 0; }
+	bool _pure operator < (const BigUInt &rhs) const noexcept { return __cmp(words, rhs.words) < 0; }
+	bool _pure operator <= (const BigUInt &rhs) const noexcept { return __cmp(words, rhs.words) <= 0; }
+	bool _pure operator > (const BigUInt &rhs) const noexcept { return __cmp(words, rhs.words) > 0; }
+	bool _pure operator >= (const BigUInt &rhs) const noexcept { return __cmp(words, rhs.words) >= 0; }
 
-	size_t clz() const _pure {
+	size_t _pure clz() const noexcept {
 		return __clz(words);
 	}
 
-	size_t ctz() const _pure {
+	size_t _pure ctz() const noexcept {
 		return __ctz(words);
 	}
 
-	size_t popcount() const _pure {
+	size_t _pure popcount() const noexcept {
 		return __popcount(words);
 	}
 
-	size_t parity() const _pure {
+	size_t _pure parity() const noexcept {
 		return __parity(words);
 	}
 
-	BigUInt & bswap() {
+	BigUInt & bswap() noexcept {
 		__bswap(words);
 		return *this;
 	}
 
 };
 
-template <size_t B> static inline BigUInt<B> _pure bswap(BigUInt<B> v) { return v.bswap(); }
+template <size_t B> static inline BigUInt<B> _pure bswap(BigUInt<B> v) noexcept { return v.bswap(); }
 
 typedef BigUInt<128> uint128_t;
 typedef BigUInt<256> uint256_t;

@@ -13,7 +13,7 @@ protected:
 	uint32_t key_schedule[sched_size];
 
 protected:
-	AESBase() { }
+	AESBase() = default;
 
 };
 
@@ -27,10 +27,10 @@ class AESEncrypterBase : public AESBase<Key_Size> {
 	friend AESDecrypterBase<Key_Size>;
 
 protected:
-	AESEncrypterBase() { }
+	AESEncrypterBase() = default;
 
 public:
-	size_t process(uint8_t (&out)[16], const uint8_t in[], size_t n);
+	size_t process(uint8_t (&out)[16], const uint8_t in[], size_t n) noexcept;
 
 };
 
@@ -39,10 +39,10 @@ template <size_t Key_Size>
 class AESDecrypterBase : public AESBase<Key_Size> {
 
 protected:
-	AESDecrypterBase(const AESEncrypterBase<Key_Size> &encrypter);
+	explicit AESDecrypterBase(const AESEncrypterBase<Key_Size> &encrypter) noexcept;
 
 public:
-	size_t process(uint8_t (&out)[16], const uint8_t in[], size_t n);
+	size_t process(uint8_t (&out)[16], const uint8_t in[], size_t n) noexcept;
 
 };
 
@@ -50,7 +50,7 @@ public:
 class AES128Encrypter : public AESEncrypterBase<16> {
 
 public:
-	explicit AES128Encrypter(const uint8_t (&key)[16]);
+	explicit AES128Encrypter(const uint8_t (&key)[16]) noexcept;
 
 };
 
@@ -58,8 +58,8 @@ public:
 class AES128Decrypter : public AESDecrypterBase<16> {
 
 public:
-	explicit AES128Decrypter(const uint8_t (&key)[16]) : AESDecrypterBase<16>(AES128Encrypter(key)) { }
-	explicit AES128Decrypter(const AES128Encrypter &encrypter) : AESDecrypterBase<16>(encrypter) { }
+	explicit AES128Decrypter(const uint8_t (&key)[16]) noexcept : AESDecrypterBase<16>(AES128Encrypter(key)) { }
+	explicit AES128Decrypter(const AES128Encrypter &encrypter) noexcept : AESDecrypterBase<16>(encrypter) { }
 
 };
 
@@ -67,7 +67,7 @@ public:
 class AES192Encrypter : public AESEncrypterBase<24> {
 
 public:
-	explicit AES192Encrypter(const uint8_t (&key)[24]);
+	explicit AES192Encrypter(const uint8_t (&key)[24]) noexcept;
 
 };
 
@@ -75,8 +75,8 @@ public:
 class AES192Decrypter : public AESDecrypterBase<24> {
 
 public:
-	explicit AES192Decrypter(const uint8_t (&key)[24]) : AESDecrypterBase<24>(AES192Encrypter(key)) { }
-	explicit AES192Decrypter(const AES192Encrypter &encrypter) : AESDecrypterBase<24>(encrypter) { }
+	explicit AES192Decrypter(const uint8_t (&key)[24]) noexcept : AESDecrypterBase<24>(AES192Encrypter(key)) { }
+	explicit AES192Decrypter(const AES192Encrypter &encrypter) noexcept : AESDecrypterBase<24>(encrypter) { }
 
 };
 
@@ -84,7 +84,7 @@ public:
 class AES256Encrypter : public AESEncrypterBase<32> {
 
 public:
-	explicit AES256Encrypter(const uint8_t (&key)[32]);
+	explicit AES256Encrypter(const uint8_t (&key)[32]) noexcept;
 
 };
 
@@ -92,7 +92,7 @@ public:
 class AES256Decrypter : public AESDecrypterBase<32> {
 
 public:
-	explicit AES256Decrypter(const uint8_t (&key)[32]) : AESDecrypterBase<32>(AES256Encrypter(key)) { }
-	explicit AES256Decrypter(const AES256Encrypter &encrypter) : AESDecrypterBase<32>(encrypter) { }
+	explicit AES256Decrypter(const uint8_t (&key)[32]) noexcept : AESDecrypterBase<32>(AES256Encrypter(key)) { }
+	explicit AES256Decrypter(const AES256Encrypter &encrypter) noexcept : AESDecrypterBase<32>(encrypter) { }
 
 };

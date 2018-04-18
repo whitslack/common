@@ -3,7 +3,7 @@
 #include "endian.h"
 
 
-static size_t varint_size(uint8_t first_byte) {
+static size_t varint_size(uint8_t first_byte) noexcept {
 	unsigned i = static_cast<uint8_t>(~first_byte);
 	if (i == 0) {
 		return 9;

@@ -40,7 +40,7 @@ static std::enable_if_t<std::is_unsigned<I>::value && std::is_unsigned<J>::value
 
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I> _const saturate(J value) {
+static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I> _const saturate(J value) noexcept {
 	if (value < std::numeric_limits<I>::min()) {
 		return std::numeric_limits<I>::min();
 	}
@@ -51,7 +51,7 @@ static std::enable_if_t<std::is_signed<I>::value && std::is_signed<J>::value, I>
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, I> _const saturate(J value) {
+static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, I> _const saturate(J value) noexcept {
 	if (value > static_cast<std::make_unsigned_t<I>>(std::numeric_limits<I>::max())) {
 		return std::numeric_limits<I>::max();
 	}
@@ -59,7 +59,7 @@ static std::enable_if_t<std::is_signed<I>::value && std::is_unsigned<J>::value, 
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, I> _const saturate(J value) {
+static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, I> _const saturate(J value) noexcept {
 	if (value < 0) {
 		return 0;
 	}
@@ -70,7 +70,7 @@ static std::enable_if_t<std::is_unsigned<I>::value && std::is_signed<J>::value, 
 }
 
 template <typename I, typename J>
-static std::enable_if_t<std::is_unsigned<I>::value && std::is_unsigned<J>::value, I> _const saturate(J value) {
+static std::enable_if_t<std::is_unsigned<I>::value && std::is_unsigned<J>::value, I> _const saturate(J value) noexcept {
 	if (value > std::numeric_limits<I>::max()) {
 		return std::numeric_limits<I>::max();
 	}
