@@ -5,6 +5,7 @@
 #include "compiler.h"
 #include "endian.h"
 #include "hmac.h"
+#include "memory.h"
 #include "pbkdf2.h"
 #include "sha.h"
 
@@ -59,7 +60,8 @@ static void scrypt_block_mix(void * _restrict out, const void * _restrict in, si
 
 static void scrypt_ro_mix(void * _restrict out, const void * _restrict in, size_t r, size_t n) {
 	auto outb = reinterpret_cast<uint8_t *>(out);
-	auto v = static_cast<uint8_t (*)[r * 128]>(std::malloc(n * r * 128));
+	auto buffer = make_buffer(n * r * 128);
+	auto v = reinterpret_cast<uint8_t (*)[r * 128]>(buffer.get());
 	std::memcpy(v[0], in, sizeof v[0]);
 	for (size_t i = 1; i < n; ++i) {
 		scrypt_block_mix(v[i], v[i - 1], r);
@@ -73,11 +75,11 @@ static void scrypt_ro_mix(void * _restrict out, const void * _restrict in, size_
 		}
 		scrypt_block_mix(outb, t, r);
 	}
-	std::free(v);
 }
 
 void scrypt(void *out, size_t out_len, const void *pass, size_t pass_len, const void *salt, size_t salt_len, size_t r, size_t n, size_t p) {
-	auto b0 = static_cast<uint8_t *>(std::malloc(2 * p * r * 128)), b1 = b0 + p * r * 128;
+	auto buffer = make_buffer(2 * p * r * 128);
+	auto b0 = buffer.get(), b1 = b0 + p * r * 128;
 	pbkdf2(&prf<HMAC<SHA256>>, 32, pass, pass_len, salt, salt_len, 1, b0, p * r * 128);
 	size_t c;
 	if (p > 1 && (c = std::thread::hardware_concurrency()) > 1) {
@@ -103,5 +105,4 @@ void scrypt(void *out, size_t out_len, const void *pass, size_t pass_len, const 
 		}
 	}
 	pbkdf2(&prf<HMAC<SHA256>>, 32, pass, pass_len, b1, p * r * 128, 1, out, out_len);
-	std::free(b0);
 }
