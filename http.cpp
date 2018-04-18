@@ -1,10 +1,10 @@
 #include "http.h"
 
 #include <iomanip>
+#include <regex>
 #include <sstream>
 
 #include "memory.h"
-#include "regex.h"
 
 #define BITS(l, o) (((size_t(1) << (l)) - 1) << (o))
 
@@ -406,102 +406,224 @@ static int _pure str_to_offset(const char str[]) noexcept {
 			return digits_to_int(str + 1, str + 3) * 3600 + digits_to_int(str + 3, str + 5) * 60;
 		case '-':
 			return digits_to_int(str + 1, str + 3) * -3600 + digits_to_int(str + 3, str + 5) * -60;
+		case 'A':
+			if (str[1] == '\0') { // A (Alpha)
+				return 1 * 3600;
+			}
+			break;
+		case 'B':
+			if (str[1] == '\0') { // B (Bravo)
+				return 2 * 3600;
+			}
+			break;
 		case 'C':
 			switch (str[1]) {
+				case '\0': // C (Charlie)
+					return 3 * 3600;
 				case 'D': // CD
 					if (str[2] == 'T') { // CDT
-						return 5 * -3600;
+						return -5 * 3600;
 					}
 					break;
 				case 'S': // CS
 					if (str[2] == 'T') { // CST
-						return 6 * -3600;
+						return -6 * 3600;
 					}
 					break;
+			}
+			break;
+		case 'D':
+			if (str[1] == '\0') { // D (Delta)
+				return 4 * 3600;
 			}
 			break;
 		case 'E':
 			switch (str[1]) {
+				case '\0': // E (Echo)
+					return 5 * 3600;
 				case 'D': // ED
 					if (str[2] == 'T') { // EDT
-						return 4 * -3600;
+						return -4 * 3600;
 					}
 					break;
 				case 'S': // ES
 					if (str[2] == 'T') { // EST
-						return 5 * -3600;
+						return -5 * 3600;
 					}
 					break;
+			}
+			break;
+		case 'F':
+			if (str[1] == '\0') { // F (Foxtrot)
+				return 6 * 3600;
+			}
+			break;
+		case 'G':
+			if (str[1] == '\0') { // G (Golf)
+				return 7 * 3600;
+			}
+			break;
+		case 'H':
+			if (str[1] == '\0') { // H (Hotel)
+				return 8 * 3600;
+			}
+			break;
+		case 'I':
+			if (str[1] == '\0') { // I (India)
+				return 9 * 3600;
+			}
+			break;
+		case 'K':
+			if (str[1] == '\0') { // K (Kilo)
+				return 10 * 3600;
+			}
+			break;
+		case 'L':
+			if (str[1] == '\0') { // L (Lima)
+				return 11 * 3600;
 			}
 			break;
 		case 'M':
 			switch (str[1]) {
+				case '\0': // M (Mike)
+					return 12 * 3600;
 				case 'D': // MD
 					if (str[2] == 'T') { // MDT
-						return 6 * -3600;
+						return -6 * 3600;
 					}
 					break;
 				case 'S': // MS
 					if (str[2] == 'T') { // MST
-						return 7 * -3600;
+						return -7 * 3600;
 					}
 					break;
+			}
+			break;
+		case 'N':
+			if (str[1] == '\0') { // N (November)
+				return -1 * 3600;
+			}
+			break;
+		case 'O':
+			if (str[1] == '\0') { // O (Oscar)
+				return -2 * 3600;
 			}
 			break;
 		case 'P':
 			switch (str[1]) {
+				case '\0': // P (Papa)
+					return -3 * 3600;
 				case 'D': // PD
 					if (str[2] == 'T') { // PDT
-						return 7 * -3600;
+						return -7 * 3600;
 					}
 					break;
 				case 'S': // PS
 					if (str[2] == 'T') { // PST
-						return 8 * -3600;
+						return -8 * 3600;
 					}
 					break;
 			}
 			break;
+		case 'Q':
+			if (str[1] == '\0') { // Q (Quebec)
+				return -4 * 3600;
+			}
+			break;
+		case 'R':
+			if (str[1] == '\0') { // R (Romeo)
+				return -5 * 3600;
+			}
+			break;
+		case 'S':
+			if (str[1] == '\0') { // S (Sierra)
+				return -6 * 3600;
+			}
+			break;
+		case 'T':
+			if (str[1] == '\0') { // T (Tango)
+				return -7 * 3600;
+			}
+			break;
+		case 'U':
+			switch (str[1]) {
+				case '\0': // U (Uniform)
+					return -8 * 3600;
+				case 'T': // UT
+					switch (str[2]) {
+						case '\0': // UT
+						case 'C': // UTC
+							return 0;
+					}
+					break;
+			}
+			break;
+		case 'V':
+			if (str[1] == '\0') { // V (Victor)
+				return -9 * 3600;
+			}
+			break;
+		case 'W':
+			if (str[1] == '\0') { // W (Whiskey)
+				return -10 * 3600;
+			}
+			break;
+		case 'X':
+			if (str[1] == '\0') { // X (X-ray)
+				return -11 * 3600;
+			}
+			break;
+		case 'Y':
+			if (str[1] == '\0') { // Y (Yankee)
+				return -12 * 3600;
+			}
+			break;
+		case 'Z':
+			if (str[1] == '\0') { // Z (Zulu)
+				return 0;
+			}
+			break;
 	}
-	return 0;
+	return INT_MIN;
 }
 
-std::time_t rfc2822_date(const char str[]) {
-#define _DIGIT_ "[0-9]"
-#define _FWS_ "(([ \t]*\r\n)?[ \t]+)"
-#define _date_time_ "(" _day_of_week_ ",)?" _FWS_ "?" _date_ _FWS_ _time_
+std::time_t rfc2822_date(std::string_view sv) {
+#define _FWS_ "(?:(?:[ \t]*\r\n)?[ \t]+)"
+#define _date_time_ "(?:" _day_of_week_ ",)?" _FWS_ "?" _date_ _FWS_ _time_
 #define _day_of_week_ "(Mon|Tue|Wed|Thu|Fri|Sat|Sun)"
-#define _date_ "(" _FWS_ "?" _day_ _FWS_ _month_ _FWS_ _year_ ")"
-#define _year_ "(" _DIGIT_ "{2,}" ")"
+#define _date_ "(?:" _FWS_ "?" _day_ _FWS_ _month_ _FWS_ _year_ ")"
+#define _year_ "(" "[0-9]{2,}" ")"
 #define _month_ "(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)"
-#define _day_ "(" _DIGIT_ "{1,2}" ")"
-#define _time_ "(" _time_of_day_ _FWS_ _zone_ ")"
-#define _time_of_day_ "(" _hour_ ":" _minute_ "(:" _second_ ")?" ")"
-#define _hour_ "(" _DIGIT_ "{2}" ")"
-#define _minute_ "(" _DIGIT_ "{2}" ")"
-#define _second_ "(" _DIGIT_ "{2}" ")"
-#define _zone_ "(" "[-+]" _DIGIT_ "{4}" "|UTC?|GMT|[ECMP][SD]T|[A-IK-Za-ik-z])"
-	static const Regex regex("^" _date_time_);
-	regmatch_t matches[26];
-	struct std::tm tm;
-	if (!regex.exec(str, std::size(matches), matches) ||
-			(tm.tm_wday = str_to_wday(str + matches[2].rm_so)) < 0 ||
-			(tm.tm_mon = str_to_month(str + matches[11].rm_so)) < 0) {
+#define _day_ "(" "0?[1-9]|[12][1-9]|3[01]" ")"
+#define _time_ "(?:" _time_of_day_ _FWS_ _zone_ ")"
+#define _time_of_day_ "(?:" _hour_ ":" _minute_ "(?:" ":" _second_ ")?" ")"
+#define _hour_ "(" "[01][0-9]|2[0-3]" ")"
+#define _minute_ "(" "[0-5][0-9]" ")"
+#define _second_ "(" "[0-5][0-9]|60" ")"
+#define _zone_ "(" "[-+][0-9]{4}" "|UTC?|GMT|[ECMP][SD]T|[A-IK-Za-ik-z])"
+	static const std::regex regex(_date_time_, std::regex::ECMAScript | std::regex::optimize);
+	std::cmatch matches;
+	struct std::tm tm { };
+	int offset;
+	if (!std::regex_match(sv.begin(), sv.end(), matches, regex) ||
+			matches[1].matched && (tm.tm_wday = str_to_wday(matches[1].first)) < 0 ||
+			(tm.tm_mon = str_to_month(matches[3].first)) < 0 ||
+			(offset = str_to_offset(matches[8].first)) == INT_MIN) {
 		throw std::ios_base::failure("invalid RFC2822 date");
 	}
-	tm.tm_mday = digits_to_int(str + matches[8].rm_so, str + matches[8].rm_eo);
-	tm.tm_year = digits_to_int(str + matches[14].rm_so, str + matches[14].rm_eo);
+	tm.tm_mday = digits_to_int(matches[2].first, matches[2].second);
+	tm.tm_year = digits_to_int(matches[4].first, matches[4].second);
 	if (tm.tm_year >= 1000) {
 		tm.tm_year -= 1900;
 	}
 	else if (tm.tm_year < 50) {
 		tm.tm_year += 100;
 	}
-	tm.tm_hour = digits_to_int(str + matches[19].rm_so, str + matches[19].rm_eo);
-	tm.tm_min = digits_to_int(str + matches[20].rm_so, str + matches[20].rm_eo);
-	tm.tm_sec = digits_to_int(str + matches[22].rm_so, str + matches[22].rm_eo);
+	tm.tm_hour = digits_to_int(matches[5].first, matches[5].second);
+	tm.tm_min = digits_to_int(matches[6].first, matches[6].second);
+	tm.tm_sec = digits_to_int(matches[7].first, matches[7].second);
 	tm.tm_isdst = -1;
-	return ::timegm(&tm) - str_to_offset(str + matches[25].rm_so);
+	return ::timegm(&tm) - offset;
 }
 
 

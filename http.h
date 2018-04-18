@@ -2,6 +2,7 @@
 
 #include <ctime>
 #include <map>
+#include <string_view>
 
 #include "ci.h"
 #include "io.h"
@@ -58,7 +59,7 @@ std::ostream & operator << (std::ostream &os, const HttpResponseHeaders &headers
 
 
 std::string rfc2822_date(const struct std::tm &tm);
-std::time_t rfc2822_date(const char str[]);
+std::time_t rfc2822_date(std::string_view sv);
 
 
 class ChunkedSource : public Source {
