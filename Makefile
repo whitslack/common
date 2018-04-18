@@ -20,7 +20,7 @@ LIB_SUFFIX := .so
 
 OS := $(shell uname -s)
 CFLAGS += -std=gnu11 -ffunction-sections -fdata-sections
-CXXFLAGS += -std=gnu++14 -ffunction-sections -fdata-sections
+CXXFLAGS += -std=gnu++17 -ffunction-sections -fdata-sections
 ifeq ($(OS),Darwin)
 LDFLAGS += -Wl,-dead_strip
 else

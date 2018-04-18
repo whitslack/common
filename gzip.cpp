@@ -5,7 +5,7 @@
 #include "narrow.h"
 
 using z_avail_t = decltype(z_stream::avail_in);
-static_assert(std::is_same<decltype(z_stream::avail_out), z_avail_t>::value, "");
+static_assert(std::is_same_v<decltype(z_stream::avail_out), z_avail_t>, "");
 
 
 GZipSource::GZipSource(Source &source) : source(source) {

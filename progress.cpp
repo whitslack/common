@@ -13,7 +13,7 @@ static int get_cols() {
 }
 
 template <typename T>
-static std::enable_if_t<std::is_unsigned<T>::value, std::ostream &> format_size(std::ostream &os, T size) {
+static std::enable_if_t<std::is_unsigned_v<T>, std::ostream &> format_size(std::ostream &os, T size) {
 	if (size < uint_least64_t(1000)) {
 		os << size << " B";
 	}

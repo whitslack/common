@@ -14,7 +14,7 @@ bool HexDumpEncoder::process(uint8_t * _restrict &out, size_t n_out, const uint8
 				if (n_in == 0) {
 					return true;
 				}
-				// fall through
+				_fallthrough;
 			case 1: case 2: case 3: case 4: case 5: case 6: case 7:
 				if (n_out == 0) {
 					return false;

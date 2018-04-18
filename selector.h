@@ -49,7 +49,7 @@ DEFINE_ENUM_FLAG_OPS(Selector::Flags)
 class Selectable {
 
 public:
-	static void _noreturn pump(Selector &selector);
+	_noreturn static void pump(Selector &selector);
 
 public:
 	virtual ~Selectable() = default;

@@ -12,51 +12,51 @@ namespace json {
 static std::ostream & format_string(std::ostream &os, const std::string &str);
 
 
-Object & _noreturn Value::as_object() {
+_noreturn Object & Value::as_object() {
 	throw std::invalid_argument("expected object");
 }
 
-const Object & _noreturn Value::as_object() const {
+_noreturn const Object & Value::as_object() const {
 	throw std::invalid_argument("expected object");
 }
 
-Array & _noreturn Value::as_array() {
+_noreturn Array & Value::as_array() {
 	throw std::invalid_argument("expected array");
 }
 
-const Array & _noreturn Value::as_array() const {
+_noreturn const Array & Value::as_array() const {
 	throw std::invalid_argument("expected array");
 }
 
-Number & _noreturn Value::as_number() {
+_noreturn Number & Value::as_number() {
 	throw std::invalid_argument("expected number");
 }
 
-const Number & _noreturn Value::as_number() const {
+_noreturn const Number & Value::as_number() const {
 	throw std::invalid_argument("expected number");
 }
 
-Integer & _noreturn Value::as_integer() {
+_noreturn Integer & Value::as_integer() {
 	throw std::invalid_argument("expected integer");
 }
 
-const Integer & _noreturn Value::as_integer() const {
+_noreturn const Integer & Value::as_integer() const {
 	throw std::invalid_argument("expected integer");
 }
 
-String & _noreturn Value::as_string() {
+_noreturn String & Value::as_string() {
 	throw std::invalid_argument("expected string");
 }
 
-const String & _noreturn Value::as_string() const {
+_noreturn const String & Value::as_string() const {
 	throw std::invalid_argument("expected string");
 }
 
-Boolean & _noreturn Value::as_boolean() {
+_noreturn Boolean & Value::as_boolean() {
 	throw std::invalid_argument("expected boolean");
 }
 
-const Boolean & _noreturn Value::as_boolean() const {
+_noreturn const Boolean & Value::as_boolean() const {
 	throw std::invalid_argument("expected boolean");
 }
 

@@ -4,7 +4,7 @@
 #include <type_traits>
 
 #define DEFINE_ENUM_FLAG_OPS(E) \
-	static_assert(std::is_enum<E>::value, "must be an enum type"); \
+	static_assert(std::is_enum_v<E>, "must be an enum type"); \
 	static constexpr E operator ~ (E arg) noexcept { return static_cast<E>(~static_cast<std::underlying_type_t<E>>(arg)); } \
 	static constexpr E operator & (E lhs, E rhs) noexcept { return static_cast<E>(static_cast<std::underlying_type_t<E>>(lhs) & static_cast<std::underlying_type_t<E>>(rhs)); } \
 	static constexpr E operator | (E lhs, E rhs) noexcept { return static_cast<E>(static_cast<std::underlying_type_t<E>>(lhs) | static_cast<std::underlying_type_t<E>>(rhs)); } \

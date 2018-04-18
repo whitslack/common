@@ -124,7 +124,7 @@ static inline std::array<LIMB_T, L> _pure operator - (const std::array<LIMB_T, L
 }
 
 template <typename WORD_T, size_t W>
-static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shln(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) noexcept {
+static inline std::enable_if_t<std::is_unsigned_v<WORD_T>, void> __shln(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) noexcept {
 	unsigned offset = static_cast<unsigned>(shift / (sizeof(WORD_T) * 8));
 	if ((shift %= static_cast<unsigned>(sizeof(WORD_T) * 8)) == 0) {
 		for (size_t i = W - offset; i-- > 0;) {
@@ -158,7 +158,7 @@ static inline std::array<WORD_T, W> _pure operator << (const std::array<WORD_T, 
 }
 
 template <typename WORD_T, size_t W>
-static inline std::enable_if_t<std::is_unsigned<WORD_T>::value, void> __shrn(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) noexcept {
+static inline std::enable_if_t<std::is_unsigned_v<WORD_T>, void> __shrn(std::array<WORD_T, W> &result, const std::array<WORD_T, W> &operand, unsigned shift) noexcept {
 	unsigned offset = static_cast<unsigned>(shift / (sizeof(WORD_T) * 8));
 	if ((shift %= static_cast<unsigned>(sizeof(WORD_T) * 8)) == 0) {
 		for (size_t i = 0; i < W - offset; ++i) {

@@ -28,7 +28,7 @@ private:
 	std::priority_queue<Work, std::vector<Work>, std::greater<Work>> queue;
 
 public:
-	void run() _noreturn;
+	_noreturn void run();
 
 	template <typename T>
 	void call_at(time_point_t deadline, T &&task) {

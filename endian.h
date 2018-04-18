@@ -15,7 +15,7 @@
 
 template <typename T>
 class be {
-	static_assert(has_bswap<T>::value, "type parameter must be a byte-swappable type");
+	static_assert(has_bswap_v<T>, "type parameter must be a byte-swappable type");
 
 private:
 	T value_be;
@@ -38,7 +38,7 @@ public:
 
 template <typename T>
 class le {
-	static_assert(has_bswap<T>::value, "type parameter must be a byte-swappable type");
+	static_assert(has_bswap_v<T>, "type parameter must be a byte-swappable type");
 
 private:
 	T value_le;

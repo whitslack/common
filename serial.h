@@ -23,22 +23,22 @@ template <> struct _varint_ops<8> {
 };
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral<T>::value && std::is_signed<T>::value, Source &> read_varint(Source &source, T &value) {
+static inline std::enable_if_t<std::is_integral_v<T> && std::is_signed_v<T>, Source &> read_varint(Source &source, T &value) {
 	return _varint_ops<sizeof(T)>::read_signed(source, reinterpret_cast<typename _varint_ops<sizeof(T)>::signed_type &>(value));
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral<T>::value && std::is_signed<T>::value, Sink &> write_varint(Sink &sink, T value) {
+static inline std::enable_if_t<std::is_integral_v<T> && std::is_signed_v<T>, Sink &> write_varint(Sink &sink, T value) {
 	return _varint_ops<sizeof(T)>::write_signed(sink, value);
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value, Source &> read_varint(Source &source, T &value) {
+static inline std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, Source &> read_varint(Source &source, T &value) {
 	return _varint_ops<sizeof(T)>::read_unsigned(source, reinterpret_cast<typename _varint_ops<sizeof(T)>::unsigned_type &>(value));
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral<T>::value && std::is_unsigned<T>::value, Sink &> write_varint(Sink &sink, T value) {
+static inline std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, Sink &> write_varint(Sink &sink, T value) {
 	return _varint_ops<sizeof(T)>::write_unsigned(sink, value);
 }
 
@@ -48,12 +48,12 @@ struct _varint {
 };
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral<T>::value, _varint<T &>> varint(T &x) {
+static inline std::enable_if_t<std::is_integral_v<T>, _varint<T &>> varint(T &x) {
 	return { x };
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral<T>::value, _varint<const T>> varint(const T &x) {
+static inline std::enable_if_t<std::is_integral_v<T>, _varint<const T>> varint(const T &x) {
 	return { x };
 }
 
@@ -85,47 +85,47 @@ static inline T read_varint(Source &source) {
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable<T>::value, Source> & operator >> (Source &source, T &value) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, T &value) {
 	source.read_fully(&value, sizeof value);
 	return source;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable<T>::value, Sink> & operator << (Sink &sink, const T &value) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const T &value) {
 	sink.write_fully(&value, sizeof value);
 	return sink;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable<T>::value, Source> & operator >> (Source &source, std::basic_string<T> &string) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::basic_string<T> &string) {
 	string.resize(read_varint<size_t>(source));
 	source.read_fully(&string.front(), string.size() * sizeof(T));
 	return source;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable<T>::value, Sink> & operator << (Sink &sink, const std::basic_string<T> &string) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const std::basic_string<T> &string) {
 	write_varint(sink, string.size());
 	sink.write_fully(string.data(), string.size() * sizeof(T));
 	return sink;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable<T>::value, Source> & operator >> (Source &source, std::vector<T> &vector) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::vector<T> &vector) {
 	vector.resize(read_varint<size_t>(source));
 	source.read_fully(vector.data(), vector.size() * sizeof(T));
 	return source;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable<T>::value, Sink> & operator << (Sink &sink, const std::vector<T> &vector) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const std::vector<T> &vector) {
 	write_varint(sink, vector.size());
 	sink.write_fully(vector.data(), vector.size() * sizeof(T));
 	return sink;
 }
 
 template <typename T, size_t N>
-static inline std::enable_if_t<!std::is_trivially_copyable<T>::value, Source> & operator >> (Source &source, std::array<T, N> &array) {
+static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::array<T, N> &array) {
 	for (auto &element : array) {
 		source >> element;
 	}
@@ -133,7 +133,7 @@ static inline std::enable_if_t<!std::is_trivially_copyable<T>::value, Source> & 
 }
 
 template <typename T, size_t N>
-static inline std::enable_if_t<!std::is_trivially_copyable<T>::value, Sink> & operator << (Sink &sink, const std::array<T, N> &array) {
+static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const std::array<T, N> &array) {
 	for (auto &element : array) {
 		sink << element;
 	}
@@ -141,7 +141,7 @@ static inline std::enable_if_t<!std::is_trivially_copyable<T>::value, Sink> & op
 }
 
 template <typename T>
-static inline std::enable_if_t<!std::is_trivially_copyable<T>::value, Source> & operator >> (Source &source, std::vector<T> &vector) {
+static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::vector<T> &vector) {
 	vector.resize(read_varint<size_t>(source));
 	for (auto &element : vector) {
 		source >> element;
@@ -150,7 +150,7 @@ static inline std::enable_if_t<!std::is_trivially_copyable<T>::value, Source> & 
 }
 
 template <typename T>
-static inline std::enable_if_t<!std::is_trivially_copyable<T>::value, Sink> & operator << (Sink &sink, const std::vector<T> &vector) {
+static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const std::vector<T> &vector) {
 	write_varint(sink, vector.size());
 	for (auto &element : vector) {
 		sink << element;
