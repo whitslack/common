@@ -1,6 +1,6 @@
+#include <optional>
 #include <stdexcept>
 #include <vector>
-#include <experimental/optional>
 
 #include "compiler.h"
 #include "narrow.h"
@@ -160,7 +160,7 @@ protected:
 
 
 template <typename Arg>
-class Option<std::experimental::optional<Arg>> : public AbstractOption, public WithArgument<std::experimental::optional<Arg>> {
+class Option<std::optional<Arg>> : public AbstractOption, public WithArgument<std::optional<Arg>> {
 
 public:
 	using AbstractOption::AbstractOption;
