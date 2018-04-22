@@ -1,5 +1,7 @@
 #pragma once
 
+#include <string_view>
+
 #include "compiler.h"
 #include "io.h"
 
@@ -99,7 +101,7 @@ Sink & transcode(Sink &sink, const void *in, size_t n_in, Args&&... args) {
 }
 
 template <typename Codec, size_t OBufSize = 512, typename... Args>
-static inline Sink & transcode(Sink &sink, const std::string &in, Args&&... args) {
+static inline Sink & transcode(Sink &sink, std::string_view in, Args&&... args) {
 	return ::transcode<Codec, Args...>(sink, in.data(), in.size(), std::forward<Args>(args)...);
 }
 
@@ -158,7 +160,7 @@ size_t transcode(void * _restrict out, size_t n_out, const void *in, size_t n_in
 }
 
 template <typename Codec, typename... Args>
-static inline size_t transcode(void * _restrict out, size_t n_out, const std::string &in, Args&&... args) {
+static inline size_t transcode(void * _restrict out, size_t n_out, std::string_view in, Args&&... args) {
 	return ::transcode<Codec, Args...>(out, n_out, in.data(), in.size(), std::forward<Args>(args)...);
 }
 
@@ -185,7 +187,7 @@ std::string & transcode(std::string &out, const void *in, size_t n_in, Args&&...
 }
 
 template <typename Codec, typename... Args>
-static inline std::string & transcode(std::string &out, const std::string &in, Args&&... args) {
+static inline std::string & transcode(std::string &out, std::string_view in, Args&&... args) {
 	return ::transcode<Codec, Args...>(out, in.data(), in.size(), std::forward<Args>(args)...);
 }
 
@@ -197,7 +199,7 @@ static inline std::string transcode(const void *in, size_t n_in) {
 }
 
 template <typename Codec, size_t OBufSize = 512>
-static inline std::string transcode(const std::string &in) {
+static inline std::string transcode(std::string_view in) {
 	std::string ret;
 	::transcode<Codec, OBufSize>(ret, in.data(), in.size());
 	return ret;

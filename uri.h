@@ -14,9 +14,7 @@ private:
 	std::string_view path, query, fragment;
 
 public:
-	explicit URI(const char uri[]) : uri(uri) { this->parse(); }
-	explicit URI(const std::string &uri) : uri(uri) { this->parse(); }
-	explicit URI(std::string &&uri) : uri(std::move(uri)) { this->parse(); }
+	explicit URI(std::string uri) : uri(std::move(uri)) { this->parse(); }
 
 	bool _pure is_opaque() const noexcept { return !authority.data(); }
 
@@ -29,7 +27,7 @@ public:
 	std::string_view _pure get_query() const noexcept { return query; }
 	std::string_view _pure get_fragment() const noexcept { return fragment; }
 
-	const std::string & _pure to_string() const noexcept { return uri; }
+	_pure operator std::string_view () const noexcept { return uri; }
 
 private:
 	void parse();

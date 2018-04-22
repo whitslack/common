@@ -1,5 +1,6 @@
 #include <optional>
 #include <stdexcept>
+#include <string_view>
 #include <vector>
 
 #include "compiler.h"
@@ -122,7 +123,7 @@ class OptionException : public std::runtime_error {
 public:
 	using std::runtime_error::runtime_error;
 
-	OptionException(const std::string &msg, const AbstractOption &opt);
+	OptionException(std::string_view msg, const AbstractOption &opt);
 
 };
 

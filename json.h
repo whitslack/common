@@ -69,12 +69,12 @@ public:
 	const Value * find(const std::string &key) const _pure;
 	const Value & get(const std::string &key) const _pure;
 
-	std::pair<map_t::iterator, bool> insert(const std::string &key, std::nullptr_t) {
-		return map.emplace(key, nullptr);
+	std::pair<map_t::iterator, bool> insert(std::string key, std::nullptr_t) {
+		return map.emplace(std::move(key), nullptr);
 	}
 	template <typename V>
-	std::pair<map_t::iterator, bool> insert(const std::string &key, V &&value) {
-		return map.emplace(key, std::make_unique<V>(std::forward<V>(value)));
+	std::pair<map_t::iterator, bool> insert(std::string key, V &&value) {
+		return map.emplace(std::move(key), std::make_unique<V>(std::forward<V>(value)));
 	}
 
 	Object & as_object() override final _const;
@@ -174,8 +174,7 @@ private:
 
 public:
 	String() = default;
-	String(const std::string &string) : string(string) { }
-	String(std::string &&string) noexcept : string(std::move(string)) { }
+	String(std::string string) noexcept : string(std::move(string)) { }
 
 	_pure operator std::string * () noexcept { return &string; }
 	_pure operator const std::string * () const noexcept { return &string; }

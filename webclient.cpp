@@ -101,7 +101,7 @@ HttpConnection::HttpConnection(Socket &&socket) noexcept : HttpConnectionBase(bu
 
 constexpr const char *HttpsConnection::protocol_name;
 
-HttpsConnection::HttpsConnection(Socket &&socket, const std::string &host, const char ca_file[]) : HttpConnectionBase(tls, tls), tls(host, std::move(socket)) {
+HttpsConnection::HttpsConnection(Socket &&socket, std::string host, const char ca_file[]) : HttpConnectionBase(tls, tls), tls(std::move(host), std::move(socket)) {
 	tls.set_priority_direct("NORMAL");
 	auto cred = std::make_shared<TLSCertificateCredentials>();
 	if (ca_file) {

@@ -173,7 +173,7 @@ static std::ostream & write_header_fields(std::ostream &os, const HttpHeaders &h
 }
 
 
-HttpHeaders::const_iterator HttpHeaders::find_token(const std::string &field_name, const std::string &token) const {
+HttpHeaders::const_iterator HttpHeaders::find_token(const std::string &field_name, std::string_view token) const {
 	auto range = this->equal_range(field_name);
 	for (auto field_itr = range.first; field_itr != range.second; ++field_itr) {
 		auto value_itr = field_itr->second.begin(), value_end = field_itr->second.end();

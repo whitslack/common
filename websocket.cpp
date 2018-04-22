@@ -3,6 +3,7 @@
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
+#include <string_view>
 
 #include "base64.h"
 #include "codec.h"
@@ -212,7 +213,7 @@ bool WebSocket::send(Opcode opcode, const void *buf, size_t n, bool more) {
 }
 
 
-static std::string make_accept_field_value(const std::string &key) {
+static std::string make_accept_field_value(std::string_view key) {
 	SHA1 sha1;
 	sha1.write_fully(key.data(), key.size());
 	sha1.write_fully("258EAFA5-E914-47DA-95CA-C5AB0DC85B11", 36);

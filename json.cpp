@@ -6,10 +6,12 @@
 #include <limits>
 #include <sstream>
 #include <stdexcept>
+#include <string_view>
+
 
 namespace json {
 
-static std::ostream & format_string(std::ostream &os, const std::string &str);
+static std::ostream & format_string(std::ostream &os, std::string_view str);
 
 
 _noreturn Object & Value::as_object() {
@@ -161,7 +163,7 @@ std::ostream & String::format(std::ostream &os) const {
 	return format_string(os, string);
 }
 
-static std::ostream & format_string(std::ostream &os, const std::string &str) {
+static std::ostream & format_string(std::ostream &os, std::string_view str) {
 	static const char HEX[] = "0123456789ABCDEF";
 	os.put('"');
 	for (char c : str) {

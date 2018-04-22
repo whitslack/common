@@ -1,4 +1,5 @@
 #include <cstring>
+#include <string_view>
 
 #include "compiler.h"
 
@@ -19,51 +20,27 @@ static int _pure compare_ci(Itr1 itr1, Itr1 end1, Itr2 itr2, Itr2 end2) {
 }
 
 template <typename Itr1>
-static inline int _pure compare_ci(Itr1 itr1, Itr1 end1, const char str2[]) {
-	return compare_ci(itr1, end1, str2, str2 + std::strlen(str2));
-}
-
-template <typename Itr1>
-static inline int _pure compare_ci(Itr1 itr1, Itr1 end1, const std::string &str2) {
+static inline int _pure compare_ci(Itr1 itr1, Itr1 end1, std::string_view str2) {
 	return compare_ci(itr1, end1, str2.begin(), str2.end());
 }
 
 template <typename Itr2>
-static inline int _pure compare_ci(const char str1[], Itr2 itr2, Itr2 end2) {
-	return compare_ci(str1, str1 + std::strlen(str1), itr2, end2);
-}
-
-template <typename Itr2>
-static inline int _pure compare_ci(const std::string &str1, Itr2 itr2, Itr2 end2) {
+static inline int _pure compare_ci(std::string_view str1, Itr2 itr2, Itr2 end2) {
 	return compare_ci(str1.begin(), str1.end(), itr2, end2);
 }
 
-static inline int _pure compare_ci(const char str1[], const char str2[]) {
-	return compare_ci(str1, str1 + std::strlen(str1), str2, str2 + std::strlen(str2));
-}
-
-static inline int _pure compare_ci(const char str1[], const std::string &str2) {
-	return compare_ci(str1, str1 + std::strlen(str1), str2.begin(), str2.end());
-}
-
-static inline int _pure compare_ci(const std::string &str1, const char str2[]) {
-	return compare_ci(str1.begin(), str1.end(), str2, str2 + std::strlen(str2));
-}
-
-static inline int _pure compare_ci(const std::string &str1, const std::string &str2) {
+static inline int _pure compare_ci(std::string_view str1, std::string_view str2) noexcept {
 	return compare_ci(str1.begin(), str1.end(), str2.begin(), str2.end());
 }
 
 struct less_ci {
-	template <typename Str1, typename Str2>
-	bool _pure operator () (Str1 &&str1, Str2 &&str2) const {
-		return compare_ci(std::forward<Str1>(str1), std::forward<Str2>(str2)) < 0;
+	bool _pure operator () (std::string_view str1, std::string_view str2) const noexcept {
+		return compare_ci(str1, str2) < 0;
 	}
 };
 
 struct greater_ci {
-	template <typename Str1, typename Str2>
-	bool _pure operator () (Str1 &&str1, Str2 &&str2) const {
-		return compare_ci(std::forward<Str1>(str1), std::forward<Str2>(str2)) > 0;
+	bool _pure operator () (std::string_view str1, std::string_view str2) const noexcept {
+		return compare_ci(str1, str2) > 0;
 	}
 };

@@ -1,4 +1,5 @@
 #include <memory>
+#include <string_view>
 #include <system_error>
 #include <vector>
 
@@ -239,7 +240,7 @@ public:
 	void set_credentials(const std::shared_ptr<TLSAnonClientCredentials> &credentials);
 */
 	std::string get_server_name();
-	void set_server_name(const char server_name[], size_t len);
+	void set_server_name(std::string_view server_name);
 	Buffer get_session_data();
 	void set_session_data(const void *session_data, size_t session_data_size);
 	unsigned int verify_peers(const char hostname[] = nullptr);

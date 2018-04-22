@@ -83,7 +83,7 @@ void URI::parse() {
 }
 
 std::ostream & operator << (std::ostream &os, const URI &uri) {
-	return os << uri.to_string();
+	return os << static_cast<std::string_view>(uri);
 }
 
 

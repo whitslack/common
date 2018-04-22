@@ -68,7 +68,7 @@ private:
 	TLSSocket tls;
 
 public:
-	HttpsConnection(Socket &&socket, const std::string &host, const char ca_file[] = nullptr);
+	HttpsConnection(Socket &&socket, std::string host, const char ca_file[] = nullptr);
 
 };
 

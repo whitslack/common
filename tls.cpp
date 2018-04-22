@@ -250,9 +250,9 @@ std::string TLSSession::get_server_name() {
 	return server_name;
 }
 
-void TLSSession::set_server_name(const char server_name[], size_t len) {
+void TLSSession::set_server_name(std::string_view server_name) {
 	int error;
-	if ((error = ::gnutls_server_name_set(session, GNUTLS_NAME_DNS, server_name, len)) != GNUTLS_E_SUCCESS) {
+	if ((error = ::gnutls_server_name_set(session, GNUTLS_NAME_DNS, server_name.data(), server_name.size())) != GNUTLS_E_SUCCESS) {
 		throw TLSError(error, "gnutls_server_name_set");
 	}
 }
@@ -411,7 +411,9 @@ int TLSSession::verify(gnutls_session_t session) noexcept {
 
 TLSSocket::TLSSocket(std::string host_name, Socket &&socket)
 		: host_name(std::move(host_name)), socket(std::move(socket)) {
-	this->set_server_name(this->host_name.c_str(), this->host_name.size());
+	if (!this->host_name.empty()) {
+		this->set_server_name(this->host_name);
+	}
 }
 
 ssize_t TLSSocket::pull(void *buf, size_t n) {

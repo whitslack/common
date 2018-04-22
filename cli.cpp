@@ -6,7 +6,7 @@
 namespace cli {
 
 
-static std::string make_what(const std::string &msg, const AbstractOption &opt) {
+static std::string make_what(std::string_view msg, const AbstractOption &opt) {
 	std::string what;
 	if (opt.long_form) {
 		what.reserve(std::strlen(opt.long_form) + 4 + msg.size());
@@ -21,7 +21,7 @@ static std::string make_what(const std::string &msg, const AbstractOption &opt) 
 	return what;
 }
 
-OptionException::OptionException(const std::string &msg, const AbstractOption &opt) : runtime_error(make_what(msg, opt)) {
+OptionException::OptionException(std::string_view msg, const AbstractOption &opt) : runtime_error(make_what(msg, opt)) {
 }
 
 int parse(int argc, char *argv[], AbstractOption * const opts[], size_t n_opts) {

@@ -19,7 +19,7 @@ extern const char
 class HttpHeaders : public std::multimap<std::string, std::string, less_ci> {
 
 public:
-	const_iterator find_token(const std::string &field_name, const std::string &token) const _pure;
+	const_iterator find_token(const std::string &field_name, std::string_view token) const _pure;
 
 };
 
@@ -33,7 +33,7 @@ public:
 
 public:
 	HttpRequestHeaders() = default;
-	HttpRequestHeaders(const std::string &method, const std::string &request_uri, const std::string &protocol_version) : method(method), request_uri(request_uri), protocol_version(protocol_version) { }
+	HttpRequestHeaders(std::string method, std::string request_uri, std::string protocol_version) : method(std::move(method)), request_uri(std::move(request_uri)), protocol_version(std::move(protocol_version)) { }
 
 };
 
@@ -50,7 +50,7 @@ public:
 
 public:
 	HttpResponseHeaders() = default;
-	HttpResponseHeaders(const std::string &protocol_version, unsigned status_code, const std::string &reason_phrase) : protocol_version(protocol_version), status_code(status_code), reason_phrase(reason_phrase) { }
+	HttpResponseHeaders(std::string protocol_version, unsigned status_code, std::string reason_phrase) : protocol_version(std::move(protocol_version)), status_code(status_code), reason_phrase(std::move(reason_phrase)) { }
 
 };
 
