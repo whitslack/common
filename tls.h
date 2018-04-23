@@ -233,11 +233,11 @@ private:
 public:
 	void set_priority(const TLSPriority &priority);
 	void set_priority_direct(const char priorities[], const char **err_pos = nullptr);
-	void set_credentials(const std::shared_ptr<TLSCertificateCredentials> &credentials);
+	void set_credentials(std::shared_ptr<TLSCertificateCredentials> credentials);
 /*
-	void set_credentials(const std::shared_ptr<TLSSRPClientCredentials> &credentials);
-	void set_credentials(const std::shared_ptr<TLSPSKClientCredentials> &credentials);
-	void set_credentials(const std::shared_ptr<TLSAnonClientCredentials> &credentials);
+	void set_credentials(std::shared_ptr<TLSSRPClientCredentials> credentials);
+	void set_credentials(std::shared_ptr<TLSPSKClientCredentials> credentials);
+	void set_credentials(std::shared_ptr<TLSAnonClientCredentials> credentials);
 */
 	std::string get_server_name();
 	void set_server_name(std::string_view server_name);

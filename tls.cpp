@@ -198,37 +198,37 @@ void TLSSession::set_priority_direct(const char priorities[], const char **err_p
 	}
 }
 
-void TLSSession::set_credentials(const std::shared_ptr<TLSCertificateCredentials> &credentials) {
+void TLSSession::set_credentials(std::shared_ptr<TLSCertificateCredentials> credentials) {
 	int error;
 	if ((error = ::gnutls_credentials_set(session, GNUTLS_CRD_CERTIFICATE, *credentials)) != GNUTLS_E_SUCCESS) {
 		throw TLSError(error, "gnutls_credentials_set");
 	}
-	this->credentials = credentials;
+	this->credentials = std::move(credentials);
 }
 
 /*
-void TLSSession::set_credentials(const std::shared_ptr<TLSSRPClientCredentials> &credentials) {
+void TLSSession::set_credentials(std::shared_ptr<TLSSRPClientCredentials> credentials) {
 	int error;
 	if ((error = ::gnutls_credentials_set(session, GNUTLS_CRD_SRP, *credentials)) != GNUTLS_E_SUCCESS) {
 		throw TLSError(error, "gnutls_credentials_set");
 	}
-	this->credentials = credentials;
+	this->credentials = std::move(credentials);
 }
 
-void TLSSession::set_credentials(const std::shared_ptr<TLSPSKClientCredentials> &credentials) {
+void TLSSession::set_credentials(std::shared_ptr<TLSPSKClientCredentials> credentials) {
 	int error;
 	if ((error = ::gnutls_credentials_set(session, GNUTLS_CRD_PSK, *credentials)) != GNUTLS_E_SUCCESS) {
 		throw TLSError(error, "gnutls_credentials_set");
 	}
-	this->credentials = credentials;
+	this->credentials = std::move(credentials);
 }
 
-void TLSSession::set_credentials(const std::shared_ptr<TLSAnonClientCredentials> &credentials) {
+void TLSSession::set_credentials(std::shared_ptr<TLSAnonClientCredentials> credentials) {
 	int error;
 	if ((error = ::gnutls_credentials_set(session, GNUTLS_CRD_ANON, *credentials)) != GNUTLS_E_SUCCESS) {
 		throw TLSError(error, "gnutls_credentials_set");
 	}
-	this->credentials = credentials;
+	this->credentials = std::move(credentials);
 }
 */
 
