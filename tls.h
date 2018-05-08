@@ -49,7 +49,6 @@ private:
 
 public:
 	std::vector<unsigned int> certificate_type_list();
-	std::vector<unsigned int> compression_list();
 	std::vector<unsigned int> ecc_curve_list();
 	std::vector<unsigned int> protocol_list();
 	std::vector<unsigned int> sign_list();

@@ -43,15 +43,6 @@ std::vector<unsigned int> TLSPriority::certificate_type_list() {
 	return std::vector<unsigned int>(list, list + ret);
 }
 
-std::vector<unsigned int> TLSPriority::compression_list() {
-	int ret;
-	const unsigned int *list;
-	if ((ret = ::gnutls_priority_compression_list(pcache, &list)) < 0) {
-		throw TLSError(ret, "gnutls_priority_compression_list");
-	}
-	return std::vector<unsigned int>(list, list + ret);
-}
-
 std::vector<unsigned int> TLSPriority::ecc_curve_list() {
 	int ret;
 	const unsigned int *list;
