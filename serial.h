@@ -219,11 +219,10 @@ static inline Sink & operator << (Sink &sink, const std::tuple<Types...> &tuple)
 }
 
 template <typename T>
-static inline std::vector<uint8_t> serialize(const T &value) {
-	std::vector<uint8_t> buffer;
-	VectorSink vs(buffer);
-	vs << value;
-	return buffer;
+static inline Buffer serialize(const T &value) {
+	BufferSink sink;
+	sink << value;
+	return sink;
 }
 
 template <typename T>

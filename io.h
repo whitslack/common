@@ -5,6 +5,7 @@
 #include <streambuf>
 #include <vector>
 
+#include "buffer.h"
 #include "compiler.h"
 
 
@@ -59,48 +60,6 @@ public:
 };
 
 
-template <typename Itr, typename E = typename std::iterator_traits<Itr>::value_type>
-class IteratorSource : public Source {
-
-public:
-	Itr itr;
-
-public:
-	explicit IteratorSource(Itr itr) : itr(itr) { }
-
-public:
-	_nodiscard ssize_t read(void *buf, size_t n) override {
-		auto out_ptr = static_cast<E *>(buf), out_eptr = out_ptr + n / sizeof(E);
-		while (out_ptr < out_eptr) {
-			*out_ptr++ = *itr++;
-		}
-		return reinterpret_cast<uint8_t *>(out_ptr) - static_cast<uint8_t *>(buf);
-	}
-
-};
-
-
-template <typename Itr, typename E = typename std::iterator_traits<Itr>::value_type>
-class IteratorSink : public Sink {
-
-public:
-	Itr itr;
-
-public:
-	explicit IteratorSink(Itr itr) : itr(itr) { }
-
-public:
-	_nodiscard size_t write(const void *buf, size_t n) override {
-		auto in_ptr = static_cast<const E *>(buf), in_eptr = in_ptr + n / sizeof(E);
-		while (in_ptr < in_eptr) {
-			*itr++ = *in_ptr++;
-		}
-		return reinterpret_cast<const uint8_t *>(in_ptr) - static_cast<const uint8_t *>(buf);
-	}
-
-};
-
-
 class LimitedSource : public Source {
 
 public:
@@ -137,66 +96,92 @@ public:
 };
 
 
-class MemorySource : public LimitedSource {
+class MemorySource : public BasicStaticBuffer<const uint8_t>, public Source {
+
+public:
+	MemorySource(const void *buf, size_t n) noexcept : BasicStaticBuffer<const uint8_t>(static_cast<const uint8_t *>(buf), static_cast<const uint8_t *>(buf), static_cast<const uint8_t *>(buf) + n, static_cast<const uint8_t *>(buf) + n) { }
+
+public:
+	_nodiscard ssize_t read(void *buf, size_t n) override;
+	size_t _pure avail() override { return this->grem(); }
+
+};
+
+
+class MemorySink : public StaticBuffer, public Sink {
+
+public:
+	MemorySink(void *buf, size_t n) noexcept : StaticBuffer(static_cast<uint8_t *>(buf), n) { }
+
+public:
+	_nodiscard size_t write(const void *buf, size_t n) override;
+
+};
+
+
+class BufferSource : public Source {
 
 private:
-	IteratorSource<const uint8_t *> source;
+	StaticBuffer &buffer;
 
 public:
-	MemorySource(const void *buf, size_t n) noexcept : LimitedSource(source, n), source(static_cast<const uint8_t *>(buf)) { }
-	MemorySource(const MemorySource &copy) noexcept : LimitedSource(source, copy.remaining), source(copy.source) { }
-	MemorySource(MemorySource &&move) noexcept : LimitedSource(source, move.remaining), source(std::move(move.source)) { }
+	explicit BufferSource(StaticBuffer &buffer) noexcept : buffer(buffer) { }
 
 public:
-	const void * data() const { return source.itr; }
+	_nodiscard ssize_t read(void *buf, size_t n) override;
+	size_t _pure avail() override { return buffer.grem(); }
 
 };
 
 
-class MemorySink : public LimitedSink {
+class StaticBufferSink : public Sink {
 
 private:
-	IteratorSink<uint8_t *> sink;
+	StaticBuffer &buffer;
 
 public:
-	MemorySink(void *buf, size_t n) noexcept : LimitedSink(sink, n), sink(static_cast<uint8_t *>(buf)) { }
-	MemorySink(const MemorySink &copy) noexcept : LimitedSink(sink, copy.remaining), sink(copy.sink) { }
-	MemorySink(MemorySink &&move) noexcept : LimitedSink(sink, move.remaining), sink(std::move(move.sink)) { }
+	explicit StaticBufferSink(StaticBuffer &buffer) noexcept : buffer(buffer) { }
 
 public:
-	void * data() const { return sink.itr; }
+	_nodiscard size_t write(const void *buf, size_t n) override;
 
 };
 
 
-template <typename C, typename E = typename C::value_type>
-class ContainerSource : public LimitedSource {
+class BufferSink : public Buffer, public Sink {
+
+public:
+	BufferSink() noexcept = default;
+	explicit BufferSink(size_t initial_size) : Buffer(initial_size) { }
+	explicit BufferSink(Buffer &&move) : Buffer(std::move(move)) { }
+
+public:
+	_nodiscard size_t write(const void *buf, size_t n) override;
+
+};
+
+
+class StringSource : public MemorySource {
+
+public:
+	template <typename CharT, typename Traits>
+	explicit StringSource(std::basic_string_view<CharT, Traits> sv) noexcept : MemorySource(sv.data(), sv.size() * sizeof(CharT)) { }
+
+};
+
+
+class StringSink : public Sink {
 
 private:
-	IteratorSource<typename C::const_iterator, E> source;
+	std::string &string;
 
 public:
-	explicit ContainerSource(const C &c) : LimitedSource(source, c.size()), source(c.begin()) { }
-	ContainerSource(const ContainerSource &copy) : LimitedSource(source, copy.remaining), source(copy.source) { }
-	ContainerSource(ContainerSource &&move) : LimitedSource(source, move.remaining), source(std::move(move.source)) { }
-
-};
-
-
-template <typename C, typename E = typename C::value_type>
-class ContainerSink : public IteratorSink<std::back_insert_iterator<C>, E> {
+	explicit StringSink(std::string &string) noexcept : string(string) { }
 
 public:
-	explicit ContainerSink(C &c) : IteratorSink<std::back_insert_iterator<C>, E>(std::back_inserter(c)) { }
+	_nodiscard size_t write(const void *buf, size_t n) override;
 
 };
-
-
-typedef ContainerSource<std::string> StringSource;
-typedef ContainerSink<std::string> StringSink;
-
-typedef ContainerSource<std::vector<uint8_t>> VectorSource;
-typedef ContainerSink<std::vector<uint8_t>> VectorSink;
 
 
 class BufferedSourceBase : public Source {

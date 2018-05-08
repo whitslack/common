@@ -146,6 +146,64 @@ size_t LimitedSink::write(const void *buf, size_t n) {
 }
 
 
+ssize_t MemorySource::read(void *buf, size_t n) {
+	size_t grem = this->grem();
+	if (n > grem) {
+		if (grem == 0) {
+			return -1;
+		}
+		n = grem;
+	}
+	std::memcpy(buf, gptr, n), gptr += n;
+	return n;
+}
+
+
+size_t MemorySink::write(const void *buf, size_t n) {
+	size_t prem = this->prem();
+	if (n > prem) {
+		n = prem;
+	}
+	std::memcpy(pptr, buf, n), pptr += n;
+	return n;
+}
+
+
+ssize_t BufferSource::read(void *buf, size_t n) {
+	size_t grem = buffer.grem();
+	if (n > grem) {
+		if (grem == 0) {
+			return -1;
+		}
+		n = grem;
+	}
+	std::memcpy(buf, buffer.gptr, n), buffer.gptr += n;
+	return n;
+}
+
+
+size_t StaticBufferSink::write(const void *buf, size_t n) {
+	size_t prem = buffer.prem();
+	if (n > prem) {
+		n = prem;
+	}
+	std::memcpy(buffer.pptr, buf, n), buffer.pptr += n;
+	return n;
+}
+
+
+size_t BufferSink::write(const void *buf, size_t n) {
+	this->append(buf, n);
+	return n;
+}
+
+
+size_t StringSink::write(const void *buf, size_t n) {
+	string.append(static_cast<const char *>(buf), n);
+	return n;
+}
+
+
 ssize_t BufferedSourceBase::read(void *buf, size_t n) {
 	if (n == 0) {
 		return 0;

@@ -7,35 +7,44 @@
 
 #include "compiler.h"
 
+
 template <typename T>
-struct BasicBuffer {
-	T *base, *gptr, *pptr, *end;
-	BasicBuffer() noexcept : base(), gptr(), pptr(), end() { }
-	BasicBuffer(T *base, T *gptr, T *pptr, T *end) noexcept : base(base), gptr(gptr), pptr(pptr), end(end) { }
-	BasicBuffer(T *base, T *end) noexcept : BasicBuffer(base, base, base, end) { }
-	BasicBuffer(T *base, size_t size) noexcept : BasicBuffer(base, base + size) { }
-	explicit BasicBuffer(size_t size) : BasicBuffer(static_cast<T *>(size == 0 ? nullptr : sizeof(T) == 1 ? std::malloc(size) : reallocarray(nullptr, size, sizeof(T))), size) { if (!base && size) throw std::bad_alloc(); }
-	BasicBuffer(BasicBuffer &&move) noexcept : base(move.base), gptr(move.gptr), pptr(move.pptr), end(move.end) { move.end = move.pptr = move.gptr = move.base = nullptr; }
+struct BasicStaticBuffer {
+	T *bptr, *gptr, *pptr, *eptr;
+	constexpr BasicStaticBuffer() noexcept : bptr(), gptr(), pptr(), eptr() { }
+	constexpr BasicStaticBuffer(T *bptr, T *gptr, T *pptr, T *eptr) noexcept : bptr(bptr), gptr(gptr), pptr(pptr), eptr(eptr) { }
+	constexpr BasicStaticBuffer(T *bptr, T *eptr) noexcept : BasicStaticBuffer(bptr, bptr, bptr, eptr) { }
+	constexpr BasicStaticBuffer(T *bptr, size_t size) noexcept : BasicStaticBuffer(bptr, bptr + size) { }
+	constexpr size_t _pure gpos() const noexcept { return gptr - bptr; }
+	constexpr void gpos(size_t gpos) noexcept { gptr = bptr + gpos; }
+	constexpr size_t _pure ppos() const noexcept { return pptr - bptr; }
+	constexpr void ppos(size_t ppos) noexcept { pptr = bptr + ppos; }
+	constexpr size_t _pure grem() const noexcept { return pptr - gptr; }
+	constexpr size_t _pure prem() const noexcept { return eptr - pptr; }
+	constexpr size_t _pure size() const noexcept { return eptr - bptr; }
+	constexpr void clear() noexcept { pptr = gptr = bptr; }
+	void compact() noexcept { if (size_t gpos = this->gpos()) std::memmove(bptr, gptr, this->grem() * sizeof(T)), pptr -= gpos, gptr = bptr; }
+};
+
+using StaticBuffer = BasicStaticBuffer<uint8_t>;
+
+
+template <typename T>
+struct BasicBuffer : BasicStaticBuffer<T> {
+	BasicBuffer() noexcept = default;
+	explicit BasicBuffer(size_t size) : BasicStaticBuffer<T>(static_cast<T *>(size == 0 ? nullptr : sizeof(T) == 1 ? std::malloc(size) : reallocarray(nullptr, size, sizeof(T))), size) { if (!this->bptr && size) throw std::bad_alloc(); }
+	BasicBuffer(BasicBuffer &&move) noexcept : BasicStaticBuffer<T>(std::move(move)) { move.eptr = move.pptr = move.gptr = move.bptr = nullptr; }
 	BasicBuffer & operator = (BasicBuffer &&move) noexcept { return this->swap(move), *this; }
-	~BasicBuffer() noexcept { std::free(base); }
-	void swap(BasicBuffer &other) noexcept { using std::swap; swap(base, other.base), swap(gptr, other.gptr), swap(pptr, other.pptr), swap(end, other.end); }
+	~BasicBuffer() noexcept { std::free(this->bptr); }
+	void swap(BasicBuffer &other) noexcept { using std::swap; swap(this->bptr, other.bptr), swap(this->gptr, other.gptr), swap(this->pptr, other.pptr), swap(this->eptr, other.eptr); }
 	friend void swap(BasicBuffer &lhs, BasicBuffer &rhs) noexcept { lhs.swap(rhs); }
-	size_t _pure gpos() const noexcept { return gptr - base; }
-	void gpos(size_t gpos) noexcept { gptr = base + gpos; }
-	size_t _pure ppos() const noexcept { return pptr - base; }
-	void ppos(size_t ppos) noexcept { pptr = base + ppos; }
-	size_t _pure grem() const noexcept { return pptr - gptr; }
-	size_t _pure prem() const noexcept { return end - pptr; }
-	size_t _pure size() const noexcept { return end - base; }
-	void clear() noexcept { pptr = gptr = base; }
-	void compact() noexcept { if (size_t gpos = this->gpos()) std::memmove(base, gptr, this->grem() * sizeof(T)), pptr -= gpos, gptr = base; }
 	void resize(size_t size) {
-		T *new_base = static_cast<T *>(sizeof(T) == 1 ? std::realloc(base, size) : reallocarray(base, size, sizeof(T)));
-		if (!new_base && size) {
+		T *new_bptr = static_cast<T *>(sizeof(T) == 1 ? std::realloc(this->bptr, size) : reallocarray(this->bptr, size, sizeof(T)));
+		if (!new_bptr && size) {
 			throw std::bad_alloc();
 		}
 		size_t gpos = this->gpos(), ppos = this->ppos();
-		end = (base = new_base) + size;
+		this->eptr = (this->bptr = new_bptr) + size;
 		this->gpos(gpos), this->ppos(ppos);
 	}
 	void ensure(size_t min_size) {
@@ -43,11 +52,14 @@ struct BasicBuffer {
 			this->resize(size_t(1) << SIZE_WIDTH - _clz(min_size - 1));
 		}
 	}
-	void append(const void *data, size_t n) {
-		if (pptr + n > end) {
+	void append(const T data[], size_t n) {
+		if (this->pptr + n > this->eptr) {
 			this->resize(size_t(1) << SIZE_WIDTH - _clz(this->ppos() + n));
 		}
-		std::memcpy(pptr, data, n), pptr += n;
+		std::memcpy(this->pptr, data, n * sizeof(T)), this->pptr += n;
+	}
+	std::enable_if_t<sizeof(T) == 1, void> append(const void *data, size_t n) {
+		return this->append(static_cast<const T *>(data), n);
 	}
 private:
 	BasicBuffer(const BasicBuffer &) = delete;
