@@ -12,6 +12,8 @@
 #include "memory.h"
 #include "sha.h"
 
+using namespace ci::literals;
+
 
 static void memxor32(void *buf, size_t n, uint32_t mask, size_t phase) {
 #ifdef __GNUC__
@@ -235,13 +237,13 @@ bool WebSocketServerHandshake::ready() {
 				this->send_error(error_pair.first, error_pair.second);
 				throw std::ios_base::failure(error_pair.second);
 			}
-			auto host_itr = request_headers.find("Host");
-			auto upgrade_itr = request_headers.find("Upgrade");
+			auto host_itr = request_headers.find("Host"_ci);
+			auto upgrade_itr = request_headers.find("Upgrade"_ci);
 			auto connection_itr = request_headers.find_token("Connection", "Upgrade");
-			auto key_itr = request_headers.find("Sec-WebSocket-Key");
-			auto version_itr = request_headers.find("Sec-WebSocket-Version");
+			auto key_itr = request_headers.find("Sec-WebSocket-Key"_ci);
+			auto version_itr = request_headers.find("Sec-WebSocket-Version"_ci);
 			auto end_itr = request_headers.end();
-			if (host_itr != end_itr && upgrade_itr != end_itr && connection_itr != end_itr && key_itr != end_itr && version_itr != end_itr && compare_ci(upgrade_itr->second, "websocket") == 0 && key_itr->second.size() == 24) {
+			if (host_itr != end_itr && upgrade_itr != end_itr && connection_itr != end_itr && key_itr != end_itr && version_itr != end_itr && upgrade_itr->second == "websocket"_ci && key_itr->second.size() == 24) {
 				if (version_itr->second != "13") {
 					HttpResponseHeaders response_headers("HTTP/1.1", 426, HTTP_REASON_PHRASE_426);
 					response_headers.emplace_hint(response_headers.end(), "Connection", "close");
@@ -349,11 +351,11 @@ bool WebSocketClientHandshake::ready() {
 				throw std::ios_base::failure(response_headers.reason_phrase);
 			}
 			this->validate_response_headers(response_headers);
-			auto upgrade_itr = response_headers.find("Upgrade");
+			auto upgrade_itr = response_headers.find("Upgrade"_ci);
 			auto connection_itr = response_headers.find_token("Connection", "Upgrade");
-			auto accept_itr = response_headers.find("Sec-WebSocket-Accept");
+			auto accept_itr = response_headers.find("Sec-WebSocket-Accept"_ci);
 			auto end_itr = response_headers.end();
-			if (upgrade_itr != end_itr && connection_itr != end_itr && accept_itr != end_itr && compare_ci(upgrade_itr->second, "websocket") == 0 && accept_itr->second.size() == 28 && accept_itr->second == make_accept_field_value(key)) {
+			if (upgrade_itr != end_itr && connection_itr != end_itr && accept_itr != end_itr && upgrade_itr->second == "websocket"_ci && accept_itr->second.size() == 28 && accept_itr->second == make_accept_field_value(key)) {
 				this->connected(response_headers);
 				return false;
 			}

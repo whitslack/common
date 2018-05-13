@@ -16,10 +16,10 @@ extern const char
 		HTTP_REASON_PHRASE_500[], HTTP_REASON_PHRASE_501[], HTTP_REASON_PHRASE_502[], HTTP_REASON_PHRASE_503[], HTTP_REASON_PHRASE_504[], HTTP_REASON_PHRASE_505[], HTTP_REASON_PHRASE_511[];
 
 
-class HttpHeaders : public std::multimap<std::string, std::string, less_ci> {
+class HttpHeaders : public std::multimap<std::string, std::string, ci::less> {
 
 public:
-	const_iterator find_token(const std::string &field_name, std::string_view token) const _pure;
+	const_iterator find_token(std::string_view field_name, std::string_view token) const _pure;
 
 };
 

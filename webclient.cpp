@@ -4,6 +4,7 @@
 
 #include "dns.h"
 
+using namespace ci::literals;
 
 static bool skip_crlf(std::istream &is) {
 	if (is.peek() == '\r') {
@@ -28,7 +29,7 @@ void HttpConnectionBase::request(HttpRequestHeaders &request_headers) {
 	std::ostream os(&sb);
 	os.exceptions(std::ios_base::badbit | std::ios_base::failbit);
 	os << request_headers << std::flush;
-	write_sink = request_headers.find("Content-Length") == request_headers.end() ? &chunked_sink : &sink;
+	write_sink = request_headers.find("Content-Length"_ci) == request_headers.end() ? &chunked_sink : &sink;
 	response_headers_read = false;
 }
 
@@ -44,7 +45,7 @@ const HttpResponseHeaders & HttpConnectionBase::get_response_headers() {
 			read_source = &chunked_source;
 		}
 		else {
-			auto content_length_itr = response_headers.find("Content-Length");
+			auto content_length_itr = response_headers.find("Content-Length"_ci);
 			if (content_length_itr == response_headers.end()) {
 				read_source = &source;
 			}
