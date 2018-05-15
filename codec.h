@@ -102,7 +102,7 @@ Sink & transcode(Sink &sink, const void *in, size_t n_in, Args&&... args) {
 
 template <typename Codec, size_t OBufSize = 512, typename... Args>
 static inline Sink & transcode(Sink &sink, std::string_view in, Args&&... args) {
-	return ::transcode<Codec, Args...>(sink, in.data(), in.size(), std::forward<Args>(args)...);
+	return ::transcode<Codec, OBufSize, Args...>(sink, in.data(), in.size(), std::forward<Args>(args)...);
 }
 
 template <typename Codec, size_t IBufSize = 512, typename... Args>
