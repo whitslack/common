@@ -18,14 +18,14 @@ class GAIResults {
 	friend GAIResults getaddrinfo(const char [], const char [], int, int, int, int);
 
 public:
-	class Iterator : public std::iterator<std::forward_iterator_tag, addrinfo, void> {
+	class Iterator : public std::iterator<std::forward_iterator_tag, struct addrinfo, void> {
 		friend class GAIResults;
 	private:
-		addrinfo *ptr;
+		struct addrinfo *ptr;
 	public:
 		Iterator() noexcept : ptr() { }
-		_pure operator addrinfo * () const noexcept { return ptr; }
-		addrinfo * _pure operator -> () const noexcept { return ptr; }
+		_pure operator struct addrinfo * () const noexcept { return ptr; }
+		struct addrinfo * _pure operator -> () const noexcept { return ptr; }
 		Iterator & operator ++ () noexcept {
 			ptr = ptr->ai_next;
 			return *this;
@@ -36,11 +36,11 @@ public:
 			return copy;
 		}
 	private:
-		explicit Iterator(addrinfo *ptr) noexcept : ptr(ptr) { }
+		explicit Iterator(struct addrinfo *ptr) noexcept : ptr(ptr) { }
 	};
 
 private:
-	addrinfo *res;
+	struct addrinfo *res;
 
 public:
 	GAIResults(GAIResults &&move) noexcept : res(move.res) { move.res = nullptr; }
@@ -50,13 +50,14 @@ public:
 	Iterator _const end() const noexcept { return Iterator(); }
 
 private:
-	explicit GAIResults(addrinfo *res) noexcept : res(res) { }
+	explicit GAIResults(struct addrinfo *res) noexcept : res(res) { }
 	GAIResults(const GAIResults &) = delete;
 	GAIResults & operator = (const GAIResults &) = delete;
 
 };
 
 GAIResults getaddrinfo(const char host[], const char service[] = nullptr, int family = AF_UNSPEC, int type = SOCK_STREAM, int protocol = 0, int flags = AI_V4MAPPED | AI_ADDRCONFIG);
+GAIResults getaddrinfo(const char host_and_service[], in_port_t default_port, int family = AF_UNSPEC, int type = SOCK_STREAM, int protocol = 0, int flags = AI_V4MAPPED | AI_ADDRCONFIG);
 
 
 std::ostream & operator << (std::ostream &os, const struct sockaddr &addr);
