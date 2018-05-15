@@ -459,8 +459,14 @@ static int _pure str_to_offset(const char str[]) noexcept {
 			}
 			break;
 		case 'G':
-			if (str[1] == '\0') { // G (Golf)
-				return 7 * 3600;
+			switch (str[1]) {
+				case '\0': // G (Golf)
+					return 7 * 3600;
+				case 'M': // GM
+					if (str[2] == 'T') { // GMT
+						return 0;
+					}
+					break;
 			}
 			break;
 		case 'H':
@@ -589,7 +595,7 @@ static int _pure str_to_offset(const char str[]) noexcept {
 
 std::time_t rfc2822_date(std::string_view sv) {
 #define _FWS_ "(?:(?:[ \t]*\r\n)?[ \t]+)"
-#define _date_time_ "(?:" _day_of_week_ ",)?" _FWS_ "?" _date_ _FWS_ _time_
+#define _date_time_ "(?:" _day_of_week_ ",)?" _date_ _FWS_ _time_
 #define _day_of_week_ "(Mon|Tue|Wed|Thu|Fri|Sat|Sun)"
 #define _date_ "(?:" _FWS_ "?" _day_ _FWS_ _month_ _FWS_ _year_ ")"
 #define _year_ "(" "[0-9]{2,}" ")"
