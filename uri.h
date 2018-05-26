@@ -1,4 +1,3 @@
-#include <iosfwd>
 #include <string>
 #include <string_view>
 
@@ -8,30 +7,28 @@
 class URI {
 
 private:
-	std::string uri;
-	std::string_view scheme;
-	std::string_view authority, userinfo, host, port;
-	std::string_view path, query, fragment;
+	std::string uri_;
+	std::string_view scheme_, authority_, userinfo_, host_, port_, path_, query_, fragment_;
 
 public:
-	explicit URI(std::string uri) : uri(std::move(uri)) { this->parse(); }
+	explicit URI(std::string uri) : uri_(std::move(uri)) { this->parse(); }
 
-	bool _pure is_opaque() const noexcept { return !authority.data(); }
+	_pure operator const std::string & () const noexcept { return uri_; }
 
-	std::string_view _pure get_scheme() const noexcept { return scheme; }
-	std::string_view _pure get_authority() const noexcept { return authority; }
-	std::string_view _pure get_userinfo() const noexcept { return userinfo; }
-	std::string_view _pure get_host() const noexcept { return host; }
-	std::string_view _pure get_port() const noexcept { return port; }
-	std::string_view _pure get_path() const noexcept { return path; }
-	std::string_view _pure get_query() const noexcept { return query; }
-	std::string_view _pure get_fragment() const noexcept { return fragment; }
+	bool _pure is_opaque() const noexcept { return !authority_.data(); }
 
-	_pure operator std::string_view () const noexcept { return uri; }
+	std::string_view _pure scheme() const noexcept { return scheme_; }
+	std::string_view _pure authority() const noexcept { return authority_; }
+	std::string_view _pure userinfo() const noexcept { return userinfo_; }
+	std::string_view _pure host() const noexcept { return host_; }
+	std::string_view _pure port() const noexcept { return port_; }
+	std::string_view _pure path() const noexcept { return path_; }
+	std::string_view _pure query() const noexcept { return query_; }
+	std::string_view _pure fragment() const noexcept { return fragment_; }
+
+	const std::string & _const to_string() const noexcept { return uri_; }
 
 private:
 	void parse();
 
 };
-
-std::ostream & operator << (std::ostream &os, const URI &uri);

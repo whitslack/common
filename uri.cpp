@@ -1,6 +1,5 @@
 #include "uri.h"
 
-#include <ostream>
 #include <regex>
 #include <stdexcept>
 
@@ -61,29 +60,25 @@ static const std::regex parse_regex(_URI_, std::regex::ECMAScript | std::regex::
 
 void URI::parse() {
 	std::smatch matches;
-	if (!std::regex_match(uri, matches, parse_regex)) {
+	if (!std::regex_match(uri_, matches, parse_regex)) {
 		throw std::invalid_argument("invalid URI");
 	}
-	matches[1].matched ? scheme = { &*matches[1].first, static_cast<size_t>(matches[1].length()) } : scheme = { };
-	matches[2].matched ? authority = { &*matches[2].first, static_cast<size_t>(matches[2].length()) } : authority = { };
-	matches[3].matched ? userinfo = { &*matches[3].first, static_cast<size_t>(matches[3].length()) } : userinfo = { };
-	matches[4].matched ? host = { &*matches[4].first, static_cast<size_t>(matches[4].length()) } : host = { };
-	matches[5].matched ? port = { &*matches[5].first, static_cast<size_t>(matches[5].length()) } : port = { };
+	matches[1].matched ? scheme_ = { &*matches[1].first, static_cast<size_t>(matches[1].length()) } : scheme_ = { };
+	matches[2].matched ? authority_ = { &*matches[2].first, static_cast<size_t>(matches[2].length()) } : authority_ = { };
+	matches[3].matched ? userinfo_ = { &*matches[3].first, static_cast<size_t>(matches[3].length()) } : userinfo_ = { };
+	matches[4].matched ? host_ = { &*matches[4].first, static_cast<size_t>(matches[4].length()) } : host_ = { };
+	matches[5].matched ? port_ = { &*matches[5].first, static_cast<size_t>(matches[5].length()) } : port_ = { };
 	if (matches[6].matched) {
-		path = { &*matches[6].first, static_cast<size_t>(matches[6].length()) };
+		path_ = { &*matches[6].first, static_cast<size_t>(matches[6].length()) };
 	}
 	else if (matches[7].matched) {
-		path = { &*matches[7].first, static_cast<size_t>(matches[7].length()) };
+		path_ = { &*matches[7].first, static_cast<size_t>(matches[7].length()) };
 	}
 	else {
-		path = { };
+		path_ = { };
 	}
-	matches[8].matched ? query = { &*matches[8].first, static_cast<size_t>(matches[8].length()) } : query = { };
-	matches[9].matched ? fragment = { &*matches[9].first, static_cast<size_t>(matches[9].length()) } : fragment = { };
-}
-
-std::ostream & operator << (std::ostream &os, const URI &uri) {
-	return os << static_cast<std::string_view>(uri);
+	matches[8].matched ? query_ = { &*matches[8].first, static_cast<size_t>(matches[8].length()) } : query_ = { };
+	matches[9].matched ? fragment_ = { &*matches[9].first, static_cast<size_t>(matches[9].length()) } : fragment_ = { };
 }
 
 
@@ -102,14 +97,14 @@ int main() {
 			}
 			std::clog << std::endl;
 			URI uri(std::move(line));
-			std::cout << " scheme = \"" << uri.get_scheme() << "\"\n"
-					" authority = \"" << uri.get_authority() << "\"\n"
-					" userinfo = \"" << uri.get_userinfo() << "\"\n"
-					" host = \"" << uri.get_host() << "\"\n"
-					" port = \"" << uri.get_port() << "\"\n"
-					" path = \"" << uri.get_path() << "\"\n"
-					" query = \"" << uri.get_query() << "\"\n"
-					" fragment = \"" << uri.get_fragment() << "\"\n"
+			std::cout << " scheme = \"" << uri.scheme() << "\"\n"
+					" authority = \"" << uri.authority() << "\"\n"
+					" userinfo = \"" << uri.userinfo() << "\"\n"
+					" host = \"" << uri.host() << "\"\n"
+					" port = \"" << uri.port() << "\"\n"
+					" path = \"" << uri.path() << "\"\n"
+					" query = \"" << uri.query() << "\"\n"
+					" fragment = \"" << uri.fragment() << "\"\n"
 					" opaque = " << uri.is_opaque() << std::endl;
 		}
 		else {
