@@ -64,7 +64,8 @@ static inline void convert(long double &out, const char str[]) {
 	out = strto(std::strtold, str);
 }
 
-static inline void convert(const char *&out, const char str[]) {
+template<typename Arg>
+static inline auto convert(Arg &out, const char str[]) noexcept(noexcept(out = str)) -> std::void_t<decltype(out = str)> {
 	out = str;
 }
 
