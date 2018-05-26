@@ -131,7 +131,7 @@ public:
 
 protected:
 	virtual std::pair<unsigned, const char *> validate_request_headers(const HttpRequestHeaders &request_headers) _pure;
-	virtual void prepare_response_headers(const HttpRequestHeaders &request_headers, HttpResponseHeaders &response_headers) _const;
+	virtual void prepare_response_headers(const HttpRequestHeaders &request_headers, HttpResponseHeaders &response_headers);
 	virtual void connected(const HttpRequestHeaders &request_headers, const HttpResponseHeaders &response_headers) = 0;
 
 private:
@@ -159,8 +159,8 @@ public:
 	bool ready();
 
 protected:
-	virtual void prepare_request_headers(HttpRequestHeaders &request_headers) _const;
-	virtual void validate_response_headers(const HttpResponseHeaders &response_headers) _const;
+	virtual void prepare_request_headers(HttpRequestHeaders &request_headers);
+	virtual void validate_response_headers(const HttpResponseHeaders &response_headers);
 	virtual void connected(const HttpResponseHeaders &response_headers) = 0;
 
 };

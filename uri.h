@@ -13,7 +13,7 @@ private:
 public:
 	explicit URI(std::string uri) : uri_(std::move(uri)) { this->parse(); }
 
-	_pure operator const std::string & () const noexcept { return uri_; }
+	_const operator const std::string & () const noexcept { return uri_; }
 
 	bool _pure is_opaque() const noexcept { return !authority_.data(); }
 
