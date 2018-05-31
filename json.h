@@ -72,6 +72,9 @@ public:
 	std::pair<map_t::iterator, bool> insert(std::string key, std::nullptr_t) {
 		return map.emplace(std::move(key), nullptr);
 	}
+	std::pair<map_t::iterator, bool> insert(std::string key, ValuePtr value) {
+		return map.emplace(std::move(key), std::move(value));
+	}
 	template <typename V>
 	std::pair<map_t::iterator, bool> insert(std::string key, V &&value) {
 		return map.emplace(std::move(key), std::make_unique<V>(std::forward<V>(value)));
@@ -102,6 +105,9 @@ public:
 
 	void insert(std::nullptr_t) {
 		vector.emplace_back(nullptr);
+	}
+	void insert(ValuePtr value) {
+		vector.emplace_back(std::move(value));
 	}
 	template <typename V>
 	void insert(V &&value) {
