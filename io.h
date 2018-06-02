@@ -3,6 +3,7 @@
 #include <array>
 #include <cstring>
 #include <streambuf>
+#include <string_view>
 #include <vector>
 
 #include "buffer.h"
@@ -244,15 +245,14 @@ class DelimitedSource : public Source {
 
 private:
 	Source &source;
-	const char * const delim_begin, * const delim_end;
-	const char *delim_ptr;
+	const std::string_view delimiter;
+	std::string_view::const_iterator delim_itr;
 
 public:
-	DelimitedSource(Source &source, const char delimiter[], const char *delim_end) noexcept : source(source), delim_begin(delimiter), delim_end(delim_end), delim_ptr(delimiter) { }
-	DelimitedSource(Source &source, const char delimiter[]) noexcept : DelimitedSource(source, delimiter, delimiter + std::strlen(delimiter)) { }
+	DelimitedSource(Source &source, std::string_view delimiter) noexcept : source(source), delimiter(delimiter), delim_itr(delimiter.begin()) { }
 
 public:
-	void reset() noexcept { delim_ptr = delim_begin; }
+	void reset() noexcept { delim_itr = delimiter.begin(); }
 	_nodiscard ssize_t read(void *buf, size_t n) override;
 
 };

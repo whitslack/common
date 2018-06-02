@@ -270,7 +270,7 @@ ssize_t DelimitedSource::read(void *buf, size_t n) {
 	ssize_t r = 0;
 	while (n > 0) {
 		std::ptrdiff_t d;
-		if ((d = delim_end - delim_ptr) <= 0) {
+		if ((d = delimiter.end() - delim_itr) <= 0) {
 			return r == 0 ? -1 : r;
 		}
 		ssize_t s;
@@ -279,7 +279,7 @@ ssize_t DelimitedSource::read(void *buf, size_t n) {
 		}
 		for (ssize_t i = 0; i < s; ++i) {
 			char c = static_cast<char *>(buf)[i];
-			delim_ptr = c == *delim_ptr ? delim_ptr + 1 : c == *delim_begin ? delim_begin + 1 : delim_begin;
+			delim_itr = c == *delim_itr ? delim_itr + 1 : c == *delimiter.begin() ? delimiter.begin() + 1 : delimiter.begin();
 		}
 		buf = static_cast<char *>(buf) + s, n -= s, r += s;
 	}
