@@ -117,6 +117,9 @@ public:
 class WebSocketServerHandshake {
 
 public:
+	using status_t = std::pair<unsigned, const char *>;
+
+public:
 	Socket socket;
 
 private:
@@ -130,7 +133,7 @@ public:
 	bool ready();
 
 protected:
-	virtual std::pair<unsigned, const char *> validate_request_headers(const HttpRequestHeaders &request_headers) _pure;
+	virtual status_t validate_request_headers(const HttpRequestHeaders &request_headers) _pure;
 	virtual void prepare_response_headers(const HttpRequestHeaders &request_headers, HttpResponseHeaders &response_headers);
 	virtual void connected(const HttpRequestHeaders &request_headers, const HttpResponseHeaders &response_headers) = 0;
 

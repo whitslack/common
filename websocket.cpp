@@ -279,7 +279,7 @@ bool WebSocketServerHandshake::ready() {
 	return true;
 }
 
-std::pair<unsigned, const char *> WebSocketServerHandshake::validate_request_headers(const HttpRequestHeaders &request_headers) {
+auto WebSocketServerHandshake::validate_request_headers(const HttpRequestHeaders &request_headers) -> status_t {
 	if (::strncasecmp(request_headers.method.data(), "GET", request_headers.method.size())) {
 		return { 405, HTTP_REASON_PHRASE_405 };
 	}
