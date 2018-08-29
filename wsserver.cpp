@@ -45,12 +45,17 @@ public:
 	}
 
 protected:
+	status_t validate_request_headers(const HttpRequestHeaders &request_headers) override {
+		auto status = this->WebSocketServerHandshake::validate_request_headers(request_headers);
+		return status.first == 101 ? server.validate_request_headers(request_headers) : status;
+	}
+
 	void prepare_response_headers(const HttpRequestHeaders &request_headers, HttpResponseHeaders &response_headers) override {
 		server.prepare_response_headers(request_headers, response_headers);
 	}
 
-	void connected(const HttpRequestHeaders &, const HttpResponseHeaders &) override {
-		server.client_attached(std::move(socket), selector);
+	void connected(const HttpRequestHeaders &request_headers, const HttpResponseHeaders &) override {
+		server.client_attached(std::move(socket), selector, request_headers);
 	}
 
 };
@@ -63,4 +68,11 @@ void WebSocketServer::selected(Selector &selector, Selector::Flags flags) noexce
 		new Handshake(std::move(socket), *this, selector);
 	}
 	selector.modify(*this, this, Selector::Flags::READABLE);
+}
+
+auto WebSocketServer::validate_request_headers(const HttpRequestHeaders &request_headers) -> status_t {
+	if (request_headers.request_uri != "/") {
+		return { 404, HTTP_REASON_PHRASE_404 };
+	}
+	return { 101, HTTP_REASON_PHRASE_101 };
 }

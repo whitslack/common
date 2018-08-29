@@ -286,9 +286,6 @@ auto WebSocketServerHandshake::validate_request_headers(const HttpRequestHeaders
 	if (request_headers.protocol_version != "HTTP/1.1"_ci) {
 		return { 505, HTTP_REASON_PHRASE_505 };
 	}
-	if (request_headers.request_uri != "/") {
-		return { 404, HTTP_REASON_PHRASE_404 };
-	}
 	return { 101, HTTP_REASON_PHRASE_101 };
 }
 
