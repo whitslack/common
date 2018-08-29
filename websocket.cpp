@@ -280,10 +280,10 @@ bool WebSocketServerHandshake::ready() {
 }
 
 auto WebSocketServerHandshake::validate_request_headers(const HttpRequestHeaders &request_headers) -> status_t {
-	if (::strncasecmp(request_headers.method.data(), "GET", request_headers.method.size())) {
+	if (request_headers.method != "GET"_ci) {
 		return { 405, HTTP_REASON_PHRASE_405 };
 	}
-	if (::strncasecmp(request_headers.protocol_version.data(), "HTTP/1.1", request_headers.protocol_version.size())) {
+	if (request_headers.protocol_version != "HTTP/1.1"_ci) {
 		return { 505, HTTP_REASON_PHRASE_505 };
 	}
 	if (request_headers.request_uri != "/") {
