@@ -1,10 +1,8 @@
 #pragma once
 
 #include <array>
-#include <cstring>
 #include <streambuf>
 #include <string_view>
-#include <vector>
 
 #include "buffer.h"
 #include "compiler.h"
@@ -64,13 +62,13 @@ public:
 class LimitedSource : public Source {
 
 public:
-	size_t remaining;
+	uintmax_t remaining;
 
 private:
 	Source &source;
 
 public:
-	LimitedSource(Source &source, size_t remaining) noexcept : remaining(remaining), source(source) { }
+	constexpr LimitedSource(Source &source, uintmax_t remaining) noexcept : remaining(remaining), source(source) { }
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
@@ -82,13 +80,13 @@ public:
 class LimitedSink : public Sink {
 
 public:
-	size_t remaining;
+	uintmax_t remaining;
 
 private:
 	Sink &sink;
 
 public:
-	LimitedSink(Sink &sink, size_t remaining) noexcept : remaining(remaining), sink(sink) { }
+	constexpr LimitedSink(Sink &sink, uintmax_t remaining) noexcept : remaining(remaining), sink(sink) { }
 
 public:
 	_nodiscard size_t write(const void *buf, size_t n) override;
@@ -97,76 +95,32 @@ public:
 };
 
 
-class MemorySource : public BasicStaticBuffer<const std::byte>, public Source {
+_nodiscard ssize_t read(void *dst, ConstBufferView &src, size_t n) noexcept;
+_nodiscard size_t write(BufferView &dst, const void *src, size_t n) noexcept;
+
+
+class MemorySource : public ConstBufferView, public Source {
 
 public:
-	MemorySource(const void *buf, size_t n) noexcept : BasicStaticBuffer<const std::byte>(static_cast<const std::byte *>(buf), static_cast<const std::byte *>(buf), static_cast<const std::byte *>(buf) + n, static_cast<const std::byte *>(buf) + n) { }
+	constexpr MemorySource(const void *buf, size_t n) noexcept : ConstBufferView(static_cast<const std::byte *>(buf), static_cast<const std::byte *>(buf), static_cast<const std::byte *>(buf) + n, static_cast<const std::byte *>(buf) + n) { }
+
+	template <typename R>
+	constexpr explicit MemorySource(R &&range) noexcept : MemorySource(std::data(std::forward<R>(range)), std::size(std::forward<R>(range)) * sizeof(typename std::remove_reference_t<R>::value_type)) { }
 
 public:
-	_nodiscard ssize_t read(void *buf, size_t n) override;
+	_nodiscard ssize_t read(void *buf, size_t n) override { return ::read(buf, *this, n); }
 	size_t _pure avail() override { return this->grem(); }
 
 };
 
 
-class MemorySink : public StaticBuffer, public Sink {
+class MemorySink : public BufferView, public Sink {
 
 public:
-	MemorySink(void *buf, size_t n) noexcept : StaticBuffer(static_cast<std::byte *>(buf), n) { }
+	constexpr MemorySink(void *buf, size_t n) noexcept : BufferView(static_cast<std::byte *>(buf), n) { }
 
 public:
-	_nodiscard size_t write(const void *buf, size_t n) override;
-
-};
-
-
-class BufferSource : public Source {
-
-private:
-	StaticBuffer &buffer;
-
-public:
-	explicit BufferSource(StaticBuffer &buffer) noexcept : buffer(buffer) { }
-
-public:
-	_nodiscard ssize_t read(void *buf, size_t n) override;
-	size_t _pure avail() override { return buffer.grem(); }
-
-};
-
-
-class StaticBufferSink : public Sink {
-
-private:
-	StaticBuffer &buffer;
-
-public:
-	explicit StaticBufferSink(StaticBuffer &buffer) noexcept : buffer(buffer) { }
-
-public:
-	_nodiscard size_t write(const void *buf, size_t n) override;
-
-};
-
-
-class BufferSink : public Buffer, public Sink {
-
-public:
-	BufferSink() noexcept = default;
-	explicit BufferSink(size_t initial_size) : Buffer(initial_size) { }
-	explicit BufferSink(Buffer &&move) : Buffer(std::move(move)) { }
-
-public:
-	_nodiscard size_t write(const void *buf, size_t n) override;
-
-};
-
-
-class StringSource : public MemorySource {
-
-public:
-	template <typename CharT, typename Traits>
-	explicit StringSource(std::basic_string_view<CharT, Traits> sv) noexcept : MemorySource(sv.data(), sv.size() * sizeof(CharT)) { }
+	_nodiscard size_t write(const void *buf, size_t n) override { return ::write(*this, buf, n); }
 
 };
 
@@ -177,66 +131,88 @@ private:
 	std::string &string;
 
 public:
-	explicit StringSink(std::string &string) noexcept : string(string) { }
+	constexpr explicit StringSink(std::string &string) noexcept : string(string) { }
 
 public:
-	_nodiscard size_t write(const void *buf, size_t n) override;
+	_nodiscard size_t write(const void *buf, size_t n) override { return string.append(static_cast<const char *>(buf), n), n; }
 
 };
 
 
-class BufferedSourceBase : public Source {
+class BufferViewSource : public Source {
 
 private:
-	Source &source;
-	std::byte * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
+	ConstBufferView &buffer;
+
+public:
+	constexpr explicit BufferViewSource(ConstBufferView &buffer) noexcept : buffer(buffer) { }
+
+public:
+	_nodiscard ssize_t read(void *buf, size_t n) override { return ::read(buf, buffer, n); };
+
+};
+
+
+class BufferViewSink : public Sink {
+
+private:
+	BufferView &buffer;
+
+public:
+	constexpr explicit BufferViewSink(BufferView &buffer) noexcept : buffer(buffer) { }
+
+public:
+	_nodiscard size_t write(const void *buf, size_t n) override { return ::write(buffer, buf, n); }
+
+};
+
+
+class DynamicBufferSink : public DynamicBuffer, public Sink {
+
+private:
+	DynamicBuffer &buffer;
+
+public:
+	constexpr explicit DynamicBufferSink(DynamicBuffer &buffer) noexcept : buffer(buffer) { }
+
+public:
+	_nodiscard size_t write(const void *buf, size_t n) override { return buffer.append(buf, n), n; }
+
+};
+
+
+class BufferedSource : public Source, protected DynamicBuffer {
 
 protected:
-	explicit BufferedSourceBase(Source &source, std::byte *buf_bptr, std::byte *buf_eptr) noexcept : source(source), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
+	Source &source;
+
+public:
+	explicit BufferedSource(Source &source) : BufferedSource(source, 8192) { }
+
+	template <typename... Args>
+	explicit BufferedSource(Source &source, Args &&...args) : DynamicBuffer(std::forward<Args>(args)...), source(source) { }
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
-	size_t avail() override { return buf_pptr - buf_gptr; }
+	size_t avail() override { return this->grem(); }
 
 };
 
 
-class BufferedSinkBase : public Sink {
-
-private:
-	Sink &sink;
-	std::byte * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
+class BufferedSink : public Sink, protected DynamicBuffer {
 
 protected:
-	explicit BufferedSinkBase(Sink &sink, std::byte *buf_bptr, std::byte *buf_eptr) noexcept : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_eptr), buf_pptr(buf_eptr), buf_eptr(buf_eptr) { }
+	Sink &sink;
+
+public:
+	explicit BufferedSink(Sink &sink) : BufferedSink(sink, 8192) { }
+
+	template <typename... Args>
+	explicit BufferedSink(Sink &sink, Args &&...args) : DynamicBuffer(std::forward<Args>(args)...), sink(sink) { }
 
 public:
 	_nodiscard size_t write(const void *buf, size_t n) override;
 	bool flush() override;
-
-};
-
-
-template <size_t Buffer_Size>
-class BufferedSource : public BufferedSourceBase {
-
-private:
-	std::array<std::byte, Buffer_Size> buffer;
-
-public:
-	explicit BufferedSource(Source &source) noexcept : BufferedSourceBase(source, &*buffer.begin(), &*buffer.end()) { }
-
-};
-
-
-template <size_t Buffer_Size>
-class BufferedSink : public BufferedSinkBase {
-
-private:
-	std::array<std::byte, Buffer_Size> buffer;
-
-public:
-	explicit BufferedSink(Sink &sink) noexcept : BufferedSinkBase(sink, &*buffer.begin(), &*buffer.end()) { }
 
 };
 

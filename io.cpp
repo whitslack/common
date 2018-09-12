@@ -123,7 +123,7 @@ ssize_t LimitedSource::read(void *buf, size_t n) {
 		if (remaining == 0) {
 			return -1;
 		}
-		n = remaining;
+		n = static_cast<size_t>(remaining);
 	}
 	ssize_t r = source.read(buf, n);
 	if (r > 0) {
@@ -135,7 +135,7 @@ ssize_t LimitedSource::read(void *buf, size_t n) {
 
 size_t LimitedSink::write(const void *buf, size_t n) {
 	if (n > remaining) {
-		n = remaining;
+		n = static_cast<size_t>(remaining);
 	}
 	if (n == 0) {
 		return 0;
@@ -146,123 +146,87 @@ size_t LimitedSink::write(const void *buf, size_t n) {
 }
 
 
-ssize_t MemorySource::read(void *buf, size_t n) {
-	size_t grem = this->grem();
+ssize_t read(void *dst, ConstBufferView &src, size_t n) noexcept {
+	size_t grem = src.grem();
 	if (n > grem) {
 		if (grem == 0) {
 			return -1;
 		}
 		n = grem;
 	}
-	std::memcpy(buf, gptr, n), gptr += n;
+	std::memcpy(dst, src.gptr, n), src.gptr += n;
 	return n;
 }
 
-
-size_t MemorySink::write(const void *buf, size_t n) {
-	size_t prem = this->prem();
+size_t write(BufferView &dst, const void *src, size_t n) noexcept {
+	size_t prem = dst.prem();
 	if (n > prem) {
 		n = prem;
 	}
-	std::memcpy(pptr, buf, n), pptr += n;
+	std::memcpy(dst.pptr, src, n), dst.pptr += n;
 	return n;
 }
 
 
-ssize_t BufferSource::read(void *buf, size_t n) {
-	size_t grem = buffer.grem();
-	if (n > grem) {
-		if (grem == 0) {
-			return -1;
-		}
-		n = grem;
-	}
-	std::memcpy(buf, buffer.gptr, n), buffer.gptr += n;
-	return n;
-}
-
-
-size_t StaticBufferSink::write(const void *buf, size_t n) {
-	size_t prem = buffer.prem();
-	if (n > prem) {
-		n = prem;
-	}
-	std::memcpy(buffer.pptr, buf, n), buffer.pptr += n;
-	return n;
-}
-
-
-size_t BufferSink::write(const void *buf, size_t n) {
-	this->append(buf, n);
-	return n;
-}
-
-
-size_t StringSink::write(const void *buf, size_t n) {
-	string.append(static_cast<const char *>(buf), n);
-	return n;
-}
-
-
-ssize_t BufferedSourceBase::read(void *buf, size_t n) {
+ssize_t BufferedSource::read(void *buf, size_t n) {
 	if (n == 0) {
 		return 0;
 	}
-	size_t b = buf_pptr - buf_gptr;
+	size_t b = pptr - gptr;
 	if (b > 0) {
 		if (n <= b) {
-			std::memcpy(buf, buf_gptr, n), buf_gptr += n;
+			std::memcpy(buf, gptr, n), gptr += n;
 			return n;
 		}
-		std::memcpy(buf, buf_gptr, b), buf_gptr += b;
+		std::memcpy(buf, gptr, b), gptr += b;
 		buf = static_cast<std::byte *>(buf) + b, n -= b;
 	}
-	ssize_t r = buf_eptr - buf_bptr;
+	ssize_t r = eptr - bptr;
 	if (n >= static_cast<size_t>(r)) {
 		r = source.read(buf, n);
 		return r >= 0 ? b + r : b == 0 ? r : b;
 	}
-	if ((r = source.read(buf_gptr = buf_bptr, r)) <= 0) {
-		buf_pptr = buf_bptr;
+	if ((r = source.read(gptr = bptr, r)) <= 0) {
+		pptr = bptr;
 		return b == 0 ? r : b;
 	}
-	buf_pptr = buf_bptr + r;
+	pptr = bptr + r;
 	if (n <= static_cast<size_t>(r)) {
-		std::memcpy(buf, buf_gptr, n), buf_gptr += n;
+		std::memcpy(buf, gptr, n), gptr += n;
 		return b + n;
 	}
-	std::memcpy(buf, buf_gptr, r), buf_gptr += r;
+	std::memcpy(buf, gptr, r), gptr += r;
 	return b + r;
 }
 
 
-size_t BufferedSinkBase::write(const void *buf, size_t n) {
+size_t BufferedSink::write(const void *buf, size_t n) {
 	if (n == 0) {
 		return 0;
 	}
-	size_t r = buf_eptr - buf_pptr;
+	size_t r = eptr - pptr;
 	if (r > 0) {
 		if (n < r) {
-			std::memcpy(buf_pptr, buf, n), buf_pptr += n;
+			std::memcpy(pptr, buf, n), pptr += n;
 			return n;
 		}
-		std::memcpy(buf_pptr, buf, r), buf_pptr += r;
+		std::memcpy(pptr, buf, r), pptr += r;
 		buf = static_cast<const std::byte *>(buf) + r, n -= r;
 	}
-	size_t b = buf_eptr - buf_gptr;
-	if (b > 0 && (buf_gptr += sink.write(buf_gptr, b)) < buf_eptr) {
+	size_t b = eptr - gptr;
+	if (b > 0 && (gptr += sink.write(gptr, b)) < eptr) {
 		return r;
 	}
-	if (n >= static_cast<size_t>(buf_eptr - buf_bptr)) {
+	if (n >= static_cast<size_t>(eptr - bptr)) {
 		return r + sink.write(buf, n);
 	}
-	std::memcpy(buf_gptr = buf_bptr, buf, n), buf_pptr = buf_bptr + n;
+	std::memcpy(gptr = bptr, buf, n), pptr = bptr + n;
 	return r + n;
 }
 
-bool BufferedSinkBase::flush() {
-	size_t b = buf_pptr - buf_gptr;
-	return (b == 0 || (buf_gptr += sink.write(buf_gptr, b)) == buf_pptr) && sink.flush();
+bool BufferedSink::flush() {
+	size_t b = pptr - gptr;
+	return (b == 0 || (gptr += sink.write(gptr, b)) == pptr) && sink.flush();
 }
 
 

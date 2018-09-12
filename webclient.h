@@ -48,8 +48,8 @@ public:
 
 private:
 	Socket socket;
-	BufferedSource<1500> buffered_source;
-	BufferedSink<1500> buffered_sink;
+	BufferedSource buffered_source;
+	BufferedSink buffered_sink;
 
 public:
 	HttpConnection(Socket &&socket) noexcept;

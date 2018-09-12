@@ -230,12 +230,12 @@ void TLSSession::set_server_name(std::string_view server_name) {
 	}
 }
 
-Buffer TLSSession::get_session_data() {
+DynamicBuffer TLSSession::get_session_data() {
 	size_t size = 0;
 	if (int error = ::gnutls_session_get_data(session, nullptr, &size); _unlikely(error != GNUTLS_E_SUCCESS && error != GNUTLS_E_SHORT_MEMORY_BUFFER)) {
 		throw TLSError(error, "gnutls_session_get_data");
 	}
-	Buffer session_data(size);
+	DynamicBuffer session_data(size);
 	if (int error = ::gnutls_session_get_data(session, session_data.pptr, &size); _unlikely(error != GNUTLS_E_SUCCESS)) {
 		throw TLSError(error, "gnutls_session_get_data");
 	}

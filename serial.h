@@ -1,5 +1,6 @@
 #include <map>
 #include <tuple>
+#include <vector>
 
 #include "io.h"
 
@@ -208,10 +209,11 @@ static inline Sink & operator << (Sink &sink, const std::tuple<Types...> &tuple)
 }
 
 template <typename T>
-static inline Buffer serialize(const T &value) {
-	BufferSink sink;
+static inline DynamicBuffer serialize(const T &value) {
+	DynamicBuffer buffer;
+	DynamicBufferSink sink(buffer);
 	sink << value;
-	return sink;
+	return buffer;
 }
 
 template <typename T>
