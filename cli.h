@@ -1,3 +1,4 @@
+#include <chrono>
 #include <optional>
 #include <stdexcept>
 #include <string_view>
@@ -67,6 +68,13 @@ static inline void convert(long double &out, const char str[]) {
 template<typename Arg>
 static inline auto convert(Arg &out, const char str[]) noexcept(noexcept(out = str)) -> std::void_t<decltype(out = str)> {
 	out = str;
+}
+
+template<typename Rep, typename Period>
+static inline auto convert(std::chrono::duration<Rep, Period> &out, const char str[]) {
+	Rep rep;
+	convert(rep, str);
+	out = std::chrono::duration<Rep, Period> { rep };
 }
 
 
