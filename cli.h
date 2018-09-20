@@ -4,6 +4,7 @@
 #include <string_view>
 #include <vector>
 
+#include "charconv.h"
 #include "compiler.h"
 #include "narrow.h"
 
@@ -11,58 +12,37 @@
 namespace cli {
 
 
-template <typename Func, typename... Args>
-static inline std::result_of_t<Func(const char *, char **, Args...)> strto(Func strto, const char str[], Args &&...args) {
-	char *end = nullptr;
-	auto ret = strto(str, &end, std::forward<Args>(args)...);
-	if (_unlikely(!end || end == str || *end)) {
-		throw std::invalid_argument("expected a number");
+template <typename T>
+static inline std::enable_if_t<std::is_integral_v<T>> convert(T &out, std::string_view sv) {
+	int base = 10;
+	if (std::is_unsigned_v<T> && sv.size() >= 2 && sv[0] == '0' && (sv[1] | 0x20) == 'x') {
+		sv.remove_prefix(2);
+		base = 16;
 	}
-	return ret;
+	auto result = std::from_chars(sv.begin(), sv.end(), out, base);
+	if (_likely(result.ec == std::errc { })) {
+		if (_likely(result.ptr == sv.end())) {
+			return;
+		}
+	}
+	else if (result.ec == std::errc::result_out_of_range) {
+		throw std::range_error("out of range");
+	}
+	throw std::invalid_argument(std::is_unsigned_v<T> ? "expected an unsigned integer" : "expected an integer");
 }
 
-static inline void convert(short &out, const char str[]) {
-	out = narrow_check<short>(strto(std::strtol, str, 0));
-}
-
-static inline void convert(int &out, const char str[]) {
-	out = narrow_check<int>(strto(std::strtol, str, 0));
-}
-
-static inline void convert(long &out, const char str[]) {
-	out = strto(std::strtol, str, 0);
-}
-
-static inline void convert(long long &out, const char str[]) {
-	out = strto(std::strtoll, str, 0);
-}
-
-static inline void convert(unsigned short &out, const char str[]) {
-	out = narrow_check<unsigned short>(strto(std::strtoul, str, 0));
-}
-
-static inline void convert(unsigned &out, const char str[]) {
-	out = narrow_check<unsigned>(strto(std::strtoul, str, 0));
-}
-
-static inline void convert(unsigned long &out, const char str[]) {
-	out = strto(std::strtoul, str, 0);
-}
-
-static inline void convert(unsigned long long &out, const char str[]) {
-	out = strto(std::strtoull, str, 0);
-}
-
-static inline void convert(float &out, const char str[]) {
-	out = strto(std::strtof, str);
-}
-
-static inline void convert(double &out, const char str[]) {
-	out = strto(std::strtod, str);
-}
-
-static inline void convert(long double &out, const char str[]) {
-	out = strto(std::strtold, str);
+template <typename T>
+static inline std::enable_if_t<std::is_floating_point_v<T>> convert(T &out, std::string_view sv) {
+	auto result = std::from_chars(sv.begin(), sv.end(), out);
+	if (_likely(result.ec == std::errc { })) {
+		if (_likely(result.ptr == sv.end())) {
+			return;
+		}
+	}
+	else if (result.ec == std::errc::result_out_of_range) {
+		throw std::range_error("out of range");
+	}
+	throw std::invalid_argument("expected a number");
 }
 
 template<typename Arg>
