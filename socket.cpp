@@ -244,8 +244,13 @@ ssize_t Socket::recvfrom(void * _restrict buffer, size_t length, int flags, Sock
 
 bool Socket::flush() {
 #ifdef TCP_CORK
+# ifdef __linux__
+	// On Linux, setting TCP_NODELAY, even if it's already set, triggers an explicit push.
+	this->setsockopt(IPPROTO_TCP, TCP_NODELAY, 1);
+# else
 	this->setsockopt(IPPROTO_TCP, TCP_CORK, 0);
 	this->setsockopt(IPPROTO_TCP, TCP_CORK, 1);
+# endif
 #elif defined(TCP_NOPUSH)
 	this->setsockopt(IPPROTO_TCP, TCP_NOPUSH, 0);
 	this->send(nullptr, 0, 0);
