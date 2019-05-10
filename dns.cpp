@@ -2,6 +2,7 @@
 
 #include <cassert>
 #include <cstring>
+#include <istream>
 #include <ostream>
 #include <string>
 
@@ -114,4 +115,49 @@ std::ostream & operator << (std::ostream &os, const struct sockaddr_in6 &addr) {
 		}
 	}
 	return os << '[' << host << "]:" << serv;
+}
+
+std::istream & operator >> (std::istream &is, struct sockaddr_in &addr) {
+	if (std::string s; is >> s) {
+		for (auto &ai : getaddrinfo(s.c_str(), in_port_t(0), AF_INET, 0, 0, AI_NUMERICHOST | AI_NUMERICSERV)) {
+			if (ai.ai_family == AF_INET && ai.ai_addrlen == sizeof addr) {
+				std::memcpy(&addr, ai.ai_addr, sizeof addr);
+				return is;
+			}
+		}
+	}
+	is.setstate(std::ios_base::failbit);
+	return is;
+}
+
+std::istream & operator >> (std::istream &is, struct sockaddr_in6 &addr) {
+	if (std::string s; is >> s) {
+		for (auto &ai : getaddrinfo(s.c_str(), in_port_t(0), AF_INET6, 0, 0, AI_NUMERICHOST | AI_NUMERICSERV)) {
+			if (ai.ai_family == AF_INET6 && ai.ai_addrlen == sizeof addr) {
+				std::memcpy(&addr, ai.ai_addr, sizeof addr);
+				return is;
+			}
+		}
+	}
+	is.setstate(std::ios_base::failbit);
+	return is;
+}
+
+std::istream & operator >> (std::istream &is, SocketAddress &addr) {
+	if (std::string s; is >> s) {
+		for (auto &ai : getaddrinfo(s.c_str(), in_port_t(0), AF_UNSPEC, 0, 0, AI_NUMERICHOST | AI_NUMERICSERV)) {
+			addr.assign(ai.ai_addr, ai.ai_addrlen);
+			return is;
+		}
+	}
+	is.setstate(std::ios_base::failbit);
+	return is;
+}
+
+void convert(SocketAddress &addr, const char str[]) {
+	for (auto &ai : getaddrinfo(str, in_port_t(0), AF_UNSPEC, 0, 0, AI_NUMERICHOST | AI_NUMERICSERV)) {
+		addr.assign(ai.ai_addr, ai.ai_addrlen);
+		return;
+	}
+	throw std::invalid_argument("expected a socket address");
 }

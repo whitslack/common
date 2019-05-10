@@ -1,10 +1,8 @@
 #include "socket.h"
 
 #include <cassert>
-#include <ostream>
 #include <system_error>
 
-#include <arpa/inet.h>
 #include <netinet/tcp.h>
 #include <sys/ioctl.h>
 
@@ -170,6 +168,32 @@ void socketpair(int domain, int type, int protocol, int socket_vector[2]) {
 } // namespace posix
 
 
+SocketAddress Socket::getsockname() const {
+	struct sockaddr_storage ss;
+	socklen_t size { sizeof ss };
+	this->getsockname(reinterpret_cast<struct sockaddr *>(&ss), &size);
+	if (_likely(size <= sizeof ss)) {
+		return { reinterpret_cast<const struct sockaddr *>(&ss), size };
+	}
+	SocketAddress ret;
+	this->getsockname(ret.alloc(size), &size);
+	assert(size == ret.size());
+	return ret;
+}
+
+SocketAddress Socket::getpeername() const {
+	struct sockaddr_storage ss;
+	socklen_t size { sizeof ss };
+	this->getsockname(reinterpret_cast<struct sockaddr *>(&ss), &size);
+	if (_likely(size <= sizeof ss)) {
+		return { reinterpret_cast<const struct sockaddr *>(&ss), size };
+	}
+	SocketAddress ret;
+	this->getsockname(ret.alloc(size), &size);
+	assert(size == ret.size());
+	return ret;
+}
+
 bool Socket::connect(const struct sockaddr *address, socklen_t address_len) {
 	bool ret = posix::connect(fd, address, address_len);
 #ifdef TCP_CORK
@@ -200,6 +224,24 @@ size_t Socket::avail() {
 	return n;
 }
 
+Socket Socket::accept(SocketAddress &address, int flags) {
+	struct sockaddr_storage ss;
+	socklen_t size { sizeof ss };
+	auto ret = this->accept(reinterpret_cast<struct sockaddr *>(&ss), &size, flags);
+	assert(size <= sizeof ss);
+	address.assign(reinterpret_cast<const struct sockaddr *>(&ss), std::min<socklen_t>(size, sizeof ss));
+	return ret;
+}
+
+ssize_t Socket::recvfrom(void * _restrict buffer, size_t length, int flags, SocketAddress &address) {
+	struct sockaddr_storage ss;
+	socklen_t size { sizeof ss };
+	auto ret = this->recvfrom(buffer, length, flags, reinterpret_cast<struct sockaddr *>(&ss), &size);
+	assert(size <= sizeof ss);
+	address.assign(reinterpret_cast<const struct sockaddr *>(&ss), std::min<socklen_t>(size, sizeof ss));
+	return ret;
+}
+
 bool Socket::flush() {
 #ifdef TCP_CORK
 	this->setsockopt(IPPROTO_TCP, TCP_CORK, 0);
@@ -210,70 +252,6 @@ bool Socket::flush() {
 	this->setsockopt(IPPROTO_TCP, TCP_NOPUSH, 1);
 #endif
 	return true;
-}
-
-
-template <typename T, typename A>
-void SocketBase<T, A>::getsockname(A &address) const {
-	socklen_t address_len = static_cast<socklen_t>(sizeof address);
-	this->Socket::getsockname(reinterpret_cast<struct sockaddr *>(&address), &address_len);
-	assert(address_len == sizeof address);
-}
-
-template <typename T, typename A>
-void SocketBase<T, A>::bind(const A &address) {
-	this->Socket::bind(reinterpret_cast<const struct sockaddr *>(&address), static_cast<socklen_t>(sizeof address));
-}
-
-template <typename T, typename A>
-void SocketBase<T, A>::getpeername(A &address) const {
-	socklen_t address_len = static_cast<socklen_t>(sizeof address);
-	this->Socket::getpeername(reinterpret_cast<struct sockaddr *>(&address), &address_len);
-	assert(address_len == sizeof address);
-}
-
-template <typename T, typename A>
-bool SocketBase<T, A>::connect(const A &address) {
-	return this->Socket::connect(reinterpret_cast<const struct sockaddr *>(&address), static_cast<socklen_t>(sizeof address));
-}
-
-template <typename T, typename A>
-T SocketBase<T, A>::accept(A *address, int flags) {
-	socklen_t address_len = static_cast<socklen_t>(sizeof *address);
-	return T(this->Socket::accept(reinterpret_cast<struct sockaddr *>(address), address ? &address_len : nullptr, flags));
-}
-
-template <typename T, typename A>
-ssize_t SocketBase<T, A>::recvfrom(void * _restrict buffer, size_t length, int flags, A &address) {
-	socklen_t address_len = static_cast<socklen_t>(sizeof address);
-	ssize_t ret = this->Socket::recvfrom(buffer, length, flags, reinterpret_cast<struct sockaddr *>(&address), &address_len);
-	assert(address_len == sizeof address);
-	return ret;
-}
-
-template <typename T, typename A>
-size_t SocketBase<T, A>::sendto(const void *message, size_t length, int flags, const A &address) {
-	return this->Socket::sendto(message, length, flags, reinterpret_cast<const struct sockaddr *>(&address), static_cast<socklen_t>(sizeof address));
-}
-
-template class SocketBase<Socket4, struct sockaddr_in>;
-template class SocketBase<Socket6, struct sockaddr_in6>;
-
-
-std::ostream & operator << (std::ostream &os, const struct in_addr &addr) {
-	char buf[INET_ADDRSTRLEN];
-	if (_unlikely(!::inet_ntop(AF_INET, &addr, buf, sizeof buf))) {
-		throw std::system_error(errno, std::system_category(), "inet_ntop");
-	}
-	return os << buf;
-}
-
-std::ostream & operator << (std::ostream &os, const struct in6_addr &addr) {
-	char buf[INET6_ADDRSTRLEN];
-	if (_unlikely(!::inet_ntop(AF_INET6, &addr, buf, sizeof buf))) {
-		throw std::system_error(errno, std::system_category(), "inet_ntop");
-	}
-	return os << buf;
 }
 
 

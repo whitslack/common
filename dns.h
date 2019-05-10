@@ -3,6 +3,7 @@
 #include <netdb.h>
 
 #include "compiler.h"
+#include "sockaddr.h"
 
 
 class GAICategory : public std::error_category {
@@ -64,6 +65,16 @@ std::ostream & operator << (std::ostream &os, const struct sockaddr &addr);
 std::ostream & operator << (std::ostream &os, const struct sockaddr_in &addr);
 std::ostream & operator << (std::ostream &os, const struct sockaddr_in6 &addr);
 
+static inline std::ostream & operator << (std::ostream &os, const SocketAddress &addr) {
+	return os << *addr;
+}
+
 static inline std::ostream & operator << (std::ostream &os, const struct sockaddr_storage &addr) {
 	return os << reinterpret_cast<const struct sockaddr &>(addr);
 }
+
+std::istream & operator >> (std::istream &is, struct sockaddr_in &addr);
+std::istream & operator >> (std::istream &is, struct sockaddr_in6 &addr);
+std::istream & operator >> (std::istream &is, SocketAddress &addr);
+
+void convert(SocketAddress &addr, const char str[]);
