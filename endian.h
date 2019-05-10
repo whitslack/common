@@ -14,13 +14,11 @@
 
 
 template <typename T>
-class be {
+struct be {
 	static_assert(has_bswap_v<T>, "type parameter must be a byte-swappable type");
 
-private:
 	T value_be;
 
-public:
 	constexpr be() = default;
 #if BYTE_ORDER == BIG_ENDIAN
 	constexpr be(const T &value) noexcept(noexcept(T(value))) : value_be(value) { }
@@ -37,13 +35,11 @@ public:
 
 
 template <typename T>
-class le {
+struct le {
 	static_assert(has_bswap_v<T>, "type parameter must be a byte-swappable type");
 
-private:
 	T value_le;
 
-public:
 	constexpr le() = default;
 #if BYTE_ORDER == BIG_ENDIAN
 	constexpr le(const T &value) noexcept(noexcept(T(bswap(value)))) : value_le(bswap(value)) { }
