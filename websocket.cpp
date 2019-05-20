@@ -393,7 +393,9 @@ int WebSocketBuf::sync() {
 }
 
 WebSocketBuf::int_type WebSocketBuf::overflow(int_type ch) {
-	this->sync(true);
+	if (this->sync(true) < 0) {
+		return traits_type::eof();
+	}
 	if (!traits_type::eq_int_type(ch, traits_type::eof())) {
 		*this->pptr() = traits_type::to_char_type(ch);
 		this->pbump(1);
