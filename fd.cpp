@@ -8,6 +8,41 @@
 #include <sys/time.h>
 
 
+#ifdef __linux__
+namespace linux {
+
+void fallocate(int fd, int mode, off_t offset, off_t len) {
+	if (_unlikely(::fallocate(fd, mode, offset, len) < 0)) {
+		throw std::system_error(errno, std::system_category(), "fallocate");
+	}
+}
+
+void madvise(void *addr, size_t length, int advice) {
+	if (_unlikely(::madvise(addr, length, advice) < 0)) {
+		throw std::system_error(errno, std::system_category(), "madvise");
+	}
+}
+
+void * mremap(void *old_address, size_t old_size, size_t new_size, int flags) {
+	void *ret;
+	if (_unlikely((ret = ::mremap(old_address, old_size, new_size, flags)) == MAP_FAILED)) {
+		throw std::system_error(errno, std::system_category(), "mremap");
+	}
+	return ret;
+}
+
+void * mremap(void *old_address, size_t old_size, size_t new_size, int flags, void *new_address) {
+	void *ret;
+	if (_unlikely((ret = ::mremap(old_address, old_size, new_size, flags, new_address)) == MAP_FAILED)) {
+		throw std::system_error(errno, std::system_category(), "mremap");
+	}
+	return ret;
+}
+
+} // namespace linux
+#endif
+
+
 namespace posix {
 
 void access(const char *path, int amode) {
@@ -261,6 +296,14 @@ void mkdirat(int fd, const char *path, mode_t mode) {
 	}
 }
 
+char * mkdtemp(char tmpl[]) {
+	char *ret;
+	if (_unlikely(!(ret = ::mkdtemp(tmpl)))) {
+		throw std::system_error(errno, std::system_category(), "mkdtemp");
+	}
+	return ret;
+}
+
 void mkfifo(const char *path, mode_t mode) {
 	if (_unlikely(::mkfifo(path, mode) < 0)) {
 		throw std::system_error(errno, std::system_category(), "mkfifo");
@@ -283,6 +326,14 @@ void mknodat(int fd, const char *path, mode_t mode, dev_t dev) {
 	if (_unlikely(::mknodat(fd, path, mode, dev) < 0)) {
 		throw std::system_error(errno, std::system_category(), "mknodat");
 	}
+}
+
+int mkstemp(char tmpl[]) {
+	int ret;
+	if (_unlikely((ret = ::mkstemp(tmpl)) < 0)) {
+		throw std::system_error(errno, std::system_category(), "mkstemp");
+	}
+	return ret;
 }
 
 void * mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off) {
@@ -438,6 +489,14 @@ size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, siz
 		throw std::system_error(errno, std::system_category(), "readlinkat");
 	}
 	return static_cast<size_t>(ret);
+}
+
+unique_c_ptr<char[]> realpath(const char *file_name) {
+	unique_c_ptr<char[]> ret(::realpath(file_name, nullptr));
+	if (_unlikely(!ret)) {
+		throw std::system_error(errno, std::system_category(), "realpath");
+	}
+	return ret;
 }
 
 void rename(const char *oldpath, const char *newpath) {

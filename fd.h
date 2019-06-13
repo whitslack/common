@@ -13,6 +13,19 @@
 
 #include "compiler.h"
 #include "io.h"
+#include "memory.h"
+#include "narrow.h"
+
+
+#ifdef __linux__
+#undef linux
+namespace linux {
+	void fallocate(int fd, int mode, off_t offset, off_t len);
+	void madvise(void *addr, size_t length, int advice);
+	_nodiscard void * mremap(void *old_address, size_t old_size, size_t new_size, int flags = 0);
+	_nodiscard void * mremap(void *old_address, size_t old_size, size_t new_size, int flags, void *new_address);
+}
+#endif
 
 
 namespace posix {
@@ -56,10 +69,12 @@ void lstat(const char * _restrict path, struct stat * _restrict buf);
 void madvise(void *addr, size_t len, int advice);
 void mkdir(const char *path, mode_t mode = 0777);
 void mkdirat(int fd, const char *path, mode_t mode = 0777);
+char * mkdtemp(char tmpl[]);
 void mkfifo(const char *path, mode_t mode = 0666);
 void mkfifoat(int fd, const char *path, mode_t mode = 0666);
 void mknod(const char *path, mode_t mode, dev_t dev);
 void mknodat(int fd, const char *path, mode_t mode, dev_t dev);
+_nodiscard int mkstemp(char tmpl[]);
 _nodiscard void * mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
 void mprotect(void *addr, size_t len, int prot);
 void msync(void *addr, size_t len, int flags);
@@ -76,6 +91,7 @@ _nodiscard ssize_t read(int fildes, void *buf, size_t nbyte);
 _nodiscard ssize_t readv(int fildes, const struct iovec iov[], int iovcnt);
 size_t readlink(const char * _restrict path, char * _restrict buf, size_t bufsize);
 size_t readlinkat(int fd, const char * _restrict path, char * _restrict buf, size_t bufsize);
+unique_c_ptr<char[]> realpath(const char *file_name);
 void rename(const char *oldpath, const char *newpath);
 void renameat(int oldfd, const char *oldpath, int newfd, const char *newpath);
 void rmdir(const char *path);
@@ -148,6 +164,9 @@ public:
 		_pure operator void * () const noexcept { return addr; }
 		void * _pure data() const noexcept { return addr; }
 		size_t _pure size() const noexcept { return len; }
+#ifdef __linux__
+		void mremap(size_t new_size, int flags = 0) { addr = linux::mremap(addr, len, new_size, flags), len = new_size; }
+#endif
 		void madvise(size_t offset, size_t len, int advice) { posix::madvise(static_cast<std::byte *>(addr) + offset, len, advice); }
 		void mprotect(size_t offset, size_t len, int prot) { posix::mprotect(static_cast<std::byte *>(addr) + offset, len, prot); }
 		void msync(size_t offset, size_t len, int flags = MS_ASYNC) { posix::msync(static_cast<std::byte *>(addr) + offset, len, flags); }
