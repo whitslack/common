@@ -18,8 +18,8 @@ public:
 	HMAC(const void *key, size_t n);
 
 public:
-	size_t write(const void *buf, size_t n) override { return hash.write(buf, n); }
+	_nodiscard size_t write(const void *buf, size_t n) override { return hash.write(buf, n); }
 	bool flush() override { return hash.flush(); }
-	const digest_type & digest();
+	_nodiscard const digest_type & digest();
 
 };

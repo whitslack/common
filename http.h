@@ -74,8 +74,8 @@ public:
 
 public:
 	void reset() noexcept { chunk_rem = 0, state = Size; }
-	ssize_t read(void *buf, size_t n) override;
-	size_t avail() override;
+	_nodiscard ssize_t read(void *buf, size_t n) override;
+	_nodiscard size_t avail() override;
 
 };
 
@@ -92,7 +92,7 @@ public:
 
 public:
 	void reset() noexcept { write_size = 0, state = Idle; }
-	size_t write(const void *buf, size_t n) override;
+	_nodiscard size_t write(const void *buf, size_t n) override;
 	bool flush() override;
 
 private:

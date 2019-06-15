@@ -36,8 +36,8 @@ protected:
 	}
 
 public:
-	size_t write(const void *buf, size_t n) override;
-	const digest_type & digest();
+	_nodiscard size_t write(const void *buf, size_t n) override;
+	_nodiscard const digest_type & digest();
 
 protected:
 	virtual void update(const uint8_t (&block)[block_size]) = 0;

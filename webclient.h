@@ -34,8 +34,8 @@ protected:
 public:
 	void request(HttpRequestHeaders &request_headers);
 	const HttpResponseHeaders & get_response_headers();
-	ssize_t read(void *buf, size_t n) override;
-	size_t write(const void *buf, size_t n) override;
+	_nodiscard ssize_t read(void *buf, size_t n) override;
+	_nodiscard size_t write(const void *buf, size_t n) override;
 	bool flush() override;
 
 };

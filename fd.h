@@ -60,7 +60,7 @@ void mkfifo(const char *path, mode_t mode = 0666);
 void mkfifoat(int fd, const char *path, mode_t mode = 0666);
 void mknod(const char *path, mode_t mode, dev_t dev);
 void mknodat(int fd, const char *path, mode_t mode, dev_t dev);
-void * mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
+_nodiscard void * mmap(void *addr, size_t len, int prot, int flags, int fildes, off_t off);
 void mprotect(void *addr, size_t len, int prot);
 void msync(void *addr, size_t len, int flags);
 void munmap(void *addr, size_t len);
