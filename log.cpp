@@ -1,5 +1,6 @@
 #include "log.h"
 
+#include <chrono>
 #include <ctime>
 #include <iomanip>
 
@@ -22,9 +23,12 @@ int LogBuf::sync() {
 
 LogStream::LogStream(std::ostream *stream_ptr, const char label[]) : std::ostream(stream_ptr ? &buf : nullptr), buf(stream_ptr) {
 	if (stream_ptr) {
-		std::time_t time = std::time(nullptr);
+		auto now = std::chrono::system_clock::now();
+		std::time_t time = std::chrono::system_clock::to_time_t(now);
 		std::tm tm;
 		::localtime_r(&time, &tm);
-		*this << std::put_time(&tm, "%c") << "  " << std::setw(5) << label << "  ";
+		*this << std::put_time(&tm, "%FT%T") << ','
+				<< std::setfill('0') << std::setw(6) << std::chrono::duration_cast<std::chrono::microseconds>(now - std::chrono::time_point_cast<std::chrono::seconds>(now)).count()
+				<< std::setfill(' ') << "  " << std::setw(5) << label << "  ";
 	}
 }
