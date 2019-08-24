@@ -96,7 +96,6 @@ public:
 	_nodiscard size_t sendto(const void *message, size_t length, int flags, const SocketAddress &dest_addr) { return this->sendto(message, length, flags, dest_addr, dest_addr.size()); }
 	_nodiscard size_t sendto(const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len) { return posix::sendto(fd, message, length, flags, dest_addr, dest_len); }
 
-	size_t avail() override;
 	bool flush() override;
 
 };

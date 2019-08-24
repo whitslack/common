@@ -75,7 +75,6 @@ public:
 public:
 	void reset() noexcept { chunk_rem = 0, state = Size; }
 	_nodiscard ssize_t read(void *buf, size_t n) override;
-	_nodiscard size_t avail() override;
 
 };
 

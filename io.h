@@ -22,7 +22,6 @@ public:
 public:
 	_nodiscard virtual ssize_t read(void *buf, size_t n) = 0;
 	_nodiscard virtual ssize_t read(const BufferPointer bufs[], size_t count);
-	virtual size_t avail() { return 0; }
 
 	void read_fully(void *buf, size_t n);
 	void read_fully(const BufferPointer bufs[], size_t count);
@@ -72,7 +71,6 @@ public:
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
-	size_t avail() override { return remaining; }
 
 };
 
@@ -90,7 +88,6 @@ public:
 
 public:
 	_nodiscard size_t write(const void *buf, size_t n) override;
-	size_t avail() { return remaining; }
 
 };
 
@@ -109,7 +106,6 @@ public:
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override { return ::read(buf, *this, n); }
-	size_t _pure avail() override { return this->grem(); }
 
 };
 
@@ -194,7 +190,6 @@ public:
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
-	size_t avail() override { return this->grem(); }
 
 };
 
@@ -245,7 +240,6 @@ public:
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
-	size_t avail() override { return source.avail(); }
 
 };
 
@@ -291,7 +285,6 @@ public:
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
-	size_t avail() override;
 
 	_nodiscard size_t write(const void *buf, size_t n) override;
 	bool flush() override { return sb.pubsync() == 0; }
@@ -316,7 +309,6 @@ public:
 
 protected:
 	std::streambuf * setbuf(char_type s[], std::streamsize n) override;
-	std::streamsize showmanyc() override;
 	int_type underflow() override;
 	std::streamsize xsgetn(char_type s[], std::streamsize n) override;
 

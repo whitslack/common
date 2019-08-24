@@ -730,10 +730,6 @@ Exit:
 	return 0;
 }
 
-size_t ChunkedSource::avail() {
-	return std::min(source.avail(), chunk_rem);
-}
-
 
 size_t ChunkedSink::write(const void *buf, size_t n) {
 	return this->write(buf, n, false);

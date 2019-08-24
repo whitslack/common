@@ -265,10 +265,6 @@ ssize_t StreamBufSourceSink::read(void *buf, size_t n) {
 	return r == 0 ? -1 : r;
 }
 
-size_t StreamBufSourceSink::avail() {
-	return saturate<size_t>(sb.in_avail());
-}
-
 size_t StreamBufSourceSink::write(const void *buf, size_t n) {
 	return static_cast<size_t>(sb.sputn(static_cast<const std::streambuf::char_type *>(buf), saturate<std::streamsize>(n)));
 }
@@ -285,10 +281,6 @@ std::streambuf * SourceBuf::setbuf(char_type s[], std::streamsize n) {
 	this->setg(s, s + n, s + n);
 	this->setp(s + n, s + n);
 	return this;
-}
-
-std::streamsize SourceBuf::showmanyc() {
-	return source.avail();
 }
 
 std::streambuf::int_type SourceBuf::underflow() {

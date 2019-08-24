@@ -234,12 +234,6 @@ Socket Socket::accept(struct sockaddr * _restrict address, socklen_t * _restrict
 	return socket;
 }
 
-size_t Socket::avail() {
-	int n;
-	this->ioctl(FIONREAD, &n);
-	return n;
-}
-
 Socket Socket::accept(SocketAddress &address, int flags) {
 	struct sockaddr_storage ss;
 	socklen_t size { sizeof ss };
