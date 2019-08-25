@@ -1,102 +1,257 @@
 #pragma once
 
 #include <array>
+#include <functional>
+#include <optional>
 #include <streambuf>
 #include <string_view>
 
 #include "buffer.h"
 #include "compiler.h"
+#include "narrow.h"
 #include "span.h"
 
 
-class Source {
+struct BufferPointer {
+	void *ptr;
+	size_t size;
+};
+
+
+struct ConstBufferPointer {
+	const void *ptr;
+	size_t size;
+};
+
+
+template <typename Derived, typename... Args>
+class Readable {
+	friend Derived;
+
+private:
+	constexpr Readable() noexcept = default;
 
 public:
-	struct BufferPointer {
-		void *ptr;
-		size_t size;
-	};
+	_nodiscard ssize_t read(std::span<const BufferPointer> bufs, Args &&...args);
+
+	void read_fully(void *buf, size_t n, Args &&...args);
+	void read_fully(std::span<const BufferPointer> bufs, Args &&...args);
+
+	_nodiscard ssize_t read(std::initializer_list<BufferPointer> bufs, Args &&...args) { return static_cast<Derived *>(this)->read({ bufs }, std::forward<Args>(args)...); }
+	void read_fully(std::initializer_list<BufferPointer> bufs, Args &&...args) { return static_cast<Derived *>(this)->read_fully({ bufs }, std::forward<Args>(args)...); }
+
+	_deprecated _nodiscard ssize_t read(const BufferPointer bufs[], size_t count, Args &&...args) { return static_cast<Derived *>(this)->read({ bufs, count }, std::forward<Args>(args)...); }
+	_deprecated void read_fully(const BufferPointer bufs[], size_t count, Args &&...args) { return static_cast<Derived *>(this)->read_fully({ bufs, count }, std::forward<Args>(args)...); }
+
+protected:
+	template <typename NewDerived, typename... NewArgs>
+	constexpr auto _const recast() noexcept { return reinterpret_cast<Readable<NewDerived, NewArgs...> &>(*this); }
+
+};
+
+
+template <typename Derived, typename... Args>
+class Writable {
+	friend Derived;
+
+private:
+	constexpr Writable() noexcept = default;
+
+public:
+	_nodiscard size_t write(std::span<const ConstBufferPointer> bufs, Args &&...args);
+
+	void write_fully(const void *buf, size_t n, Args &&...args);
+	void write_fully(std::span<const ConstBufferPointer> bufs, Args &&...args);
+
+	_nodiscard size_t write(std::initializer_list<ConstBufferPointer> bufs, Args &&...args) { return static_cast<Derived *>(this)->write({ bufs }, std::forward<Args>(args)...); }
+	void write_fully(std::initializer_list<ConstBufferPointer> bufs, Args &&...args) { return static_cast<Derived *>(this)->write_fully({ bufs }, std::forward<Args>(args)...); }
+
+	_deprecated _nodiscard size_t write(const ConstBufferPointer bufs[], size_t count, Args &&...args) { return static_cast<Derived *>(this)->write({ bufs, count }, std::forward<Args>(args)...); }
+	_deprecated void write_fully(const ConstBufferPointer bufs[], size_t count, Args &&...args) { return static_cast<Derived *>(this)->write_fully({ bufs, count }, std::forward<Args>(args)...); }
+
+protected:
+	template <typename NewDerived, typename... NewArgs>
+	constexpr auto _const recast() noexcept { return reinterpret_cast<Writable<NewDerived, NewArgs...> &>(*this); }
+
+};
+
+
+template <typename Derived, typename... Args>
+class Flushable {
+	friend Derived;
+
+private:
+	constexpr Flushable() noexcept = default;
+
+public:
+	template <typename T = Derived>
+	static std::enable_if_t<std::is_convertible_v<decltype(std::declval<T>().flush(std::declval<Args>()...)), bool>, std::optional<bool>> flush_if_supported(Derived &derived, Args &&...args) {
+		return derived.flush(std::forward<Args>(args)...);
+	}
+
+	template <typename T = Derived>
+	static std::optional<bool> flush_if_supported(T &, Args &&...) {
+		return std::nullopt;
+	}
+
+public:
+	void flush_fully(Args &&...args);
+
+protected:
+	template <typename NewDerived, typename... NewArgs>
+	constexpr auto _const recast() noexcept { return reinterpret_cast<Flushable<NewDerived, NewArgs...> &>(*this); }
+
+};
+
+
+class Source : public Readable<Source> {
+
+public:
+	using BufferPointer = ::BufferPointer;
 
 public:
 	virtual ~Source() = default;
 
 public:
 	_nodiscard virtual ssize_t read(void *buf, size_t n) = 0;
-	_nodiscard virtual ssize_t read(std::span<const BufferPointer> bufs);
-
-	void read_fully(void *buf, size_t n);
-	void read_fully(std::span<const BufferPointer> bufs);
-
-	_nodiscard ssize_t read(std::initializer_list<BufferPointer> bufs) { return this->read({ bufs }); }
-	void read_fully(std::initializer_list<BufferPointer> bufs) { return this->read_fully({ bufs }); }
-
-	_deprecated _nodiscard ssize_t read(const BufferPointer bufs[], size_t count) { return this->read({ bufs, count }); }
-	_deprecated void read_fully(const BufferPointer bufs[], size_t count) { return this->read_fully({ bufs, count }); }
+	_nodiscard virtual ssize_t read(std::span<const BufferPointer> bufs) { return this->Readable::read(bufs); }
+	using Readable::read;
 
 };
 
+extern template class Readable<Source>;
 
-class Sink {
+
+class Sink : public Writable<Sink>, public Flushable<Sink> {
 
 public:
-	struct BufferPointer {
-		const void *ptr;
-		size_t size;
-	};
+	using BufferPointer = ::ConstBufferPointer;
 
 public:
 	virtual ~Sink() = default;
 
 public:
 	_nodiscard virtual size_t write(const void *buf, size_t n) = 0;
-	_nodiscard virtual size_t write(std::span<const BufferPointer> bufs);
+	_nodiscard virtual size_t write(std::span<const BufferPointer> bufs) { return this->Writable::write(bufs); }
+	using Writable::write;
+
 	virtual bool flush() { return true; }
 
-	void write_fully(const void *buf, size_t n);
-	void write_fully(std::span<const BufferPointer> bufs);
-	void flush_fully();
-
-	_nodiscard size_t write(std::initializer_list<BufferPointer> bufs) { return this->write({ bufs }); }
-	void write_fully(std::initializer_list<BufferPointer> bufs) { return this->write_fully({ bufs }); }
-
-	_deprecated _nodiscard size_t write(const BufferPointer bufs[], size_t count) { return this->write({ bufs, count }); }
-	_deprecated void write_fully(const BufferPointer bufs[], size_t count) { return this->write_fully({ bufs, count }); }
-
 };
 
+extern template class Writable<Sink>;
+extern template class Flushable<Sink>;
 
-class LimitedSource : public Source {
+
+template <typename Input = std::reference_wrapper<Source>>
+class InputSource : public Input, public Source {
 
 public:
-	uintmax_t remaining;
+	using Input::Input;
+
+public:
+	_nodiscard ssize_t read(void *buf, size_t n) override { return this->unwrap().read(buf, n); }
+	_nodiscard ssize_t read(std::span<const BufferPointer> bufs) override { return this->unwrap().read(bufs); }
+
+	using Source::read;
+	using Source::read_fully;
 
 private:
-	Source &source;
-
-public:
-	constexpr LimitedSource(Source &source, uintmax_t remaining) noexcept : remaining(remaining), source(source) { }
-
-public:
-	_nodiscard ssize_t read(void *buf, size_t n) override;
+	std::add_lvalue_reference_t<std::unwrap_reference_t<Input>> unwrap() { return *this; }
 
 };
 
+extern template class InputSource<>;
 
-class LimitedSink : public Sink {
+
+template <typename Output = std::reference_wrapper<Sink>>
+class OutputSink : public Output, public Sink {
 
 public:
-	uintmax_t remaining;
+	using Output::Output;
+
+public:
+	_nodiscard size_t write(const void *buf, size_t n) override { return this->unwrap().write(buf, n); }
+	_nodiscard size_t write(std::span<const BufferPointer> bufs) override { return this->unwrap().write(bufs); }
+	bool flush() override { return Flushable<std::unwrap_reference_t<Output>>::flush_if_supported(this->unwrap()).value_or(true); }
+
+	using Sink::write;
+	using Sink::write_fully;
+	using Sink::flush_fully;
 
 private:
-	Sink &sink;
-
-public:
-	constexpr LimitedSink(Sink &sink, uintmax_t remaining) noexcept : remaining(remaining), sink(sink) { }
-
-public:
-	_nodiscard size_t write(const void *buf, size_t n) override;
+	std::add_lvalue_reference_t<std::unwrap_reference_t<Output>> unwrap() { return *this; }
 
 };
+
+extern template class OutputSink<>;
+
+
+template <typename Input = Source &>
+class LimitedReadable : public Readable<LimitedReadable<Input>> {
+
+public:
+	Input input;
+	uintmax_t remaining;
+
+public:
+	constexpr LimitedReadable(Input &&input, uintmax_t remaining) noexcept : input(std::forward<Input>(input)), remaining(remaining) { }
+
+public:
+	_nodiscard ssize_t read(void *buf, size_t n) {
+		if (_unlikely(n > remaining)) {
+			if (remaining == 0) {
+				return -1;
+			}
+			n = saturate<size_t>(remaining);
+		}
+		if (_unlikely(n == 0)) {
+			return 0;
+		}
+		ssize_t r = input.read(buf, n);
+		if (r > 0) {
+			remaining -= r;
+		}
+		return r;
+	}
+
+	using Readable<LimitedReadable<Input>>::read;
+
+};
+
+using LimitedSource = InputSource<LimitedReadable<>>;
+extern template class InputSource<LimitedReadable<>>;
+
+
+template <typename Output = Sink &>
+class LimitedWritable : public Writable<LimitedWritable<Output>> {
+
+public:
+	Output output;
+	uintmax_t remaining;
+
+public:
+	constexpr LimitedWritable(Output &&output, uintmax_t remaining) noexcept : output(std::forward<Output>(output)), remaining(remaining) { }
+
+public:
+	_nodiscard size_t write(const void *buf, size_t n) {
+		if (_unlikely(n > remaining)) {
+			n = saturate<size_t>(remaining);
+		}
+		if (_unlikely(n == 0)) {
+			return 0;
+		}
+		size_t w = output.write(buf, n);
+		remaining -= w;
+		return w;
+	}
+
+	using Writable<LimitedWritable<Output>>::write;
+
+};
+
+using LimitedSink = OutputSink<LimitedWritable<>>;
+extern template class OutputSink<LimitedWritable<>>;
 
 
 _nodiscard ssize_t read(void *dst, ConstBufferView &src, size_t n) noexcept;
@@ -219,21 +374,48 @@ public:
 };
 
 
-class DelimitedSource : public Source {
+template <typename Input = Source &>
+class DelimitedReadable : public Readable<DelimitedReadable<Input>> {
+
+public:
+	Input input;
 
 private:
-	Source &source;
 	const std::string_view delimiter;
 	std::string_view::const_iterator delim_itr;
 
 public:
-	DelimitedSource(Source &source, std::string_view delimiter) noexcept : source(source), delimiter(delimiter), delim_itr(delimiter.begin()) { }
+	constexpr DelimitedReadable(Input &&input, std::string_view delimiter) noexcept : input(std::forward<Input>(input)), delimiter(delimiter), delim_itr(delimiter.begin()) { }
 
 public:
 	void reset() noexcept { delim_itr = delimiter.begin(); }
-	_nodiscard ssize_t read(void *buf, size_t n) override;
+
+	_nodiscard ssize_t read(void *buf, size_t n) {
+		ssize_t r = 0;
+		while (n > 0) {
+			std::ptrdiff_t d;
+			if ((d = delimiter.end() - delim_itr) <= 0) {
+				return r == 0 ? -1 : r;
+			}
+			ssize_t s;
+			if ((s = input.read(buf, std::min(static_cast<size_t>(d), n))) <= 0) {
+				return r == 0 ? s : r;
+			}
+			for (ssize_t i = 0; i < s; ++i) {
+				char c = static_cast<char *>(buf)[i];
+				delim_itr = c == *delim_itr ? delim_itr + 1 : c == *delimiter.begin() ? delimiter.begin() + 1 : delimiter.begin();
+			}
+			buf = static_cast<char *>(buf) + s, n -= s, r += s;
+		}
+		return r;
+	}
+
+	using Readable<DelimitedReadable<Input>>::read;
 
 };
+
+using DelimitedSource = InputSource<DelimitedReadable<>>;
+extern template class InputSource<DelimitedReadable<>>;
 
 
 class Tap : public Source {

@@ -7,6 +7,8 @@
 #include <sys/stat.h>
 #include <sys/time.h>
 
+#include "io.tcc"
+
 
 #ifdef __linux__
 namespace linux {
@@ -743,6 +745,12 @@ void FileDescriptor::pwritev_fully(struct iovec iov[], int iovcnt, off_t offset)
 		}
 	}
 }
+
+template class Readable<FileDescriptor>;
+template class Writable<FileDescriptor>;
+
+template class InputSource<std::reference_wrapper<FileDescriptor>>;
+template class OutputSink<std::reference_wrapper<FileDescriptor>>;
 
 
 #if _POSIX_VERSION < 200809L

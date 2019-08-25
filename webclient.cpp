@@ -94,7 +94,9 @@ bool HttpConnectionBase::flush() {
 
 constexpr const char *HttpConnection::protocol_name;
 
-HttpConnection::HttpConnection(Socket &&socket) noexcept : HttpConnectionBase(buffered_source, buffered_sink), socket(std::move(socket)), buffered_source(this->socket), buffered_sink(this->socket) {
+HttpConnection::HttpConnection(Socket &&socket) noexcept
+	: HttpConnectionBase(buffered_source, buffered_sink), socket(std::move(socket)), socket_source(this->socket), socket_sink(this->socket), buffered_source(socket_source), buffered_sink(socket_sink)
+{
 }
 
 

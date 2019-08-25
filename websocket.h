@@ -150,12 +150,13 @@ public:
 
 private:
 	std::string key;
+	FileSource socket_source;
 	DelimitedSource delimited_source;
 	std::array<std::byte, 1460> response_buf;
 	size_t response_pos;
 
 public:
-	WebSocketClientHandshake(Socket &&socket) noexcept : socket(std::move(socket)), delimited_source(this->socket, "\r\n\r\n"), response_pos() { }
+	WebSocketClientHandshake(Socket &&socket) noexcept : socket(std::move(socket)), socket_source(this->socket), delimited_source(socket_source, "\r\n\r\n"), response_pos() { }
 
 public:
 	void start(const char host[], in_port_t port = 0, const char request_uri[] = "/");

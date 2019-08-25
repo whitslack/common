@@ -46,7 +46,7 @@ void socketpair(int domain, int type, int protocol, int socket_vector[2]);
 #endif
 
 
-class Socket : public FileDescriptor {
+class Socket : public FileDescriptor, public Flushable<Socket> {
 
 public:
 	Socket() = default;
@@ -96,9 +96,11 @@ public:
 	_nodiscard size_t sendto(const void *message, size_t length, int flags, const SocketAddress &dest_addr) { return this->sendto(message, length, flags, dest_addr, dest_addr.size()); }
 	_nodiscard size_t sendto(const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len) { return posix::sendto(fd, message, length, flags, dest_addr, dest_len); }
 
-	bool flush() override;
+	bool flush();
 
 };
+
+extern template class Flushable<Socket>;
 
 
 #if __NEED_SOCKET_POLYFILL

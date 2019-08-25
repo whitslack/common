@@ -269,6 +269,8 @@ bool Socket::flush() {
 	return true;
 }
 
+template class Flushable<Socket>;
+
 
 #if __NEED_SOCKET_POLYFILL
 

@@ -249,7 +249,8 @@ bool WebSocketServerHandshake::ready() {
 					HttpResponseHeaders response_headers("HTTP/1.1", 426, HTTP_REASON_PHRASE_426);
 					response_headers.emplace_hint(response_headers.end(), "Connection", "close");
 					response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Version", "13");
-					SinkBuf sb(socket);
+					FileSink socket_sink(socket);
+					SinkBuf sb(socket_sink);
 					char buf[1024];
 					sb.pubsetbuf(buf, sizeof buf);
 					std::ostream(&sb) << response_headers << std::flush;
@@ -260,7 +261,8 @@ bool WebSocketServerHandshake::ready() {
 				response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Accept", make_accept_field_value(key_itr->second));
 				response_headers.emplace_hint(response_headers.end(), "Upgrade", "websocket");
 				this->prepare_response_headers(request_headers, response_headers);
-				SinkBuf sb(socket);
+				FileSink socket_sink(socket);
+				SinkBuf sb(socket_sink);
 				char buf[1024];
 				sb.pubsetbuf(buf, sizeof buf);
 				std::ostream os(&sb);
@@ -297,7 +299,8 @@ void WebSocketServerHandshake::send_error(int status_code, const char reason_phr
 	HttpResponseHeaders response_headers("HTTP/1.1", status_code, reason_phrase);
 	response_headers.emplace_hint(response_headers.end(), "Connection", "close");
 	response_headers.emplace_hint(response_headers.end(), "Sec-WebSocket-Version", "13");
-	SinkBuf sb(socket);
+	FileSink socket_sink(socket);
+	SinkBuf sb(socket_sink);
 	char buf[1024];
 	sb.pubsetbuf(buf, sizeof buf);
 	std::ostream os(&sb);
@@ -328,7 +331,8 @@ void WebSocketClientHandshake::start(const char host[], in_port_t port, const ch
 	request_headers.emplace_hint(request_headers.end(), "Sec-WebSocket-Version", "13");
 	request_headers.emplace_hint(request_headers.end(), "Upgrade", "websocket");
 	this->prepare_request_headers(request_headers);
-	SinkBuf sb(socket);
+	FileSink socket_sink(socket);
+	SinkBuf sb(socket_sink);
 	char buf[1024];
 	sb.pubsetbuf(buf, sizeof buf);
 	std::ostream os(&sb);

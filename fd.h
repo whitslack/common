@@ -140,7 +140,7 @@ public:
 } // namespace posix
 
 
-class FileDescriptor : public Source, public Sink {
+class FileDescriptor : public Readable<FileDescriptor>, public Writable<FileDescriptor> {
 
 public:
 	class MemoryMapping {
@@ -177,10 +177,10 @@ protected:
 public:
 	FileDescriptor() noexcept : fd(-1) { }
 	explicit FileDescriptor(int fd) noexcept : fd(fd) { }
-	explicit FileDescriptor(const char *path, int oflag = O_RDONLY | O_CLOEXEC, mode_t mode = 0666) : fd(posix::open(path, oflag, mode)) { }
+	explicit FileDescriptor(const char *path, int oflag, mode_t mode = 0666) : fd(posix::open(path, oflag, mode)) { }
 	FileDescriptor(FileDescriptor &&move) noexcept : fd(move.fd) { move.fd = -1; }
 	FileDescriptor & operator = (FileDescriptor &&move) noexcept { return this->swap(move), *this; }
-	virtual ~FileDescriptor() { if (fd >= 0) posix::close(fd); }
+	~FileDescriptor() { if (fd >= 0) posix::close(fd); }
 	void swap(FileDescriptor &other) noexcept { using std::swap; swap(fd, other.fd); }
 	friend void swap(FileDescriptor &lhs, FileDescriptor &rhs) noexcept { lhs.swap(rhs); }
 
@@ -192,16 +192,13 @@ public:
 	_pure explicit operator bool () const noexcept { return fd >= 0; }
 	_pure operator int () const noexcept { return fd; }
 
-	using Source::read;
-	using Sink::write;
-
 	void creat(const char *path, mode_t mode = 0666) { *this = FileDescriptor(posix::creat(path, mode)); }
 	void open(const char *path, int oflag = O_RDONLY | O_CLOEXEC, mode_t mode = 0666) { *this = FileDescriptor(path, oflag, mode); }
 	void close() { return posix::close(std::exchange(fd, -1)); }
-	_nodiscard ssize_t read(void *buf, size_t n) override { return posix::read(fd, buf, n); }
-	_nodiscard size_t write(const void *buf, size_t n) override { return posix::write(fd, buf, n); }
-	_nodiscard ssize_t read(std::span<const Source::BufferPointer> bufs) override { return this->readv(reinterpret_cast<const struct iovec *>(bufs.data()), saturate<int>(bufs.size())); }
-	_nodiscard size_t write(std::span<const Sink::BufferPointer> bufs) override { return this->writev(reinterpret_cast<const struct iovec *>(bufs.data()), saturate<int>(bufs.size())); }
+	_nodiscard ssize_t read(void *buf, size_t n) { return posix::read(fd, buf, n); }
+	_nodiscard size_t write(const void *buf, size_t n) { return posix::write(fd, buf, n); }
+	_nodiscard ssize_t read(std::span<const BufferPointer> bufs) { return this->readv(reinterpret_cast<const struct iovec *>(bufs.data()), saturate<int>(bufs.size())); }
+	_nodiscard size_t write(std::span<const ConstBufferPointer> bufs) { return this->writev(reinterpret_cast<const struct iovec *>(bufs.data()), saturate<int>(bufs.size())); }
 	_nodiscard ssize_t readv(const struct iovec iov[], int iovcnt) { return posix::readv(fd, iov, iovcnt); }
 	_nodiscard size_t writev(const struct iovec iov[], int iovcnt) { return posix::writev(fd, iov, iovcnt); }
 	_nodiscard ssize_t pread(void *buf, size_t nbyte, off_t offset) const { return posix::pread(fd, buf, nbyte, offset); }
@@ -251,7 +248,21 @@ public:
 	void preadv_fully(struct iovec iov[], int iovcnt, off_t offset) const;
 	void pwritev_fully(struct iovec iov[], int iovcnt, off_t offset);
 
+	using Readable::read;
+	using Readable::read_fully;
+	using Writable::write;
+	using Writable::write_fully;
+
 };
+
+extern template class Readable<FileDescriptor>;
+extern template class Writable<FileDescriptor>;
+
+using FileSource = InputSource<std::reference_wrapper<FileDescriptor>>;
+extern template class InputSource<std::reference_wrapper<FileDescriptor>>;
+
+using FileSink = OutputSink<std::reference_wrapper<FileDescriptor>>;
+extern template class OutputSink<std::reference_wrapper<FileDescriptor>>;
 
 
 #if _POSIX_VERSION < 200809L

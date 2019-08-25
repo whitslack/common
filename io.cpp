@@ -1,144 +1,17 @@
-#include "io.h"
-
-#include <system_error>
+#include "io.tcc"
 
 #include "narrow.h"
 
 
-ssize_t Source::read(std::span<const BufferPointer> bufs) {
-	ssize_t ret = 0;
-	for (auto [buf, n] : bufs) {
-		while (n > 0) {
-			ssize_t r = this->read(buf, n);
-			if (r <= 0) {
-				return ret == 0 ? r : ret;
-			}
-			ret += r;
-			buf = static_cast<std::byte *>(buf) + r, n -= r;
-		}
-	}
-	return ret;
-}
+template class Readable<Source>;
+template class Writable<Sink>;
+template class Flushable<Sink>;
 
-void Source::read_fully(void *buf, size_t n) {
-	while (n > 0) {
-		ssize_t r = this->read(buf, n);
-		if (_likely(r > 0)) {
-			buf = static_cast<std::byte *>(buf) + r, n -= r;
-		}
-		else if (r < 0) {
-			throw std::ios_base::failure("premature EOF");
-		}
-		else {
-			throw std::logic_error("non-blocking read in blocking context");
-		}
-	}
-}
-
-void Source::read_fully(std::span<const BufferPointer> bufs) {
-	while (!bufs.empty()) {
-		ssize_t r = this->read(bufs);
-		if (_likely(r > 0)) {
-			while ((r -= bufs.front().size) > 0) {
-				bufs = bufs.subspan(1);
-			}
-			if (r < 0) {
-				this->read_fully(static_cast<std::byte *>(bufs.front().ptr) + bufs.front().size + r, -r);
-			}
-			bufs = bufs.subspan(1);
-		}
-		else if (r < 0) {
-			throw std::ios_base::failure("premature EOF");
-		}
-		else {
-			throw std::logic_error("non-blocking read in blocking context");
-		}
-	}
-}
-
-
-size_t Sink::write(std::span<const BufferPointer> bufs) {
-	size_t ret = 0;
-	for (auto [buf, n] : bufs) {
-		while (n > 0) {
-			size_t w = this->write(buf, n);
-			if (w == 0) {
-				return ret;
-			}
-			ret += w;
-			buf = static_cast<const std::byte *>(buf) + w, n -= w;
-		}
-	}
-	return ret;
-}
-
-void Sink::write_fully(const void *buf, size_t n) {
-	while (n > 0) {
-		size_t w = this->write(buf, n);
-		if (_likely(w > 0)) {
-			buf = static_cast<const std::byte *>(buf) + w, n -= w;
-		}
-		else {
-			throw std::logic_error("non-blocking write in blocking context");
-		}
-	}
-}
-
-void Sink::write_fully(std::span<const BufferPointer> bufs) {
-	while (!bufs.empty()) {
-		size_t w = this->write(bufs);
-		if (_likely(w > 0)) {
-			while (w > bufs.front().size) {
-				w -= bufs.front().size;
-				bufs = bufs.subspan(1);
-			}
-			if (w < bufs[0].size) {
-				this->write_fully(static_cast<const std::byte *>(bufs.front().ptr) + w, bufs.front().size - w);
-			}
-			bufs = bufs.subspan(1);
-		}
-		else {
-			throw std::logic_error("non-blocking write in blocking context");
-		}
-	}
-}
-
-void Sink::flush_fully() {
-	if (_unlikely(!this->flush())) {
-		throw std::logic_error("non-blocking write in blocking context");
-	}
-}
-
-
-ssize_t LimitedSource::read(void *buf, size_t n) {
-	if (n == 0) {
-		return 0;
-	}
-	if (n > remaining) {
-		if (remaining == 0) {
-			return -1;
-		}
-		n = static_cast<size_t>(remaining);
-	}
-	ssize_t r = source.read(buf, n);
-	if (r > 0) {
-		remaining -= r;
-	}
-	return r;
-}
-
-
-size_t LimitedSink::write(const void *buf, size_t n) {
-	if (n > remaining) {
-		n = static_cast<size_t>(remaining);
-	}
-	if (n == 0) {
-		return 0;
-	}
-	size_t w = sink.write(buf, n);
-	remaining -= w;
-	return w;
-}
+template class InputSource<>;
+template class OutputSink<>;
+template class InputSource<LimitedReadable<>>;
+template class OutputSink<LimitedWritable<>>;
+template class InputSource<DelimitedReadable<>>;
 
 
 ssize_t read(void *dst, ConstBufferView &src, size_t n) noexcept {
@@ -222,27 +95,6 @@ size_t BufferedSink::write(const void *buf, size_t n) {
 bool BufferedSink::flush() {
 	size_t b = pptr - gptr;
 	return (b == 0 || (gptr += sink.write(gptr, b)) == pptr) && sink.flush();
-}
-
-
-ssize_t DelimitedSource::read(void *buf, size_t n) {
-	ssize_t r = 0;
-	while (n > 0) {
-		std::ptrdiff_t d;
-		if ((d = delimiter.end() - delim_itr) <= 0) {
-			return r == 0 ? -1 : r;
-		}
-		ssize_t s;
-		if ((s = source.read(buf, std::min(static_cast<size_t>(d), n))) <= 0) {
-			return r == 0 ? s : r;
-		}
-		for (ssize_t i = 0; i < s; ++i) {
-			char c = static_cast<char *>(buf)[i];
-			delim_itr = c == *delim_itr ? delim_itr + 1 : c == *delimiter.begin() ? delimiter.begin() + 1 : delimiter.begin();
-		}
-		buf = static_cast<char *>(buf) + s, n -= s, r += s;
-	}
-	return r;
 }
 
 

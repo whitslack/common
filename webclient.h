@@ -48,6 +48,8 @@ public:
 
 private:
 	Socket socket;
+	FileSource socket_source;
+	FileSink socket_sink;
 	BufferedSource buffered_source;
 	BufferedSink buffered_sink;
 
