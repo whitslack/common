@@ -43,38 +43,27 @@ static inline std::enable_if_t<std::is_integral_v<T> && std::is_unsigned_v<T>, S
 }
 
 template <typename T>
-struct _varint {
-	T x;
+class varint {
+	static_assert(std::is_integral_v<std::remove_reference_t<T>>, "type parameter must be an integral type");
+private:
+	T &&x;
+public:
+	constexpr explicit varint(T &&x) noexcept : x(x) { }
+	friend Source & operator >> (Source &source, varint varint) { return read_varint(source, varint.x); }
+	friend Sink & operator << (Sink &sink, varint varint) { return write_varint(sink, varint.x); }
 };
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral_v<T>, _varint<T &>> varint(T &x) {
-	return { x };
-}
+explicit varint(T &&) -> varint<T &&>;
 
 template <typename T>
-static inline std::enable_if_t<std::is_integral_v<T>, _varint<const T>> varint(const T &x) {
-	return { x };
-}
-
-template <typename T>
-static inline _varint<std::underlying_type_t<T> &> varenum(T &ref) {
+static inline varint<std::underlying_type_t<T> &> varenum(T &ref) {
 	return varint(reinterpret_cast<std::underlying_type_t<T> &>(ref));
 }
 
 template <typename T>
-static inline _varint<const std::underlying_type_t<T>> varenum(const T &ref) {
+static inline varint<const std::underlying_type_t<T>> varenum(const T &ref) {
 	return varint(reinterpret_cast<const std::underlying_type_t<T> &>(ref));
-}
-
-template <typename T>
-static inline Source & operator >> (Source &source, _varint<T> varint) {
-	return read_varint(source, varint.x);
-}
-
-template <typename T>
-static inline Sink & operator << (Sink &sink, _varint<T> varint) {
-	return write_varint(sink, varint.x);
 }
 
 template <typename T>

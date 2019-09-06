@@ -3,25 +3,21 @@
 // copied from GManNickG's blog post at http://www.gmannickg.com/?p=28
 // modified to support warning-free narrowing conversions of arithmetic types
 // modified to support use in compile-time constant expressions
+// modified to utilize a user-defined template deduction guide instead of a helper function
 
 #include <utility>
 
 template <typename T>
-class auto_cast_wrapper
+class auto_cast
 {
-	template <typename R>
-	friend constexpr auto_cast_wrapper<R> auto_cast(R&& x) noexcept;
-
-private:
-	constexpr auto_cast_wrapper(T&& x) noexcept :
+public:
+	constexpr explicit auto_cast(T&& x) noexcept :
 	mX(std::forward<T>(x))
 	{}
 
-	constexpr auto_cast_wrapper(const auto_cast_wrapper& other) noexcept :
-	mX(std::forward<T>(other.mX))
-	{}
-
-	auto_cast_wrapper& operator=(const auto_cast_wrapper&) = delete;
+private:
+	auto_cast(const auto_cast&) = delete;
+	auto_cast& operator=(const auto_cast&) = delete;
 
 	T&& mX;
 
@@ -47,8 +43,5 @@ public:
 	}
 };
 
-template <typename R>
-constexpr auto_cast_wrapper<R> auto_cast(R&& x) noexcept
-{
-	return auto_cast_wrapper<R>(std::forward<R>(x));
-}
+template <typename T>
+explicit auto_cast(T&&) -> auto_cast<T&&>;
