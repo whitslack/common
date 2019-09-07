@@ -1,6 +1,5 @@
 #pragma once
 
-#include <climits>
 #include <cstdint>
 #include <type_traits>
 
@@ -62,37 +61,9 @@
 #define _likely(...) __builtin_expect(!!(__VA_ARGS__), true)
 #define _unlikely(...) __builtin_expect(!!(__VA_ARGS__), false)
 
-static constexpr auto _const _ffs(int v) noexcept { return __builtin_ffs(v); }
-static constexpr auto _const _ffs(long v) noexcept { return __builtin_ffsl(v); }
-static constexpr auto _const _ffs(long long v) noexcept { return __builtin_ffsll(v); }
-
-static constexpr auto _const _clz(unsigned v) noexcept { return __builtin_clz(v); }
-static constexpr auto _const _clz(unsigned long v) noexcept { return __builtin_clzl(v); }
-static constexpr auto _const _clz(unsigned long long v) noexcept { return __builtin_clzll(v); }
-
-static constexpr auto _const _ctz(unsigned v) noexcept { return __builtin_ctz(v); }
-static constexpr auto _const _ctz(unsigned long v) noexcept { return __builtin_ctzl(v); }
-static constexpr auto _const _ctz(unsigned long long v) noexcept { return __builtin_ctzll(v); }
-
-static constexpr auto _const _clrsb(int v) noexcept { return __builtin_clrsb(v); }
-static constexpr auto _const _clrsb(long v) noexcept { return __builtin_clrsbl(v); }
-static constexpr auto _const _clrsb(long long v) noexcept { return __builtin_clrsbll(v); }
-
-static constexpr auto _const _popcount(unsigned v) noexcept { return __builtin_popcount(v); }
-static constexpr auto _const _popcount(unsigned long v) noexcept { return __builtin_popcountl(v); }
-static constexpr auto _const _popcount(unsigned long long v) noexcept { return __builtin_popcountll(v); }
-
 static constexpr auto _const _parity(unsigned v) noexcept { return __builtin_parity(v); }
 static constexpr auto _const _parity(unsigned long v) noexcept { return __builtin_parityl(v); }
 static constexpr auto _const _parity(unsigned long long v) noexcept { return __builtin_parityll(v); }
-
-static constexpr unsigned _const rotl(unsigned v, unsigned s) noexcept { return v << s | v >> sizeof v * CHAR_BIT - s; }
-static constexpr unsigned long _const rotl(unsigned long v, unsigned s) noexcept { return v << s | v >> sizeof v * CHAR_BIT - s; }
-static constexpr unsigned long long _const rotl(unsigned long long v, unsigned s) noexcept { return v << s | v >> sizeof v * CHAR_BIT - s; }
-
-static constexpr unsigned _const rotr(unsigned v, unsigned s) noexcept { return v >> s | v << sizeof v * CHAR_BIT - s; }
-static constexpr unsigned long _const rotr(unsigned long v, unsigned s) noexcept { return v >> s | v << sizeof v * CHAR_BIT - s; }
-static constexpr unsigned long long _const rotr(unsigned long long v, unsigned s) noexcept { return v >> s | v << sizeof v * CHAR_BIT - s; }
 
 template <typename T> static constexpr std::enable_if_t<std::is_integral_v<T> && sizeof(T) == sizeof(uint16_t), T> _const bswap(T v) noexcept { return __builtin_bswap16(v); }
 template <typename T> static constexpr std::enable_if_t<std::is_integral_v<T> && sizeof(T) == sizeof(uint32_t), T> _const bswap(T v) noexcept { return __builtin_bswap32(v); }

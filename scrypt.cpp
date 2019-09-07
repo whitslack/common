@@ -1,5 +1,6 @@
 #include "scrypt.h"
 
+#include <bit>
 #include <future>
 
 #include "compiler.h"
@@ -17,22 +18,22 @@ static void salsa20_8_core(void * _restrict out, const void * _restrict in) noex
 		outw[i] = as_le(inw[i]);
 	}
 	for (size_t i = 0; i < 4; ++i) {
-		outw[ 4] ^= rotl(outw[ 0] + outw[12],  7);	outw[ 9] ^= rotl(outw[ 5] + outw[ 1],  7);
-		outw[14] ^= rotl(outw[10] + outw[ 6],  7);	outw[ 3] ^= rotl(outw[15] + outw[11],  7);
-		outw[ 8] ^= rotl(outw[ 4] + outw[ 0],  9);	outw[13] ^= rotl(outw[ 9] + outw[ 5],  9);
-		outw[ 2] ^= rotl(outw[14] + outw[10],  9);	outw[ 7] ^= rotl(outw[ 3] + outw[15],  9);
-		outw[12] ^= rotl(outw[ 8] + outw[ 4], 13);	outw[ 1] ^= rotl(outw[13] + outw[ 9], 13);
-		outw[ 6] ^= rotl(outw[ 2] + outw[14], 13);	outw[11] ^= rotl(outw[ 7] + outw[ 3], 13);
-		outw[ 0] ^= rotl(outw[12] + outw[ 8], 18);	outw[ 5] ^= rotl(outw[ 1] + outw[13], 18);
-		outw[10] ^= rotl(outw[ 6] + outw[ 2], 18);	outw[15] ^= rotl(outw[11] + outw[ 7], 18);
-		outw[ 1] ^= rotl(outw[ 0] + outw[ 3],  7);	outw[ 6] ^= rotl(outw[ 5] + outw[ 4],  7);
-		outw[11] ^= rotl(outw[10] + outw[ 9],  7);	outw[12] ^= rotl(outw[15] + outw[14],  7);
-		outw[ 2] ^= rotl(outw[ 1] + outw[ 0],  9);	outw[ 7] ^= rotl(outw[ 6] + outw[ 5],  9);
-		outw[ 8] ^= rotl(outw[11] + outw[10],  9);	outw[13] ^= rotl(outw[12] + outw[15],  9);
-		outw[ 3] ^= rotl(outw[ 2] + outw[ 1], 13);	outw[ 4] ^= rotl(outw[ 7] + outw[ 6], 13);
-		outw[ 9] ^= rotl(outw[ 8] + outw[11], 13);	outw[14] ^= rotl(outw[13] + outw[12], 13);
-		outw[ 0] ^= rotl(outw[ 3] + outw[ 2], 18);	outw[ 5] ^= rotl(outw[ 4] + outw[ 7], 18);
-		outw[10] ^= rotl(outw[ 9] + outw[ 8], 18);	outw[15] ^= rotl(outw[14] + outw[13], 18);
+		outw[ 4] ^= std::rotl(outw[ 0] + outw[12],  7);	outw[ 9] ^= std::rotl(outw[ 5] + outw[ 1],  7);
+		outw[14] ^= std::rotl(outw[10] + outw[ 6],  7);	outw[ 3] ^= std::rotl(outw[15] + outw[11],  7);
+		outw[ 8] ^= std::rotl(outw[ 4] + outw[ 0],  9);	outw[13] ^= std::rotl(outw[ 9] + outw[ 5],  9);
+		outw[ 2] ^= std::rotl(outw[14] + outw[10],  9);	outw[ 7] ^= std::rotl(outw[ 3] + outw[15],  9);
+		outw[12] ^= std::rotl(outw[ 8] + outw[ 4], 13);	outw[ 1] ^= std::rotl(outw[13] + outw[ 9], 13);
+		outw[ 6] ^= std::rotl(outw[ 2] + outw[14], 13);	outw[11] ^= std::rotl(outw[ 7] + outw[ 3], 13);
+		outw[ 0] ^= std::rotl(outw[12] + outw[ 8], 18);	outw[ 5] ^= std::rotl(outw[ 1] + outw[13], 18);
+		outw[10] ^= std::rotl(outw[ 6] + outw[ 2], 18);	outw[15] ^= std::rotl(outw[11] + outw[ 7], 18);
+		outw[ 1] ^= std::rotl(outw[ 0] + outw[ 3],  7);	outw[ 6] ^= std::rotl(outw[ 5] + outw[ 4],  7);
+		outw[11] ^= std::rotl(outw[10] + outw[ 9],  7);	outw[12] ^= std::rotl(outw[15] + outw[14],  7);
+		outw[ 2] ^= std::rotl(outw[ 1] + outw[ 0],  9);	outw[ 7] ^= std::rotl(outw[ 6] + outw[ 5],  9);
+		outw[ 8] ^= std::rotl(outw[11] + outw[10],  9);	outw[13] ^= std::rotl(outw[12] + outw[15],  9);
+		outw[ 3] ^= std::rotl(outw[ 2] + outw[ 1], 13);	outw[ 4] ^= std::rotl(outw[ 7] + outw[ 6], 13);
+		outw[ 9] ^= std::rotl(outw[ 8] + outw[11], 13);	outw[14] ^= std::rotl(outw[13] + outw[12], 13);
+		outw[ 0] ^= std::rotl(outw[ 3] + outw[ 2], 18);	outw[ 5] ^= std::rotl(outw[ 4] + outw[ 7], 18);
+		outw[10] ^= std::rotl(outw[ 9] + outw[ 8], 18);	outw[15] ^= std::rotl(outw[14] + outw[13], 18);
 	}
 	for (size_t i = 0; i < 16; ++i) {
 		as_le(outw[i]) = outw[i] + as_le(inw[i]);

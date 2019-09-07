@@ -1,5 +1,6 @@
 #include "http.h"
 
+#include <climits>
 #include <iomanip>
 #include <regex>
 #include <sstream>

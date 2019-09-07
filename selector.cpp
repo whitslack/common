@@ -3,6 +3,8 @@
 
 #ifdef __linux__
 
+#include <climits>
+
 #include <sys/epoll.h>
 #include <sys/eventfd.h>
 

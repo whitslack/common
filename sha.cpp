@@ -1,5 +1,6 @@
 #include "sha.h"
 
+#include <bit>
 
 #include "hash.tcc"
 
@@ -15,24 +16,24 @@ void SHA1::update(const uint8_t (&block)[64]) {
 		words[i] = reinterpret_cast<const be<uint32_t> (&)[16]>(block)[i];
 	}
 	for (size_t i = 16; i < 80; ++i) {
-		words[i] = rotl(words[i - 3] ^ words[i - 8] ^ words[i - 14] ^ words[i - 16], 1);
+		words[i] = std::rotl(words[i - 3] ^ words[i - 8] ^ words[i - 14] ^ words[i - 16], 1);
 	}
 	uint32_t a = state[0], b = state[1], c = state[2], d = state[3], e = state[4];
 	for (size_t i = 0; i < 20; ++i) {
-		uint32_t temp = e + ((d ^ c) & b ^ d) + rotl(a, 5) + 0x5a827999 + words[i];
-		e = d, d = c, c = rotl(b, 30), b = a, a = temp;
+		uint32_t temp = e + ((d ^ c) & b ^ d) + std::rotl(a, 5) + 0x5a827999 + words[i];
+		e = d, d = c, c = std::rotl(b, 30), b = a, a = temp;
 	}
 	for (size_t i = 20; i < 40; ++i) {
-		uint32_t temp = e + (d ^ c ^ b) + rotl(a, 5) + 0x6ed9eba1 + words[i];
-		e = d, d = c, c = rotl(b, 30), b = a, a = temp;
+		uint32_t temp = e + (d ^ c ^ b) + std::rotl(a, 5) + 0x6ed9eba1 + words[i];
+		e = d, d = c, c = std::rotl(b, 30), b = a, a = temp;
 	}
 	for (size_t i = 40; i < 60; ++i) {
-		uint32_t temp = e + (d & (c ^ b) ^ c & b) + rotl(a, 5) + 0x8f1bbcdc + words[i];
-		e = d, d = c, c = rotl(b, 30), b = a, a = temp;
+		uint32_t temp = e + (d & (c ^ b) ^ c & b) + std::rotl(a, 5) + 0x8f1bbcdc + words[i];
+		e = d, d = c, c = std::rotl(b, 30), b = a, a = temp;
 	}
 	for (size_t i = 60; i < 80; ++i) {
-		uint32_t temp = e + (d ^ c ^ b) + rotl(a, 5) + 0xca62c1d6 + words[i];
-		e = d, d = c, c = rotl(b, 30), b = a, a = temp;
+		uint32_t temp = e + (d ^ c ^ b) + std::rotl(a, 5) + 0xca62c1d6 + words[i];
+		e = d, d = c, c = std::rotl(b, 30), b = a, a = temp;
 	}
 	state[0] += a, state[1] += b, state[2] += c, state[3] += d, state[4] += e;
 }
@@ -56,13 +57,13 @@ void SHA256Base<Digest_Size>::update(const uint8_t (&block)[64]) {
 		words[i] = reinterpret_cast<const be<uint32_t> (&)[16]>(block)[i];
 	}
 	for (size_t i = 16; i < 64; ++i) {
-		words[i] = words[i - 16] + (rotr(words[i - 15], 7) ^ rotr(words[i - 15], 18) ^ words[i - 15] >> 3) + words[i - 7] + (rotr(words[i - 2], 17) ^ rotr(words[i - 2], 19) ^ words[i - 2] >> 10);
+		words[i] = words[i - 16] + (std::rotr(words[i - 15], 7) ^ std::rotr(words[i - 15], 18) ^ words[i - 15] >> 3) + words[i - 7] + (std::rotr(words[i - 2], 17) ^ std::rotr(words[i - 2], 19) ^ words[i - 2] >> 10);
 	}
 	uint32_t a = this->state[0], b = this->state[1], c = this->state[2], d = this->state[3], e = this->state[4], f = this->state[5], g = this->state[6], h = this->state[7];
 	for (size_t i = 0; i < 64; ++i) {
-		uint32_t t1 = h + ((g ^ f) & e ^ g) + (rotr(e, 6) ^ rotr(e, 11) ^ rotr(e, 25)) + sha256_round_constants[i] + words[i];
+		uint32_t t1 = h + ((g ^ f) & e ^ g) + (std::rotr(e, 6) ^ std::rotr(e, 11) ^ std::rotr(e, 25)) + sha256_round_constants[i] + words[i];
 		h = g, g = f, f = e, e = d + t1;
-		uint32_t t2 = (c & (b ^ a) ^ b & a) + (rotr(a, 2) ^ rotr(a, 13) ^ rotr(a, 22));
+		uint32_t t2 = (c & (b ^ a) ^ b & a) + (std::rotr(a, 2) ^ std::rotr(a, 13) ^ std::rotr(a, 22));
 		d = c, c = b, b = a, a = t1 + t2;
 	}
 	this->state[0] += a, this->state[1] += b, this->state[2] += c, this->state[3] += d, this->state[4] += e, this->state[5] += f, this->state[6] += g, this->state[7] += h;
@@ -115,13 +116,13 @@ void SHA512Base<Digest_Size>::update(const uint8_t (&block)[128]) {
 		words[i] = reinterpret_cast<const be<uint64_t> (&)[16]>(block)[i];
 	}
 	for (size_t i = 16; i < 80; ++i) {
-		words[i] = words[i - 16] + (rotr(words[i - 15], 1) ^ rotr(words[i - 15], 8) ^ words[i - 15] >> 7) + words[i - 7] + (rotr(words[i - 2], 19) ^ rotr(words[i - 2], 61) ^ words[i - 2] >> 6);
+		words[i] = words[i - 16] + (std::rotr(words[i - 15], 1) ^ std::rotr(words[i - 15], 8) ^ words[i - 15] >> 7) + words[i - 7] + (std::rotr(words[i - 2], 19) ^ std::rotr(words[i - 2], 61) ^ words[i - 2] >> 6);
 	}
 	uint64_t a = this->state[0], b = this->state[1], c = this->state[2], d = this->state[3], e = this->state[4], f = this->state[5], g = this->state[6], h = this->state[7];
 	for (size_t i = 0; i < 80; ++i) {
-		uint64_t t1 = h + ((g ^ f) & e ^ g) + (rotr(e, 14) ^ rotr(e, 18) ^ rotr(e, 41)) + sha512_round_constants[i] + words[i];
+		uint64_t t1 = h + ((g ^ f) & e ^ g) + (std::rotr(e, 14) ^ std::rotr(e, 18) ^ std::rotr(e, 41)) + sha512_round_constants[i] + words[i];
 		h = g, g = f, f = e, e = d + t1;
-		uint64_t t2 = (c & (b ^ a) ^ b & a) + (rotr(a, 28) ^ rotr(a, 34) ^ rotr(a, 39));
+		uint64_t t2 = (c & (b ^ a) ^ b & a) + (std::rotr(a, 28) ^ std::rotr(a, 34) ^ std::rotr(a, 39));
 		d = c, c = b, b = a, a = t1 + t2;
 	}
 	this->state[0] += a, this->state[1] += b, this->state[2] += c, this->state[3] += d, this->state[4] += e, this->state[5] += f, this->state[6] += g, this->state[7] += h;

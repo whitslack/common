@@ -1,5 +1,6 @@
 #include "websocket.h"
 
+#include <bit>
 #include <iostream>
 #include <sstream>
 #include <stdexcept>
@@ -28,10 +29,10 @@ static void memxor32(void *buf, size_t n, uint32_t mask, size_t phase) {
 		uintptr_t uintptr;
 	} ptr;
 	ptr.void_ptr = buf;
-	uint32_t mask_le = rotr(as_le(mask), unsigned(phase * 8));
+	uint32_t mask_le = std::rotr(+as_le(mask), unsigned(phase * 8));
 	while (n > 0 && ptr.uintptr % sizeof(vec_t)) {
 		*ptr.uint8_ptr = static_cast<uint8_t>(*ptr.uint8_ptr ^ mask_le), ++ptr.uint8_ptr, --n;
-		mask_le = rotr(mask_le, 8);
+		mask_le = std::rotr(mask_le, 8);
 	}
 	uint32_t mask_he = as_le(mask_le);
 	while (n >= sizeof(vec_t)) {
@@ -39,7 +40,7 @@ static void memxor32(void *buf, size_t n, uint32_t mask, size_t phase) {
 	}
 	while (n > 0) {
 		*ptr.uint8_ptr = static_cast<uint8_t>(*ptr.uint8_ptr ^ mask_le), ++ptr.uint8_ptr, --n;
-		mask_le = rotr(mask_le, 8);
+		mask_le = std::rotr(mask_le, 8);
 	}
 }
 

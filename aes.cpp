@@ -1,5 +1,6 @@
 #include "aes.h"
 
+#include <bit>
 #include <cassert>
 
 #include "endian.h"
@@ -136,55 +137,55 @@ size_t AESEncrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[
 	uint32_t t0, t1, t2, t3;
 	for (size_t i = 0;;) {
 		t0 =
-				rotr(encrypt_table[static_cast<uint8_t>(s0 >> 24)],  0) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s1 >> 16)],  8) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s2 >>  8)], 16) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s3 >>  0)], 24) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s0 >> 24)],  0) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s1 >> 16)],  8) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s2 >>  8)], 16) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s3 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 4];
 		t1 =
-				rotr(encrypt_table[static_cast<uint8_t>(s1 >> 24)],  0) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s2 >> 16)],  8) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s3 >>  8)], 16) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s0 >>  0)], 24) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s1 >> 24)],  0) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s2 >> 16)],  8) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s3 >>  8)], 16) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s0 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 5];
 		t2 =
-				rotr(encrypt_table[static_cast<uint8_t>(s2 >> 24)],  0) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s3 >> 16)],  8) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s0 >>  8)], 16) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s1 >>  0)], 24) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s2 >> 24)],  0) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s3 >> 16)],  8) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s0 >>  8)], 16) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s1 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 6];
 		t3 =
-				rotr(encrypt_table[static_cast<uint8_t>(s3 >> 24)],  0) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s0 >> 16)],  8) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s1 >>  8)], 16) ^
-				rotr(encrypt_table[static_cast<uint8_t>(s2 >>  0)], 24) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s3 >> 24)],  0) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s0 >> 16)],  8) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s1 >>  8)], 16) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(s2 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 7];
 		if (++i == AESBase<Key_Size>::sched_size / 8) {
 			break;
 		}
 		s0 =
-				rotr(encrypt_table[static_cast<uint8_t>(t0 >> 24)],  0) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t1 >> 16)],  8) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t2 >>  8)], 16) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t3 >>  0)], 24) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t0 >> 24)],  0) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t1 >> 16)],  8) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t2 >>  8)], 16) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t3 >>  0)], 24) ^
 				this->key_schedule[i * 8];
 		s1 =
-				rotr(encrypt_table[static_cast<uint8_t>(t1 >> 24)],  0) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t2 >> 16)],  8) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t3 >>  8)], 16) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t0 >>  0)], 24) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t1 >> 24)],  0) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t2 >> 16)],  8) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t3 >>  8)], 16) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t0 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 1];
 		s2 =
-				rotr(encrypt_table[static_cast<uint8_t>(t2 >> 24)],  0) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t3 >> 16)],  8) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t0 >>  8)], 16) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t1 >>  0)], 24) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t2 >> 24)],  0) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t3 >> 16)],  8) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t0 >>  8)], 16) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t1 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 2];
 		s3 =
-				rotr(encrypt_table[static_cast<uint8_t>(t3 >> 24)],  0) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t0 >> 16)],  8) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t1 >>  8)], 16) ^
-				rotr(encrypt_table[static_cast<uint8_t>(t2 >>  0)], 24) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t3 >> 24)],  0) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t0 >> 16)],  8) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t1 >>  8)], 16) ^
+				std::rotr(encrypt_table[static_cast<uint8_t>(t2 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 3];
 	}
 	reinterpret_cast<be<uint32_t> (&)[4]>(out)[0] =
@@ -223,10 +224,10 @@ AESDecrypterBase<Key_Size>::AESDecrypterBase(const AESEncrypterBase<Key_Size> &e
 	for (size_t j = 4; j < AESBase<Key_Size>::sched_size - 4; j += 4) {
 		for (size_t i = 0; i < 4; ++i) {
 			this->key_schedule[j + i] =
-					rotr(decrypt_table[encrypt_sbox[static_cast<uint8_t>(encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 - j + i] >> 24)]],  0) ^
-					rotr(decrypt_table[encrypt_sbox[static_cast<uint8_t>(encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 - j + i] >> 16)]],  8) ^
-					rotr(decrypt_table[encrypt_sbox[static_cast<uint8_t>(encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 - j + i] >>  8)]], 16) ^
-					rotr(decrypt_table[encrypt_sbox[static_cast<uint8_t>(encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 - j + i] >>  0)]], 24);
+					std::rotr(decrypt_table[encrypt_sbox[static_cast<uint8_t>(encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 - j + i] >> 24)]],  0) ^
+					std::rotr(decrypt_table[encrypt_sbox[static_cast<uint8_t>(encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 - j + i] >> 16)]],  8) ^
+					std::rotr(decrypt_table[encrypt_sbox[static_cast<uint8_t>(encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 - j + i] >>  8)]], 16) ^
+					std::rotr(decrypt_table[encrypt_sbox[static_cast<uint8_t>(encrypter.key_schedule[AESBase<Key_Size>::sched_size - 4 - j + i] >>  0)]], 24);
 		}
 	}
 	for (size_t i = 0; i < 4; ++i) {
@@ -244,55 +245,55 @@ size_t AESDecrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[
 	uint32_t t0, t1, t2, t3;
 	for (size_t i = 0;;) {
 		t0 =
-				rotr(decrypt_table[static_cast<uint8_t>(s0 >> 24)],  0) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s3 >> 16)],  8) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s2 >>  8)], 16) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s1 >>  0)], 24) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s0 >> 24)],  0) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s3 >> 16)],  8) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s2 >>  8)], 16) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s1 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 4];
 		t1 =
-				rotr(decrypt_table[static_cast<uint8_t>(s1 >> 24)],  0) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s0 >> 16)],  8) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s3 >>  8)], 16) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s2 >>  0)], 24) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s1 >> 24)],  0) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s0 >> 16)],  8) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s3 >>  8)], 16) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s2 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 5];
 		t2 =
-				rotr(decrypt_table[static_cast<uint8_t>(s2 >> 24)],  0) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s1 >> 16)],  8) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s0 >>  8)], 16) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s3 >>  0)], 24) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s2 >> 24)],  0) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s1 >> 16)],  8) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s0 >>  8)], 16) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s3 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 6];
 		t3 =
-				rotr(decrypt_table[static_cast<uint8_t>(s3 >> 24)],  0) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s2 >> 16)],  8) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s1 >>  8)], 16) ^
-				rotr(decrypt_table[static_cast<uint8_t>(s0 >>  0)], 24) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s3 >> 24)],  0) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s2 >> 16)],  8) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s1 >>  8)], 16) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(s0 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 7];
 		if (++i == AESBase<Key_Size>::sched_size / 8) {
 			break;
 		}
 		s0 =
-				rotr(decrypt_table[static_cast<uint8_t>(t0 >> 24)],  0) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t3 >> 16)],  8) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t2 >>  8)], 16) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t1 >>  0)], 24) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t0 >> 24)],  0) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t3 >> 16)],  8) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t2 >>  8)], 16) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t1 >>  0)], 24) ^
 				this->key_schedule[i * 8];
 		s1 =
-				rotr(decrypt_table[static_cast<uint8_t>(t1 >> 24)],  0) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t0 >> 16)],  8) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t3 >>  8)], 16) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t2 >>  0)], 24) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t1 >> 24)],  0) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t0 >> 16)],  8) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t3 >>  8)], 16) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t2 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 1];
 		s2 =
-				rotr(decrypt_table[static_cast<uint8_t>(t2 >> 24)],  0) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t1 >> 16)],  8) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t0 >>  8)], 16) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t3 >>  0)], 24) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t2 >> 24)],  0) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t1 >> 16)],  8) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t0 >>  8)], 16) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t3 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 2];
 		s3 =
-				rotr(decrypt_table[static_cast<uint8_t>(t3 >> 24)],  0) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t2 >> 16)],  8) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t1 >>  8)], 16) ^
-				rotr(decrypt_table[static_cast<uint8_t>(t0 >>  0)], 24) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t3 >> 24)],  0) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t2 >> 16)],  8) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t1 >>  8)], 16) ^
+				std::rotr(decrypt_table[static_cast<uint8_t>(t0 >>  0)], 24) ^
 				this->key_schedule[i * 8 + 3];
 	}
 	reinterpret_cast<be<uint32_t> (&)[4]>(out)[0] =

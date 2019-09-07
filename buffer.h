@@ -1,5 +1,6 @@
 #pragma once
 
+#include <bit>
 #include <cstdint>
 #include <cstdlib>
 #include <cstring>
@@ -49,12 +50,12 @@ struct BasicBuffer : BasicStaticBuffer<T> {
 	}
 	void ensure(size_t min_size) {
 		if (this->size() < min_size) {
-			this->resize(size_t(1) << SIZE_WIDTH - _clz(min_size - 1));
+			this->resize(std::ceil2(min_size));
 		}
 	}
 	void append(const T data[], size_t n) {
 		if (this->pptr + n > this->eptr) {
-			this->resize(size_t(1) << SIZE_WIDTH - _clz(this->ppos() + n));
+			this->resize(std::ceil2(this->ppos() + n));
 		}
 		std::memcpy(this->pptr, data, n * sizeof(T)), this->pptr += n;
 	}

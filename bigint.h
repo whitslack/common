@@ -1,6 +1,7 @@
 #pragma once
 
 #include <array>
+#include <bit>
 
 #include "compiler.h"
 #include "pp.h"
@@ -285,7 +286,7 @@ static inline size_t _pure __clz(const std::array<WORD_T, W> &operand) noexcept 
 	for (size_t i = W; i > 0;) {
 		auto word = operand[WORD(W, --i)];
 		if (word) {
-			ret += _clz(word);
+			ret += std::countl_zero(word);
 			break;
 		}
 		ret += sizeof word * 8;
@@ -299,7 +300,7 @@ static inline size_t _pure __ctz(const std::array<WORD_T, W> &operand) noexcept 
 	for (size_t i = 0; i < W; ++i) {
 		auto word = operand[WORD(W, i)];
 		if (word) {
-			ret += _ctz(word);
+			ret += std::countr_zero(word);
 			break;
 		}
 		ret += sizeof word * 8;
@@ -311,7 +312,7 @@ template <typename WORD_T, size_t W>
 static inline size_t _pure __popcount(const std::array<WORD_T, W> &operand) noexcept {
 	size_t ret = 0;
 	for (size_t i = 0; i < W; ++i) {
-		ret += _popcount(operand[WORD(W, i)]);
+		ret += std::popcount(operand[WORD(W, i)]);
 	}
 	return ret;
 }
