@@ -21,6 +21,7 @@ LIB_SUFFIX := .so
 OS := $(shell uname -s)
 CFLAGS += -std=gnu11 -ffunction-sections -fdata-sections
 CXXFLAGS += -std=gnu++17 -ffunction-sections -fdata-sections
+LDFLAGS += -L$(LIBDIR)
 ifeq ($(OS),Darwin)
 LDFLAGS += -Wl,-dead_strip
 else
@@ -63,8 +64,8 @@ clean : $(CLEAN)
 	rm -rf $(sort $(OBJDIR) $(LIBDIR) $(BINDIR))
 
 $(OBJDIR)/%.o : %.c
-	mkdir -p $(@D) && $(COMPILE.c) -MMD -MP -o $@ $<
+	mkdir -p $(@D) && $(COMPILE.c) -MMD -MP -MQ $@ -o $@ $<
 $(OBJDIR)/%.o : %.cpp
-	mkdir -p $(@D) && $(COMPILE.cpp) -MMD -MP -o $@ $<
+	mkdir -p $(@D) && $(COMPILE.cpp) -MMD -MP -MQ $@ -o $@ $<
 
 -include $(addprefix $(OBJDIR)/,$(addsuffix .d,$(sort $(basename $(SOURCES)))))
