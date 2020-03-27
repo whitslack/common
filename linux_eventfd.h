@@ -3,6 +3,10 @@
 #include "fd.h"
 
 
+#undef linux
+namespace linux {
+
+
 class EventFD : public FileDescriptor {
 
 public:
@@ -10,6 +14,9 @@ public:
 
 public:
 	eventfd_t read();
-	void write(eventfd_t value);
+	_nodiscard bool write(eventfd_t value);
 
 };
+
+
+} // namespace linux
