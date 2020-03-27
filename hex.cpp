@@ -13,18 +13,18 @@ bool HexEncoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *
 		goto buf_full;
 	}
 	for (;;) {
-		if (n_in == 0) {
+		if (_unlikely(n_in == 0)) {
 			buf_full = false;
 			return true;
 		}
-		if (n_out == 0) {
+		if (_unlikely(n_out == 0)) {
 			buf_full = false;
 			return false;
 		}
 		b = *in++, --n_in;
 		*out++ = encode[b >> 4], --n_out;
 buf_full:
-		if (n_out == 0) {
+		if (_unlikely(n_out == 0)) {
 			buf_full = true, buf = static_cast<uint8_t>(b);
 			return false;
 		}
@@ -51,25 +51,25 @@ bool HexDecoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *
 		goto buf_full;
 	}
 	for (;;) {
-		if (n_in == 0) {
+		if (_unlikely(n_in == 0)) {
 			buf_full = false;
 			return true;
 		}
 		b0 = *in++, --n_in;
-		if ((b0 -= '0') > 'f' - '0' || static_cast<int>(b0 = decode[b0]) < 0) {
+		if (_unlikely((b0 -= '0') > 'f' - '0' || static_cast<int>(b0 = decode[b0]) < 0)) {
 			throw std::ios_base::failure("invalid hex");
 		}
 buf_full:
-		if (n_in == 0) {
+		if (_unlikely(n_in == 0)) {
 			buf_full = true, buf = static_cast<uint8_t>(b0);
 			return true;
 		}
-		if (n_out == 0) {
+		if (_unlikely(n_out == 0)) {
 			buf_full = true, buf = static_cast<uint8_t>(b0);
 			return false;
 		}
 		b1 = *in++, --n_in;
-		if ((b1 -= '0') > 'f' - '0' || static_cast<int>(b1 = decode[b1]) < 0) {
+		if (_unlikely((b1 -= '0') > 'f' - '0' || static_cast<int>(b1 = decode[b1]) < 0)) {
 			throw std::ios_base::failure("invalid hex");
 		}
 		*out++ = static_cast<uint8_t>(b0 << 4 | b1), --n_out;
@@ -77,7 +77,7 @@ buf_full:
 }
 
 bool HexDecoder::finish(uint8_t *&, size_t) {
-	if (buf_full) {
+	if (_unlikely(buf_full)) {
 		throw std::ios_base::failure("invalid hex");
 	}
 	return true;

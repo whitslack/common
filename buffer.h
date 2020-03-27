@@ -32,7 +32,7 @@ using StaticBuffer = BasicStaticBuffer<uint8_t>;
 template <typename T>
 struct BasicBuffer : BasicStaticBuffer<T> {
 	BasicBuffer() noexcept = default;
-	explicit BasicBuffer(size_t size) : BasicStaticBuffer<T>(static_cast<T *>(size == 0 ? nullptr : sizeof(T) == 1 ? std::malloc(size) : reallocarray(nullptr, size, sizeof(T))), size) { if (!this->bptr && size) throw std::bad_alloc(); }
+	explicit BasicBuffer(size_t size) : BasicStaticBuffer<T>(static_cast<T *>(size == 0 ? nullptr : sizeof(T) == 1 ? std::malloc(size) : reallocarray(nullptr, size, sizeof(T))), size) { if (_unlikely(!this->bptr && size)) throw std::bad_alloc(); }
 	BasicBuffer(BasicBuffer &&move) noexcept : BasicStaticBuffer<T>(std::move(move)) { move.eptr = move.pptr = move.gptr = move.bptr = nullptr; }
 	BasicBuffer & operator = (BasicBuffer &&move) noexcept { return this->swap(move), *this; }
 	~BasicBuffer() noexcept { std::free(this->bptr); }
@@ -40,7 +40,7 @@ struct BasicBuffer : BasicStaticBuffer<T> {
 	friend void swap(BasicBuffer &lhs, BasicBuffer &rhs) noexcept { lhs.swap(rhs); }
 	void resize(size_t size) {
 		T *new_bptr = static_cast<T *>(sizeof(T) == 1 ? std::realloc(this->bptr, size) : reallocarray(this->bptr, size, sizeof(T)));
-		if (!new_bptr && size) {
+		if (_unlikely(!new_bptr && size)) {
 			throw std::bad_alloc();
 		}
 		size_t gpos = this->gpos(), ppos = this->ppos();

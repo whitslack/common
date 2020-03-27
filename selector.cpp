@@ -15,7 +15,7 @@ static void epoll_ctl(FileDescriptor &epoll_fd, int op, FileDescriptor &fd, void
 			((flags & Selector::Flags::READABLE) != Selector::Flags::NONE ? static_cast<uint32_t>(EPOLLIN) : 0) |
 			((flags & Selector::Flags::WRITABLE) != Selector::Flags::NONE ? static_cast<uint32_t>(EPOLLOUT) : 0);
 	event.data.ptr = ptr;
-	if (::epoll_ctl(epoll_fd, op, fd, &event) < 0) {
+	if (_unlikely(::epoll_ctl(epoll_fd, op, fd, &event) < 0)) {
 		throw std::system_error(errno, std::system_category(), "epoll_ctl");
 	}
 }
@@ -23,7 +23,7 @@ static void epoll_ctl(FileDescriptor &epoll_fd, int op, FileDescriptor &fd, void
 static std::pair<void *, Selector::Flags> epoll_wait(FileDescriptor &epoll_fd, int timeout) {
 	struct epoll_event event;
 	int n = ::epoll_wait(epoll_fd, &event, 1, timeout);
-	if (n < 0 && errno != EINTR) {
+	if (_unlikely(n < 0 && errno != EINTR)) {
 		throw std::system_error(errno, std::system_category(), "epoll_wait");
 	}
 	if (n <= 0) {
@@ -37,7 +37,7 @@ static std::pair<void *, Selector::Flags> epoll_wait(FileDescriptor &epoll_fd, i
 static std::pair<void *, Selector::Flags> epoll_pwait(FileDescriptor &epoll_fd, int timeout, const sigset_t *sigmask) {
 	struct epoll_event event;
 	int n = ::epoll_pwait(epoll_fd, &event, 1, timeout, sigmask);
-	if (n < 0 && errno != EINTR) {
+	if (_unlikely(n < 0 && errno != EINTR)) {
 		throw std::system_error(errno, std::system_category(), "epoll_pwait");
 	}
 	if (n <= 0) {
@@ -51,7 +51,7 @@ static std::pair<void *, Selector::Flags> epoll_pwait(FileDescriptor &epoll_fd, 
 } // namespace linux
 
 Selector::Selector() : epoll_fd(::epoll_create1(EPOLL_CLOEXEC)) {
-	if (epoll_fd < 0) {
+	if (_unlikely(epoll_fd < 0)) {
 		throw std::system_error(errno, std::system_category(), "epoll_create1");
 	}
 }
@@ -90,7 +90,7 @@ void Selector::kick() {
 	event.data.ptr = nullptr;
 	int op;
 	if (event_fd < 0) {
-		if ((event_fd = FileDescriptor(::eventfd(1, EFD_CLOEXEC))) < 0) {
+		if (_unlikely((event_fd = FileDescriptor(::eventfd(1, EFD_CLOEXEC))) < 0)) {
 			throw std::system_error(errno, std::system_category(), "eventfd");
 		}
 		op = EPOLL_CTL_ADD;
@@ -98,7 +98,7 @@ void Selector::kick() {
 	else {
 		op = EPOLL_CTL_MOD;
 	}
-	if (::epoll_ctl(epoll_fd, op, event_fd, &event) < 0) {
+	if (_unlikely(::epoll_ctl(epoll_fd, op, event_fd, &event) < 0)) {
 		throw std::system_error(errno, std::system_category(), "epoll_ctl");
 	}
 }

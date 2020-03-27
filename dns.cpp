@@ -21,8 +21,7 @@ GAIResults getaddrinfo(const char host[], const char service[], int family, int 
 	hints.ai_protocol = protocol;
 	hints.ai_flags = flags;
 	addrinfo *res;
-	int error;
-	if ((error = ::getaddrinfo(host, service, &hints, &res)) != 0) {
+	if (int error = ::getaddrinfo(host, service, &hints, &res); _unlikely(error != 0)) {
 		if (error == EAI_SYSTEM) {
 			throw std::system_error(errno, std::system_category(), "getaddrinfo");
 		}
@@ -47,8 +46,7 @@ std::ostream & operator << (std::ostream &os, const struct sockaddr &addr) {
 
 std::ostream & operator << (std::ostream &os, const struct sockaddr_in &addr) {
 	char host[NI_MAXHOST], serv[NI_MAXSERV];
-	int error;
-	if ((error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV)) != 0) {
+	if (int error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV); _unlikely(error != 0)) {
 		if (error == EAI_SYSTEM) {
 			throw std::system_error(errno, std::system_category(), "getnameinfo");
 		}
@@ -61,8 +59,7 @@ std::ostream & operator << (std::ostream &os, const struct sockaddr_in &addr) {
 
 std::ostream & operator << (std::ostream &os, const struct sockaddr_in6 &addr) {
 	char host[NI_MAXHOST], serv[NI_MAXSERV];
-	int error;
-	if ((error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV)) != 0) {
+	if (int error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV); _unlikely(error != 0)) {
 		if (error == EAI_SYSTEM) {
 			throw std::system_error(errno, std::system_category(), "getnameinfo");
 		}

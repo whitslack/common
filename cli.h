@@ -15,7 +15,7 @@ template <typename Func, typename... Args>
 static inline std::result_of_t<Func(const char *, char **, Args...)> strto(Func strto, const char str[], Args &&...args) {
 	char *end = nullptr;
 	auto ret = strto(str, &end, std::forward<Args>(args)...);
-	if (!end || end == str || *end) {
+	if (_unlikely(!end || end == str || *end)) {
 		throw std::invalid_argument("expected a number");
 	}
 	return ret;
@@ -153,7 +153,7 @@ protected:
 	int _pure takes_arg() const noexcept override { return 1; }
 
 	void parse(char arg[]) override {
-		if (!arg) {
+		if (_unlikely(!arg)) {
 			throw OptionException("option requires an argument", *this);
 		}
 		try {
@@ -226,7 +226,7 @@ protected:
 	int _pure takes_arg() const noexcept override { return 0; }
 
 	void parse(char arg[]) override {
-		if (arg) {
+		if (_unlikely(arg)) {
 			throw OptionException("option does not accept an argument", *this);
 		}
 		++occurrences;

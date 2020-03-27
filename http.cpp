@@ -240,7 +240,7 @@ std::istream & operator >> (std::istream &is, HttpRequestHeaders &headers) {
 	 * message and receives a CRLF first, it should ignore the CRLF.
 	 */
 	while (skip_crlf(is));
-	if (!read_token(is, headers.method) || headers.method.empty() || is.get() != ' ' || !read_word(is, headers.request_uri) || headers.request_uri.empty() || is.get() != ' ' || !read_word(is, headers.protocol_version) || headers.protocol_version.empty() || is.get() != '\r' || is.get() != '\n') {
+	if (_unlikely(!read_token(is, headers.method) || headers.method.empty() || is.get() != ' ' || !read_word(is, headers.request_uri) || headers.request_uri.empty() || is.get() != ' ' || !read_word(is, headers.protocol_version) || headers.protocol_version.empty() || is.get() != '\r' || is.get() != '\n')) {
 		throw std::ios_base::failure("bad request line");
 	}
 	return read_header_fields(is, headers);
@@ -251,7 +251,7 @@ std::ostream & operator << (std::ostream &os, const HttpRequestHeaders &headers)
 }
 
 std::istream & operator >> (std::istream &is, HttpResponseHeaders &headers) {
-	if (!read_word(is, headers.protocol_version) || headers.protocol_version.empty() || is.get() != ' ' || !(is >> headers.status_code) || is.get() != ' ' || !std::getline(is, headers.reason_phrase) || headers.reason_phrase.empty() || headers.reason_phrase.back() != '\r') {
+	if (_unlikely(!read_word(is, headers.protocol_version) || headers.protocol_version.empty() || is.get() != ' ' || !(is >> headers.status_code) || is.get() != ' ' || !std::getline(is, headers.reason_phrase) || headers.reason_phrase.empty() || headers.reason_phrase.back() != '\r')) {
 		throw std::ios_base::failure("bad status line");
 	}
 	headers.reason_phrase.pop_back();
@@ -611,10 +611,11 @@ std::time_t rfc2822_date(std::string_view sv) {
 	std::cmatch matches;
 	struct std::tm tm { };
 	int offset;
-	if (!std::regex_match(sv.begin(), sv.end(), matches, regex) ||
-			matches[1].matched && (tm.tm_wday = str_to_wday(matches[1].first)) < 0 ||
-			(tm.tm_mon = str_to_month(matches[3].first)) < 0 ||
-			(offset = str_to_offset(matches[8].first)) == INT_MIN) {
+	if (_unlikely(!std::regex_match(sv.begin(), sv.end(), matches, regex) ||
+		matches[1].matched && (tm.tm_wday = str_to_wday(matches[1].first)) < 0 ||
+		(tm.tm_mon = str_to_month(matches[3].first)) < 0 ||
+		(offset = str_to_offset(matches[8].first)) == INT_MIN))
+	{
 		throw std::ios_base::failure("invalid RFC2822 date");
 	}
 	tm.tm_mday = digits_to_int(matches[2].first, matches[2].second);
@@ -653,7 +654,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 						break;
 					}
 					int8_t v;
-					if (c < '0' || c > 'f' || (v = UNHEX[static_cast<uint8_t>(c - '0')]) < 0) {
+					if (_unlikely(c < '0' || c > 'f' || (v = UNHEX[static_cast<uint8_t>(c - '0')]) < 0)) {
 						throw std::ios_base::failure("invalid chunk size");
 					}
 					chunk_rem = chunk_rem << 4 | v;
@@ -663,7 +664,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				if ((r = source.read(&c, 1)) <= 0) {
 					goto Exit;
 				}
-				if (c != '\n') {
+				if (_unlikely(c != '\n')) {
 					throw std::ios_base::failure("invalid chunk size");
 				}
 				state = chunk_rem ? Data : End;
@@ -703,7 +704,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				if ((r = source.read(&c, 1)) <= 0) {
 					goto Exit;
 				}
-				if (c != '\r') {
+				if (_unlikely(c != '\r')) {
 					throw std::ios_base::failure("invalid chunk");
 				}
 				state = Data_CR;
@@ -712,7 +713,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 				if ((r = source.read(&c, 1)) <= 0) {
 					goto Exit;
 				}
-				if (c != '\n') {
+				if (_unlikely(c != '\n')) {
 					throw std::ios_base::failure("invalid chunk");
 				}
 				state = Size;
@@ -722,7 +723,7 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 		}
 	}
 Exit:
-	if (r < 0) {
+	if (_unlikely(r < 0)) {
 		throw std::ios_base::failure("premature End");
 	}
 	return 0;
@@ -863,7 +864,7 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool flush) {
 				state = Idle;
 				break;
 			case End:
-				if (n > 0) {
+				if (_unlikely(n > 0)) {
 					throw std::logic_error("final chunk already sent");
 				}
 				return ret;

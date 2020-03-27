@@ -55,7 +55,7 @@ ssize_t WebSocket::receive(Opcode &opcode, void *buf, size_t n) {
 				}
 				return 0;
 			}
-			if (recv_state & 0x70) {
+			if (_unlikely(recv_state & 0x70)) {
 				throw std::ios_base::failure("received WebSocket frame with non-zero reserved bits");
 			}
 			opcode = static_cast<Opcode>(recv_state & 0xF);
@@ -67,7 +67,7 @@ ssize_t WebSocket::receive(Opcode &opcode, void *buf, size_t n) {
 				case Close:
 				case Ping:
 				case Pong:
-					if (!(recv_state & 0x80)) {
+					if (_unlikely(!(recv_state & 0x80))) {
 						throw std::ios_base::failure("received fragmented WebSocket control frame");
 					}
 					break;
@@ -233,7 +233,7 @@ bool WebSocketServerHandshake::ready() {
 		MemoryBuf mb(request_buf.data(), request_pos);
 		if (std::istream(&mb) >> request_headers) {
 			auto error_pair = this->validate_request_headers(request_headers);
-			if (error_pair.first >= 300) {
+			if (_unlikely(error_pair.first >= 300)) {
 				this->send_error(error_pair.first, error_pair.second);
 				throw std::ios_base::failure(error_pair.second);
 			}
@@ -344,7 +344,7 @@ bool WebSocketClientHandshake::ready() {
 		HttpResponseHeaders response_headers;
 		MemoryBuf mb(response_buf.data(), response_pos);
 		if (std::istream(&mb) >> response_headers) {
-			if (response_headers.status_code != 101) {
+			if (_unlikely(response_headers.status_code != 101)) {
 				throw std::ios_base::failure(response_headers.reason_phrase);
 			}
 			this->validate_response_headers(response_headers);
@@ -359,7 +359,7 @@ bool WebSocketClientHandshake::ready() {
 			throw std::ios_base::failure("WebSocket handshake failed");
 		}
 	}
-	if (response_pos == response_buf.size()) {
+	if (_unlikely(response_pos == response_buf.size())) {
 		throw std::ios_base::failure("response headers too large");
 	}
 	return true;

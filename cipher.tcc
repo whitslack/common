@@ -32,7 +32,7 @@ bool CTR<Cipher>::process(uint8_t * _restrict &out, size_t n_out, const uint8_t 
 
 template <typename Cipher>
 bool CTR<Cipher>::finish(uint8_t *&, size_t) {
-	if (pos != 0) {
+	if (_unlikely(pos != 0)) {
 		throw std::logic_error("incomplete block");
 	}
 	return true;

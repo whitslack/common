@@ -60,7 +60,7 @@ static const std::regex parse_regex(_URI_, std::regex::ECMAScript | std::regex::
 
 void URI::parse() {
 	std::smatch matches;
-	if (!std::regex_match(uri_, matches, parse_regex)) {
+	if (_unlikely(!std::regex_match(uri_, matches, parse_regex))) {
 		throw std::invalid_argument("invalid URI");
 	}
 	matches[1].matched ? scheme_ = { &*matches[1].first, static_cast<size_t>(matches[1].length()) } : scheme_ = { };

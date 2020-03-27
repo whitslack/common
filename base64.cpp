@@ -151,7 +151,7 @@ state0:
 			return true;
 		}
 		b0 = *in++, --n_in;
-		if ((b0 -= '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0) {
+		if (_unlikely((b0 -= '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0)) {
 			throw std::ios_base::failure("invalid base64");
 		}
 state1:
@@ -164,7 +164,7 @@ state1:
 			return false;
 		}
 		b1 = *in++, --n_in;
-		if ((b1 -= '+') > 'z' - '+' || static_cast<int>(b1 = decode[b1]) < 0) {
+		if (_unlikely((b1 -= '+') > 'z' - '+' || static_cast<int>(b1 = decode[b1]) < 0)) {
 			throw std::ios_base::failure("invalid base64");
 		}
 		*out++ = static_cast<uint8_t>(b0 << 2 | b1 >> 4), --n_out;
@@ -182,7 +182,7 @@ state2:
 			return false;
 		}
 		b0 = *in++, --n_in;
-		if ((b0 -= '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0) {
+		if (_unlikely((b0 -= '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0)) {
 			throw std::ios_base::failure("invalid base64");
 		}
 		*out++ = static_cast<uint8_t>(b1 << 4 | b0 >> 2), --n_out;
@@ -200,7 +200,7 @@ state3:
 			return false;
 		}
 		b1 = *in++, --n_in;
-		if ((b1 -= '+') > 'z' - '+' || static_cast<int>(b1 = decode[b1]) < 0) {
+		if (_unlikely((b1 -= '+') > 'z' - '+' || static_cast<int>(b1 = decode[b1]) < 0)) {
 			throw std::ios_base::failure("invalid base64");
 		}
 		*out++ = static_cast<uint8_t>(b0 << 6 | b1), --n_out;
@@ -210,12 +210,12 @@ state4:
 		state = 4;
 		return true;
 	}
-	if (*in != '=') {
+	if (_unlikely(*in != '=')) {
 		throw std::ios_base::failure("invalid base64");
 	}
 	++in, --n_in;
 state5:
-	if (n_in == 0) {
+	if (_likely(n_in == 0)) {
 		state = 5;
 		return true;
 	}
@@ -223,7 +223,7 @@ state5:
 }
 
 bool Base64Decoder::finish(uint8_t *&, size_t) {
-	if (state != 0 && state != 5) {
+	if (_unlikely(state != 0 && state != 5)) {
 		throw std::ios_base::failure("invalid base64");
 	}
 	return true;

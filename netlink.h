@@ -174,16 +174,14 @@ public:
 	void add_memberships(int group);
 	template <typename... Args>
 	void add_memberships(Args... group) {
-		int error;
-		if ((error = ::nl_socket_add_memberships(sk, group..., NFNLGRP_NONE)) < 0) {
+		if (int error = ::nl_socket_add_memberships(sk, group..., NFNLGRP_NONE); _unlikely(error < 0)) {
 			throw Error(-error, "nl_socket_add_memberships");
 		}
 	}
 	void drop_memberships(int group);
 	template <typename... Args>
 	void drop_memberships(Args... group) {
-		int error;
-		if ((error = ::nl_socket_drop_memberships(sk, group..., NFNLGRP_NONE)) < 0) {
+		if (int error = ::nl_socket_drop_memberships(sk, group..., NFNLGRP_NONE); _unlikely(error < 0)) {
 			throw Error(-error, "nl_socket_drop_memberships");
 		}
 	}

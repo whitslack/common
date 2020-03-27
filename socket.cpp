@@ -13,7 +13,7 @@ namespace posix {
 
 int accept(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len) {
 	int ret;
-	if ((ret = ::accept(socket, address, address_len)) < 0) {
+	if (_unlikely((ret = ::accept(socket, address, address_len)) < 0)) {
 		throw std::system_error(errno, std::system_category(), "accept");
 	}
 	return ret;
@@ -21,48 +21,48 @@ int accept(int socket, struct sockaddr * _restrict address, socklen_t * _restric
 
 int accept(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len, int flags) {
 	int ret;
-	if ((ret = ::accept4(socket, address, address_len, flags)) < 0) {
+	if (_unlikely((ret = ::accept4(socket, address, address_len, flags)) < 0)) {
 		throw std::system_error(errno, std::system_category(), "accept4");
 	}
 	return ret;
 }
 
 void bind(int socket, const struct sockaddr *address, socklen_t address_len) {
-	if (::bind(socket, address, address_len) < 0) {
+	if (_unlikely(::bind(socket, address, address_len) < 0)) {
 		throw std::system_error(errno, std::system_category(), "bind");
 	}
 }
 
 bool connect(int socket, const struct sockaddr *address, socklen_t address_len) {
 	if (::connect(socket, address, address_len) < 0) {
-		if (errno == EINPROGRESS) {
-			return false;
+		if (_unlikely(errno != EINPROGRESS)) {
+			throw std::system_error(errno, std::system_category(), "connect");
 		}
-		throw std::system_error(errno, std::system_category(), "connect");
+		return false;
 	}
 	return true;
 }
 
 void getpeername(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len) {
-	if (::getpeername(socket, address, address_len) < 0) {
+	if (_unlikely(::getpeername(socket, address, address_len) < 0)) {
 		throw std::system_error(errno, std::system_category(), "getpeername");
 	}
 }
 
 void getsockname(int socket, struct sockaddr * _restrict address, socklen_t * _restrict address_len) {
-	if (::getsockname(socket, address, address_len) < 0) {
+	if (_unlikely(::getsockname(socket, address, address_len) < 0)) {
 		throw std::system_error(errno, std::system_category(), "getsockname");
 	}
 }
 
 void getsockopt(int socket, int level, int option_name, void * _restrict option_value, socklen_t * _restrict option_len) {
-	if (::getsockopt(socket, level, option_name, option_value, option_len) < 0) {
+	if (_unlikely(::getsockopt(socket, level, option_name, option_value, option_len) < 0)) {
 		throw std::system_error(errno, std::system_category(), "getsockopt");
 	}
 }
 
 void listen(int socket, int backlog) {
-	if (::listen(socket, backlog) < 0) {
+	if (_unlikely(::listen(socket, backlog) < 0)) {
 		throw std::system_error(errno, std::system_category(), "listen");
 	}
 }
@@ -70,10 +70,10 @@ void listen(int socket, int backlog) {
 ssize_t recv(int socket, void *buffer, size_t length, int flags) {
 	ssize_t ret;
 	if ((ret = ::recv(socket, buffer, length, flags)) < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
+		if (_unlikely(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
+			throw std::system_error(errno, std::system_category(), "recv");
 		}
-		throw std::system_error(errno, std::system_category(), "recv");
+		return 0;
 	}
 	return ret == 0 && length > 0 ? -1 : ret;
 }
@@ -81,10 +81,10 @@ ssize_t recv(int socket, void *buffer, size_t length, int flags) {
 ssize_t recvfrom(int socket, void * _restrict buffer, size_t length, int flags, struct sockaddr * _restrict address, socklen_t * _restrict address_len) {
 	ssize_t ret;
 	if ((ret = ::recvfrom(socket, buffer, length, flags, address, address_len)) < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
+		if (_unlikely(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
+			throw std::system_error(errno, std::system_category(), "recvfrom");
 		}
-		throw std::system_error(errno, std::system_category(), "recvfrom");
+		return 0;
 	}
 	return ret == 0 && length > 0 ? -1 : ret;
 }
@@ -92,10 +92,10 @@ ssize_t recvfrom(int socket, void * _restrict buffer, size_t length, int flags, 
 ssize_t recvmsg(int socket, struct msghdr *message, int flags) {
 	ssize_t ret;
 	if ((ret = ::recvmsg(socket, message, flags)) < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
+		if (_unlikely(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
+			throw std::system_error(errno, std::system_category(), "recvmsg");
 		}
-		throw std::system_error(errno, std::system_category(), "recvmsg");
+		return 0;
 	}
 	return ret == 0 ? -1 : ret;
 }
@@ -103,10 +103,10 @@ ssize_t recvmsg(int socket, struct msghdr *message, int flags) {
 size_t send(int socket, const void *buffer, size_t length, int flags) {
 	ssize_t ret;
 	if ((ret = ::send(socket, buffer, length, flags)) < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
+		if (_unlikely(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
+			throw std::system_error(errno, std::system_category(), "send");
 		}
-		throw std::system_error(errno, std::system_category(), "send");
+		return 0;
 	}
 	return static_cast<size_t>(ret);
 }
@@ -114,10 +114,10 @@ size_t send(int socket, const void *buffer, size_t length, int flags) {
 size_t sendmsg(int socket, const struct msghdr *message, int flags) {
 	ssize_t ret;
 	if ((ret = ::sendmsg(socket, message, flags)) < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
+		if (_unlikely(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
+			throw std::system_error(errno, std::system_category(), "sendmsg");
 		}
-		throw std::system_error(errno, std::system_category(), "sendmsg");
+		return 0;
 	}
 	return static_cast<size_t>(ret);
 }
@@ -125,29 +125,29 @@ size_t sendmsg(int socket, const struct msghdr *message, int flags) {
 size_t sendto(int socket, const void *message, size_t length, int flags, const struct sockaddr *dest_addr, socklen_t dest_len) {
 	ssize_t ret;
 	if ((ret = ::sendto(socket, message, length, flags, dest_addr, dest_len)) < 0) {
-		if (errno == EAGAIN || errno == EWOULDBLOCK || errno == EINTR) {
-			return 0;
+		if (_unlikely(errno != EAGAIN && errno != EWOULDBLOCK && errno != EINTR)) {
+			throw std::system_error(errno, std::system_category(), "sendto");
 		}
-		throw std::system_error(errno, std::system_category(), "sendto");
+		return 0;
 	}
 	return static_cast<size_t>(ret);
 }
 
 void setsockopt(int socket, int level, int option_name, const void *option_value, socklen_t option_len) {
-	if (::setsockopt(socket, level, option_name, option_value, option_len) < 0) {
+	if (_unlikely(::setsockopt(socket, level, option_name, option_value, option_len) < 0)) {
 		throw std::system_error(errno, std::system_category(), "setsockopt");
 	}
 }
 
 void shutdown(int socket, int how) {
-	if (::shutdown(socket, how) < 0) {
+	if (_unlikely(::shutdown(socket, how) < 0)) {
 		throw std::system_error(errno, std::system_category(), "shutdown");
 	}
 }
 
 bool sockatmark(int s) {
 	int ret;
-	if ((ret = ::sockatmark(s)) < 0) {
+	if (_unlikely((ret = ::sockatmark(s)) < 0)) {
 		throw std::system_error(errno, std::system_category(), "sockatmark");
 	}
 	return ret != 0;
@@ -155,14 +155,14 @@ bool sockatmark(int s) {
 
 int socket(int domain, int type, int protocol) {
 	int ret;
-	if ((ret = ::socket(domain, type, protocol)) < 0) {
+	if (_unlikely((ret = ::socket(domain, type, protocol)) < 0)) {
 		throw std::system_error(errno, std::system_category(), "socket");
 	}
 	return ret;
 }
 
 void socketpair(int domain, int type, int protocol, int socket_vector[2]) {
-	if (::socketpair(domain, type, protocol, socket_vector) < 0) {
+	if (_unlikely(::socketpair(domain, type, protocol, socket_vector) < 0)) {
 		throw std::system_error(errno, std::system_category(), "socketpair");
 	}
 }
@@ -262,7 +262,7 @@ template class SocketBase<Socket6, struct sockaddr_in6>;
 
 std::ostream & operator << (std::ostream &os, const struct in_addr &addr) {
 	char buf[INET_ADDRSTRLEN];
-	if (!::inet_ntop(AF_INET, &addr, buf, sizeof buf)) {
+	if (_unlikely(!::inet_ntop(AF_INET, &addr, buf, sizeof buf))) {
 		throw std::system_error(errno, std::system_category(), "inet_ntop");
 	}
 	return os << buf;
@@ -270,7 +270,7 @@ std::ostream & operator << (std::ostream &os, const struct in_addr &addr) {
 
 std::ostream & operator << (std::ostream &os, const struct in6_addr &addr) {
 	char buf[INET6_ADDRSTRLEN];
-	if (!::inet_ntop(AF_INET6, &addr, buf, sizeof buf)) {
+	if (_unlikely(!::inet_ntop(AF_INET6, &addr, buf, sizeof buf))) {
 		throw std::system_error(errno, std::system_category(), "inet_ntop");
 	}
 	return os << buf;

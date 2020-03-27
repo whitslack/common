@@ -104,7 +104,7 @@ mp_limb_t * fp_pow(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t
 }
 
 mp_limb_t * fp_inv(mp_limb_t * _restrict r, const mp_limb_t n[], const mp_limb_t p[], size_t l) {
-	if (mpn_zero_p(n, l)) {
+	if (_unlikely(mpn_zero_p(n, l))) {
 		throw std::domain_error("not invertible");
 	}
 	mp_limb_t u[l], v[l], s[l];

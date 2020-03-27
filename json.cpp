@@ -70,7 +70,7 @@ const Value * Object::find(const std::string &key) const {
 
 const Value & Object::get(const std::string &key) const {
 	auto ptr = this->find(key);
-	if (!ptr) {
+	if (_unlikely(!ptr)) {
 		throw std::invalid_argument(key + " missing");
 	}
 	return *ptr;
@@ -219,7 +219,7 @@ std::ostream & Boolean::format(std::ostream &os) const {
 static unsigned int from_hex(std::istream &is) {
 	static const int8_t UNHEX[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15 };
 	int c = is.peek();
-	if (c < '0' || c > 'f' || (c = UNHEX[c - '0']) < 0) {
+	if (_unlikely(c < '0' || c > 'f' || (c = UNHEX[c - '0']) < 0)) {
 		throw std::ios_base::failure("invalid hex digit");
 	}
 	is.get();
@@ -229,12 +229,12 @@ static unsigned int from_hex(std::istream &is) {
 static std::istream & parse_string(std::istream &is, std::string &string) {
 	string.clear();
 	is >> std::ws;
-	if (is.peek() != '"') {
+	if (_unlikely(is.peek() != '"')) {
 		throw std::ios_base::failure("expected string");
 	}
 	is.get();
 	for (int c; (c = is.get()) != '"';) {
-		if (!is) {
+		if (_unlikely(!is)) {
 			throw std::ios_base::failure("unterminated string");
 		}
 		if (c == '\\') {
@@ -294,7 +294,7 @@ static std::istream & parse_string(std::istream &is, std::string &string) {
 static std::istream & parse_object(std::istream &is, Object::map_t &map) {
 	map.clear();
 	is >> std::ws;
-	if (is.peek() != '{') {
+	if (_unlikely(is.peek() != '{')) {
 		throw std::ios_base::failure("expected object");
 	}
 	is.get();
@@ -305,11 +305,11 @@ static std::istream & parse_object(std::istream &is, Object::map_t &map) {
 			return is;
 		}
 		if (map.empty()) {
-			if (is.peek() != '"') {
+			if (_unlikely(is.peek() != '"')) {
 				throw std::ios_base::failure("expected string or closing brace");
 			}
 		}
-		else if (is.peek() != ',') {
+		else if (_unlikely(is.peek() != ',')) {
 			throw std::ios_base::failure("expected comma or closing brace");
 		}
 		else {
@@ -318,7 +318,7 @@ static std::istream & parse_object(std::istream &is, Object::map_t &map) {
 		std::string key;
 		parse_string(is, key);
 		is >> std::ws;
-		if (is.peek() != ':') {
+		if (_unlikely(is.peek() != ':')) {
 			throw std::ios_base::failure("expected colon");
 		}
 		is.get();
@@ -331,7 +331,7 @@ static std::istream & parse_object(std::istream &is, Object::map_t &map) {
 static std::istream & parse_array(std::istream &is, Array::vector_t &vector) {
 	vector.clear();
 	is >> std::ws;
-	if (is.peek() != '[') {
+	if (_unlikely(is.peek() != '[')) {
 		throw std::ios_base::failure("expected array");
 	}
 	is.get();
@@ -342,12 +342,10 @@ static std::istream & parse_array(std::istream &is, Array::vector_t &vector) {
 			return is;
 		}
 		if (!vector.empty()) {
-			if (is.peek() != ',') {
+			if (_unlikely(is.peek() != ',')) {
 				throw std::ios_base::failure("expected comma or closing bracket");
 			}
-			else {
-				is.get();
-			}
+			is.get();
 		}
 		ValuePtr value;
 		is >> value;
@@ -364,11 +362,11 @@ static std::istream & parse_real(std::istream &is, double &value) {
 }
 
 static std::istream & copy_digits(std::ostream &os, std::istream &is, size_t limit = std::numeric_limits<size_t>::max()) {
-	if (!::isdigit(is.peek())) {
+	if (_unlikely(!::isdigit(is.peek()))) {
 		throw std::ios_base::failure("expected digit");
 	}
 	do {
-		if (limit-- == 0) {
+		if (_unlikely(limit-- == 0)) {
 			throw std::ios_base::failure("too many digits");
 		}
 		os.put(std::istream::traits_type::to_char_type(is.get()));

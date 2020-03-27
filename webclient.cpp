@@ -75,7 +75,7 @@ ssize_t HttpConnectionBase::read(void *buf, size_t n) {
 			read_source = &limited_source;
 			SourceBuf sb(source);
 			std::istream is(&sb);
-			if (!skip_crlf(is)) {
+			if (_unlikely(!skip_crlf(is))) {
 				throw std::ios_base::failure("HTTP trailers not supported");
 			}
 		}
