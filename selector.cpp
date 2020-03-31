@@ -53,7 +53,7 @@ static std::pair<void *, Selector::Flags> epoll_pwait(FileDescriptor &epoll_fd, 
 } // namespace linux
 
 Selector::Selector() : epoll_fd(::epoll_create1(EPOLL_CLOEXEC)) {
-	if (_unlikely(epoll_fd < 0)) {
+	if (_unlikely(!epoll_fd)) {
 		throw std::system_error(errno, std::system_category(), "epoll_create1");
 	}
 }
@@ -91,8 +91,8 @@ void Selector::kick() {
 	event.events = EPOLLIN | EPOLLONESHOT;
 	event.data.ptr = nullptr;
 	int op;
-	if (event_fd < 0) {
-		if (_unlikely((event_fd = FileDescriptor(::eventfd(1, EFD_CLOEXEC))) < 0)) {
+	if (!event_fd) {
+		if (_unlikely(!(event_fd = FileDescriptor(::eventfd(1, EFD_CLOEXEC))))) {
 			throw std::system_error(errno, std::system_category(), "eventfd");
 		}
 		op = EPOLL_CTL_ADD;

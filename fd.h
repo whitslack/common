@@ -190,6 +190,7 @@ private:
 	FileDescriptor & operator = (const FileDescriptor &) = delete;
 
 public:
+	_pure explicit operator bool () const noexcept { return fd >= 0; }
 	_pure operator int () const noexcept { return fd; }
 
 	using Source::read;
