@@ -45,3 +45,6 @@ public:
 	}
 
 };
+
+extern template class Scheduler<std::chrono::system_clock>;
+extern template class Scheduler<std::chrono::steady_clock>;
