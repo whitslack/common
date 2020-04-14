@@ -168,6 +168,22 @@ void socketpair(int domain, int type, int protocol, int socket_vector[2]) {
 } // namespace posix
 
 
+std::chrono::microseconds Socket::recv_timeout() const {
+	struct timeval tv { };
+	socklen_t size = sizeof tv;
+	this->getsockopt(SOL_SOCKET, SO_RCVTIMEO, &tv, &size);
+	assert(size == sizeof tv);
+	return posix::timeval_to_duration(tv);
+}
+
+std::chrono::microseconds Socket::send_timeout() const {
+	struct timeval tv { };
+	socklen_t size = sizeof tv;
+	this->getsockopt(SOL_SOCKET, SO_SNDTIMEO, &tv, &size);
+	assert(size == sizeof tv);
+	return posix::timeval_to_duration(tv);
+}
+
 SocketAddress Socket::getsockname() const {
 	struct sockaddr_storage ss;
 	socklen_t size { sizeof ss };

@@ -31,12 +31,11 @@ Socket connect(const char host[], in_port_t port, std::chrono::microseconds time
 			Socket socket(info.ai_family, info.ai_socktype | SOCK_CLOEXEC, info.ai_protocol);
 			socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1);
 			if (timeout > std::chrono::microseconds::zero()) {
-				socket.setsockopt(SOL_SOCKET, SO_SNDTIMEO, posix::duration_to_timeval(timeout));
+				socket.send_timeout(timeout);
 			}
 			if (socket.connect(info.ai_addr, info.ai_addrlen)) {
 				if (timeout > std::chrono::microseconds::zero()) {
-					struct timeval tv = { 0, 0 };
-					socket.setsockopt(SOL_SOCKET, SO_SNDTIMEO, tv);
+					socket.send_timeout(std::chrono::microseconds::zero());
 				}
 				if (elog.debug_enabled()) {
 					if (info.ai_family == AF_INET) {

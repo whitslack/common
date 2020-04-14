@@ -1,5 +1,7 @@
 #pragma once
 
+#include <chrono>
+
 #include <netinet/in.h>
 #include <sys/socket.h>
 
@@ -58,6 +60,11 @@ public:
 	void getsockopt(int level, int option_name, void * _restrict option_value, socklen_t * _restrict option_len) const { posix::getsockopt(fd, level, option_name, option_value, option_len); }
 	void setsockopt(int level, int option_name, const void *option_value, socklen_t option_len) { posix::setsockopt(fd, level, option_name, option_value, option_len); }
 	template <typename T> void setsockopt(int level, int option_name, const T &option_value) { this->setsockopt(level, option_name, &option_value, static_cast<socklen_t>(sizeof option_value)); }
+
+	std::chrono::microseconds _pure recv_timeout() const;
+	void recv_timeout(std::chrono::microseconds timeout) { return this->setsockopt(SOL_SOCKET, SO_RCVTIMEO, posix::duration_to_timeval(timeout)); }
+	std::chrono::microseconds _pure send_timeout() const;
+	void send_timeout(std::chrono::microseconds timeout) { return this->setsockopt(SOL_SOCKET, SO_SNDTIMEO, posix::duration_to_timeval(timeout)); }
 
 	void getsockname(struct sockaddr * _restrict address, socklen_t * _restrict address_len) const { posix::getsockname(fd, address, address_len); }
 	SocketAddress _pure getsockname() const;
