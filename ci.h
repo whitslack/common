@@ -11,6 +11,9 @@ namespace {
 	template <typename> struct __toupper;
 	template <> struct __toupper<char> : std::integral_constant<int (*)(int) noexcept, &std::toupper> { };
 	template <> struct __toupper<wchar_t> : std::integral_constant<wint_t (*)(wint_t) noexcept, &std::towupper> { };
+#ifdef __cpp_char8_t
+	template <> struct __toupper<char8_t> : std::integral_constant<wint_t (*)(wint_t) noexcept, &std::towupper> { };
+#endif
 #if WINT_WIDTH >= UINT16_WIDTH
 	template <> struct __toupper<char16_t> : std::integral_constant<wint_t (*)(wint_t) noexcept, &std::towupper> { };
 #endif
@@ -41,19 +44,28 @@ struct char_traits : std::char_traits<CharT> {
 
 using string = std::basic_string<char, char_traits<char>>;
 using wstring = std::basic_string<wchar_t, char_traits<wchar_t>>;
+#ifdef __cpp_char8_t
+using u8string = std::basic_string<char8_t, char_traits<char8_t>>;
+#endif
 using u16string = std::basic_string<char16_t, char_traits<char16_t>>;
 using u32string = std::basic_string<char32_t, char_traits<char32_t>>;
 
 using string_view = std::basic_string_view<char, char_traits<char>>;
 using wstring_view = std::basic_string_view<wchar_t, char_traits<wchar_t>>;
+#ifdef __cpp_char8_t
+using u8string_view = std::basic_string_view<char8_t, char_traits<char8_t>>;
+#endif
 using u16string_view = std::basic_string_view<char16_t, char_traits<char16_t>>;
 using u32string_view = std::basic_string_view<char32_t, char_traits<char32_t>>;
 
 inline namespace literals {
-	static constexpr string_view _const operator ""_ci (const char data[], size_t size) noexcept { return { data, size}; }
-	static constexpr wstring_view _const operator ""_ci (const wchar_t data[], size_t size) noexcept { return { data, size}; }
-	static constexpr u16string_view _const operator ""_ci (const char16_t data[], size_t size) noexcept { return { data, size}; }
-	static constexpr u32string_view _const operator ""_ci (const char32_t data[], size_t size) noexcept { return { data, size}; }
+	static constexpr string_view _const operator ""_ci (const char data[], size_t size) noexcept { return { data, size }; }
+	static constexpr wstring_view _const operator ""_ci (const wchar_t data[], size_t size) noexcept { return { data, size }; }
+#ifdef __cpp_char8_t
+	static constexpr u8string_view _const operator ""_ci (const char8_t data[], size_t size) noexcept { return { data, size }; }
+#endif
+	static constexpr u16string_view _const operator ""_ci (const char16_t data[], size_t size) noexcept { return { data, size }; }
+	static constexpr u32string_view _const operator ""_ci (const char32_t data[], size_t size) noexcept { return { data, size }; }
 }
 
 #define _(CharT, NS1, NS2) \
@@ -68,6 +80,9 @@ inline namespace literals {
 	_(CharT, ci, ci)
 __(char)
 __(wchar_t)
+#ifdef __cpp_char8_t
+__(char8_t)
+#endif
 __(char16_t)
 __(char32_t)
 #undef __
@@ -109,6 +124,9 @@ _(greater_equal, >=)
 	_(CharT, >=)
 __(char)
 __(wchar_t)
+#ifdef __cpp_char8_t
+__(char8_t)
+#endif
 __(char16_t)
 __(char32_t)
 #undef __
