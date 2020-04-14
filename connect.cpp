@@ -2,6 +2,7 @@
 
 #include <thread>
 
+#include "clock.h"
 #include "dns.h"
 #include "endian.h"
 #include "log.h"
@@ -30,10 +31,7 @@ Socket connect(const char host[], in_port_t port, std::chrono::microseconds time
 			Socket socket(info.ai_family, info.ai_socktype | SOCK_CLOEXEC, info.ai_protocol);
 			socket.setsockopt(SOL_SOCKET, SO_KEEPALIVE, 1);
 			if (timeout > std::chrono::microseconds::zero()) {
-				struct timeval tv;
-				tv.tv_sec = static_cast<decltype(tv.tv_sec)>(std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
-				tv.tv_usec = static_cast<decltype(tv.tv_usec)>((timeout % std::chrono::seconds(1)).count());
-				socket.setsockopt(SOL_SOCKET, SO_SNDTIMEO, tv);
+				socket.setsockopt(SOL_SOCKET, SO_SNDTIMEO, posix::duration_to_timeval(timeout));
 			}
 			if (socket.connect(info.ai_addr, info.ai_addrlen)) {
 				if (timeout > std::chrono::microseconds::zero()) {

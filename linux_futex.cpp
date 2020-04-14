@@ -42,9 +42,7 @@ bool futex_wait_bitset(int *uaddr, int expect, unsigned mask, const struct times
 }
 
 bool futex_wait_bitset(int *uaddr, int expect, unsigned mask, std::chrono::system_clock::time_point deadline) {
-	struct timespec ts;
-	ts.tv_sec = static_cast<std::time_t>(std::chrono::duration_cast<std::chrono::seconds>(deadline.time_since_epoch()).count());
-	ts.tv_nsec = static_cast<long>(std::chrono::duration_cast<std::chrono::nanoseconds>(deadline.time_since_epoch() % std::chrono::seconds(1)).count());
+	struct timespec ts = posix::duration_to_timespec(deadline.time_since_epoch());
 	if (::futex(uaddr, FUTEX_WAIT_BITSET_PRIVATE | FUTEX_CLOCK_REALTIME, expect, &ts, mask) < 0) {
 		if (_unlikely(errno != EAGAIN && errno != EINTR && errno != ETIMEDOUT)) {
 			throw std::system_error(errno, std::system_category(), "futex");

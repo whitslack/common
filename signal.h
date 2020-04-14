@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <sys/select.h>
 
+#include "clock.h"
 #include "compiler.h"
 
 namespace posix {
@@ -46,16 +47,12 @@ void sigandset(sigset_t &dest, const sigset_t &left, const sigset_t &right);
 #endif
 
 static inline unsigned ppoll(struct pollfd * _restrict fds, nfds_t nfds, std::chrono::nanoseconds timeout, const sigset_t * _restrict sigmask = nullptr) {
-	struct timespec spec;
-	spec.tv_sec = static_cast<std::time_t>(std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
-	spec.tv_nsec = static_cast<long>((timeout % std::chrono::seconds(1)).count());
+	struct timespec spec = duration_to_timespec(timeout);
 	return posix::ppoll(fds, nfds, &spec, sigmask);
 }
 
 static inline unsigned pselect(int nfds, fd_set * _restrict readfds, fd_set * _restrict writefds, fd_set * _restrict errorfds, std::chrono::nanoseconds timeout, const sigset_t * _restrict sigmask = nullptr) {
-	struct timespec spec;
-	spec.tv_sec = static_cast<std::time_t>(std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
-	spec.tv_nsec = static_cast<long>((timeout % std::chrono::seconds(1)).count());
+	struct timespec spec = duration_to_timespec(timeout);
 	return posix::pselect(nfds, readfds, writefds, errorfds, &spec, sigmask);
 }
 
@@ -72,9 +69,7 @@ static inline void pthread_sigqueue(pthread_t thread, int sig, void *value) {
 }
 
 static inline int sigtimedwait(const sigset_t & _restrict set, siginfo_t * _restrict info, std::chrono::nanoseconds timeout) {
-	struct timespec spec;
-	spec.tv_sec = static_cast<std::time_t>(std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
-	spec.tv_nsec = static_cast<long>((timeout % std::chrono::seconds(1)).count());
+	struct timespec spec = duration_to_timespec(timeout);
 	return sigtimedwait(set, info, spec);
 }
 

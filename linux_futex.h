@@ -4,6 +4,7 @@
 #include <linux/futex.h>
 #include <sys/syscall.h>
 
+#include "clock.h"
 #include "compiler.h"
 
 
@@ -101,9 +102,7 @@ unsigned futex_wake_bitset(int *uaddr, int count, unsigned mask);
 bool futex_wait(int *uaddr, int expect, const struct timespec *timeout = nullptr);
 
 static inline bool futex_wait(int *uaddr, int expect, std::chrono::steady_clock::duration timeout) {
-	struct timespec ts;
-	ts.tv_sec = static_cast<std::time_t>(std::chrono::duration_cast<std::chrono::seconds>(timeout).count());
-	ts.tv_nsec = static_cast<long>(std::chrono::duration_cast<std::chrono::nanoseconds>(timeout % std::chrono::seconds(1)).count());
+	struct timespec ts = posix::duration_to_timespec(timeout);
 	return futex_wait(uaddr, expect, &ts);
 }
 
@@ -112,9 +111,7 @@ bool futex_wait_bitset(int *uaddr, int expect, unsigned mask, const struct times
 bool futex_wait_bitset(int *uaddr, int expect, unsigned mask, std::chrono::system_clock::time_point deadline);
 
 static inline bool futex_wait_bitset(int *uaddr, int expect, unsigned mask, std::chrono::steady_clock::time_point deadline) {
-	struct timespec ts;
-	ts.tv_sec = static_cast<std::time_t>(std::chrono::duration_cast<std::chrono::seconds>(deadline.time_since_epoch()).count());
-	ts.tv_nsec = static_cast<long>(std::chrono::duration_cast<std::chrono::nanoseconds>(deadline.time_since_epoch() % std::chrono::seconds(1)).count());
+	struct timespec ts = posix::duration_to_timespec(deadline.time_since_epoch());
 	return futex_wait_bitset(uaddr, expect, mask, &ts);
 }
 
