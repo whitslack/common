@@ -59,8 +59,8 @@
 
 #define _restrict __restrict
 
-#define _likely(p) __builtin_expect(!!(p), 1)
-#define _unlikely(p) __builtin_expect(!!(p), 0)
+#define _likely(...) __builtin_expect(!!(__VA_ARGS__), true)
+#define _unlikely(...) __builtin_expect(!!(__VA_ARGS__), false)
 
 static constexpr auto _const _ffs(int v) noexcept { return __builtin_ffs(v); }
 static constexpr auto _const _ffs(long v) noexcept { return __builtin_ffsl(v); }
@@ -127,8 +127,8 @@ static constexpr unsigned __int128 _const bswap(unsigned __int128 v) noexcept { 
 
 #define _restrict
 
-#define _likely(p) (p)
-#define _unlikely(p) (p)
+#define _likely(...) (__VA_ARGS__)
+#define _unlikely(...) (__VA_ARGS__)
 
 #endif
 
