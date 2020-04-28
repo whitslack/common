@@ -68,9 +68,9 @@ public:
 };
 
 
-pid_t spawn(const char path[], const SpawnFileActions *file_actions, const SpawnAttributes *attr, char * const argv[], char * const envp[] = environ);
+pid_t spawn(const char path[], const SpawnFileActions *file_actions, const SpawnAttributes *attr, const char * const argv[], const char * const envp[] = const_cast<const char * const *>(environ));
 
-pid_t spawnp(const char file[], const SpawnFileActions *file_actions, const SpawnAttributes *attr, char * const argv[], char * const envp[] = environ);
+pid_t spawnp(const char file[], const SpawnFileActions *file_actions, const SpawnAttributes *attr, const char * const argv[], const char * const envp[] = const_cast<const char * const *>(environ));
 
 
 } // namespace posix

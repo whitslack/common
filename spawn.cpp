@@ -127,17 +127,27 @@ void SpawnAttributes::set_sig_default(const sigset_t *sig_default) {
 }
 
 
-pid_t spawn(const char path[], const SpawnFileActions *file_actions, const SpawnAttributes *attr, char * const argv[], char * const envp[]) {
+pid_t spawn(const char path[], const SpawnFileActions *file_actions, const SpawnAttributes *attr, const char * const argv[], const char * const envp[]) {
 	pid_t pid;
-	if (int error = ::posix_spawn(&pid, path, file_actions ? static_cast<const posix_spawn_file_actions_t *>(*file_actions) : nullptr, attr ? static_cast<const posix_spawnattr_t *>(*attr) : nullptr, argv, envp); _unlikely(error < 0)) {
+	if (int error = ::posix_spawn(&pid, path,
+			file_actions ? static_cast<const posix_spawn_file_actions_t *>(*file_actions) : nullptr,
+			attr ? static_cast<const posix_spawnattr_t *>(*attr) : nullptr,
+			const_cast<char * const *>(argv), const_cast<char * const *>(envp));
+		_unlikely(error < 0))
+	{
 		throw std::system_error(error, std::system_category(), "posix_spawn");
 	}
 	return pid;
 }
 
-pid_t spawnp(const char file[], const SpawnFileActions *file_actions, const SpawnAttributes *attr, char * const argv[], char * const envp[]) {
+pid_t spawnp(const char file[], const SpawnFileActions *file_actions, const SpawnAttributes *attr, const char * const argv[], const char * const envp[]) {
 	pid_t pid;
-	if (int error = ::posix_spawnp(&pid, file, file_actions ? static_cast<const posix_spawn_file_actions_t *>(*file_actions) : nullptr, attr ? static_cast<const posix_spawnattr_t *>(*attr) : nullptr, argv, envp); _unlikely(error < 0)) {
+	if (int error = ::posix_spawnp(&pid, file,
+			file_actions ? static_cast<const posix_spawn_file_actions_t *>(*file_actions) : nullptr,
+			attr ? static_cast<const posix_spawnattr_t *>(*attr) : nullptr,
+			const_cast<char * const *>(argv), const_cast<char * const *>(envp));
+		_unlikely(error < 0))
+	{
 		throw std::system_error(error, std::system_category(), "posix_spawnp");
 	}
 	return pid;
