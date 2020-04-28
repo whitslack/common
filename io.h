@@ -6,6 +6,7 @@
 
 #include "buffer.h"
 #include "compiler.h"
+#include "span.h"
 
 
 class Source {
@@ -21,13 +22,16 @@ public:
 
 public:
 	_nodiscard virtual ssize_t read(void *buf, size_t n) = 0;
-	_nodiscard virtual ssize_t read(const BufferPointer bufs[], size_t count);
+	_nodiscard virtual ssize_t read(std::span<const BufferPointer> bufs);
 
 	void read_fully(void *buf, size_t n);
-	void read_fully(const BufferPointer bufs[], size_t count);
+	void read_fully(std::span<const BufferPointer> bufs);
 
-	_nodiscard ssize_t read(std::initializer_list<BufferPointer> bufs) { return this->read(bufs.begin(), bufs.size()); }
-	void read_fully(std::initializer_list<BufferPointer> bufs) { return this->read_fully(bufs.begin(), bufs.size()); }
+	_nodiscard ssize_t read(std::initializer_list<BufferPointer> bufs) { return this->read({ bufs }); }
+	void read_fully(std::initializer_list<BufferPointer> bufs) { return this->read_fully({ bufs }); }
+
+	_deprecated _nodiscard ssize_t read(const BufferPointer bufs[], size_t count) { return this->read({ bufs, count }); }
+	_deprecated void read_fully(const BufferPointer bufs[], size_t count) { return this->read_fully({ bufs, count }); }
 
 };
 
@@ -45,15 +49,18 @@ public:
 
 public:
 	_nodiscard virtual size_t write(const void *buf, size_t n) = 0;
-	_nodiscard virtual size_t write(const BufferPointer bufs[], size_t count);
+	_nodiscard virtual size_t write(std::span<const BufferPointer> bufs);
 	virtual bool flush() { return true; }
 
 	void write_fully(const void *buf, size_t n);
-	void write_fully(const BufferPointer bufs[], size_t count);
+	void write_fully(std::span<const BufferPointer> bufs);
 	void flush_fully();
 
-	_nodiscard size_t write(std::initializer_list<BufferPointer> bufs) { return this->write(bufs.begin(), bufs.size()); }
-	void write_fully(std::initializer_list<BufferPointer> bufs) { return this->write_fully(bufs.begin(), bufs.size()); }
+	_nodiscard size_t write(std::initializer_list<BufferPointer> bufs) { return this->write({ bufs }); }
+	void write_fully(std::initializer_list<BufferPointer> bufs) { return this->write_fully({ bufs }); }
+
+	_deprecated _nodiscard size_t write(const BufferPointer bufs[], size_t count) { return this->write({ bufs, count }); }
+	_deprecated void write_fully(const BufferPointer bufs[], size_t count) { return this->write_fully({ bufs, count }); }
 
 };
 

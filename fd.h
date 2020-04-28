@@ -200,8 +200,8 @@ public:
 	void close() { return posix::close(std::exchange(fd, -1)); }
 	_nodiscard ssize_t read(void *buf, size_t n) override { return posix::read(fd, buf, n); }
 	_nodiscard size_t write(const void *buf, size_t n) override { return posix::write(fd, buf, n); }
-	_nodiscard ssize_t read(const Source::BufferPointer bufs[], size_t count) override { return this->readv(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
-	_nodiscard size_t write(const Sink::BufferPointer bufs[], size_t count) override { return this->writev(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
+	_nodiscard ssize_t read(std::span<const Source::BufferPointer> bufs) override { return this->readv(reinterpret_cast<const struct iovec *>(bufs.data()), saturate<int>(bufs.size())); }
+	_nodiscard size_t write(std::span<const Sink::BufferPointer> bufs) override { return this->writev(reinterpret_cast<const struct iovec *>(bufs.data()), saturate<int>(bufs.size())); }
 	_nodiscard ssize_t readv(const struct iovec iov[], int iovcnt) { return posix::readv(fd, iov, iovcnt); }
 	_nodiscard size_t writev(const struct iovec iov[], int iovcnt) { return posix::writev(fd, iov, iovcnt); }
 	_nodiscard ssize_t pread(void *buf, size_t nbyte, off_t offset) const { return posix::pread(fd, buf, nbyte, offset); }

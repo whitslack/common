@@ -24,7 +24,7 @@ static std::string make_what(std::string_view msg, const AbstractOption &opt) {
 OptionException::OptionException(std::string_view msg, const AbstractOption &opt) : runtime_error(make_what(msg, opt)) {
 }
 
-int parse(int argc, char *argv[], AbstractOption * const opts[], size_t n_opts) {
+int parse(int argc, char *argv[], std::span<AbstractOption * const> opts) {
 	char **head = argv, **tail = argv, **end = argv + argc;
 	while (head < end) {
 		if ((*head)[0] == '-') {
@@ -43,10 +43,10 @@ int parse(int argc, char *argv[], AbstractOption * const opts[], size_t n_opts) 
 				else {
 					++head;
 				}
-				for (size_t i = 0; i < n_opts; ++i) {
-					if (opts[i]->long_form) {
-						if (std::strcmp(opts[i]->long_form, opt) == 0) {
-							opts[i]->parse(opts[i]->takes_arg() > 0 || eq ? *head++ : nullptr);
+				for (auto opt_ptr : opts) {
+					if (opt_ptr->long_form) {
+						if (std::strcmp(opt_ptr->long_form, opt) == 0) {
+							opt_ptr->parse(opt_ptr->takes_arg() > 0 || eq ? *head++ : nullptr);
 							goto next_arg;
 						}
 					}
@@ -57,18 +57,18 @@ int parse(int argc, char *argv[], AbstractOption * const opts[], size_t n_opts) 
 				++*head;
 				do {
 					char opt = *(*head)++;
-					for (size_t i = 0; i < n_opts; ++i) {
-						if (opts[i]->short_form == opt) {
+					for (auto opt_ptr : opts) {
+						if (opt_ptr->short_form == opt) {
 							if (**head == '\0') {
 								++head;
-								opts[i]->parse(opts[i]->takes_arg() > 0 ? *head++ : nullptr);
+								opt_ptr->parse(opt_ptr->takes_arg() > 0 ? *head++ : nullptr);
 								goto next_arg;
 							}
-							if (opts[i]->takes_arg()) {
-								opts[i]->parse(*head++);
+							if (opt_ptr->takes_arg()) {
+								opt_ptr->parse(*head++);
 								goto next_arg;
 							}
-							opts[i]->parse(nullptr);
+							opt_ptr->parse(nullptr);
 							goto next_opt;
 						}
 					}

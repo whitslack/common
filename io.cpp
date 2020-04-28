@@ -1,16 +1,13 @@
 #include "io.h"
 
-#include <cstddef>
 #include <system_error>
 
 #include "narrow.h"
 
 
-ssize_t Source::read(const BufferPointer bufs[], size_t count) {
+ssize_t Source::read(std::span<const BufferPointer> bufs) {
 	ssize_t ret = 0;
-	for (size_t i = 0; i < count; ++i) {
-		void *buf = bufs[i].ptr;
-		size_t n = bufs[i].size;
+	for (auto [buf, n] : bufs) {
 		while (n > 0) {
 			ssize_t r = this->read(buf, n);
 			if (r <= 0) {
@@ -38,17 +35,17 @@ void Source::read_fully(void *buf, size_t n) {
 	}
 }
 
-void Source::read_fully(const BufferPointer bufs[], size_t count) {
-	while (count > 0) {
-		ssize_t r = this->read(bufs, count);
+void Source::read_fully(std::span<const BufferPointer> bufs) {
+	while (!bufs.empty()) {
+		ssize_t r = this->read(bufs);
 		if (_likely(r > 0)) {
-			while ((r -= bufs[0].size) > 0) {
-				++bufs, --count;
+			while ((r -= bufs.front().size) > 0) {
+				bufs = bufs.subspan(1);
 			}
 			if (r < 0) {
-				this->read_fully(static_cast<std::byte *>(bufs[0].ptr) + bufs[0].size + r, -r);
+				this->read_fully(static_cast<std::byte *>(bufs.front().ptr) + bufs.front().size + r, -r);
 			}
-			++bufs, --count;
+			bufs = bufs.subspan(1);
 		}
 		else if (r < 0) {
 			throw std::ios_base::failure("premature EOF");
@@ -60,11 +57,9 @@ void Source::read_fully(const BufferPointer bufs[], size_t count) {
 }
 
 
-size_t Sink::write(const BufferPointer bufs[], size_t count) {
+size_t Sink::write(std::span<const BufferPointer> bufs) {
 	size_t ret = 0;
-	for (size_t i = 0; i < count; ++i) {
-		const void *buf = bufs[i].ptr;
-		size_t n = bufs[i].size;
+	for (auto [buf, n] : bufs) {
 		while (n > 0) {
 			size_t w = this->write(buf, n);
 			if (w == 0) {
@@ -89,18 +84,18 @@ void Sink::write_fully(const void *buf, size_t n) {
 	}
 }
 
-void Sink::write_fully(const BufferPointer bufs[], size_t count) {
-	while (count > 0) {
-		size_t w = this->write(bufs, count);
+void Sink::write_fully(std::span<const BufferPointer> bufs) {
+	while (!bufs.empty()) {
+		size_t w = this->write(bufs);
 		if (_likely(w > 0)) {
-			while (w > bufs[0].size) {
-				w -= bufs[0].size;
-				++bufs, --count;
+			while (w > bufs.front().size) {
+				w -= bufs.front().size;
+				bufs = bufs.subspan(1);
 			}
 			if (w < bufs[0].size) {
-				this->write_fully(static_cast<const std::byte *>(bufs[0].ptr) + w, bufs[0].size - w);
+				this->write_fully(static_cast<const std::byte *>(bufs.front().ptr) + w, bufs.front().size - w);
 			}
-			++bufs, --count;
+			bufs = bufs.subspan(1);
 		}
 		else {
 			throw std::logic_error("non-blocking write in blocking context");

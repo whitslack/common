@@ -7,6 +7,7 @@
 
 #include "bit.h"
 #include "compiler.h"
+#include "span.h"
 
 
 template <typename T>
@@ -16,6 +17,7 @@ struct BasicBufferView {
 	constexpr BasicBufferView(T *bptr, T *gptr, T *pptr, T *eptr) noexcept : bptr(bptr), gptr(gptr), pptr(pptr), eptr(eptr) { }
 	constexpr BasicBufferView(T *bptr, T *eptr) noexcept : BasicBufferView(bptr, bptr, bptr, eptr) { }
 	constexpr BasicBufferView(T *bptr, size_t size) noexcept : BasicBufferView(bptr, bptr + size) { }
+	constexpr BasicBufferView(std::span<T> span) noexcept : BasicBufferView(span.begin(), span.end()) { }
 	constexpr _const operator BasicBufferView<const T> & () noexcept { return reinterpret_cast<BasicBufferView<const T> &>(*this); }
 	constexpr _const operator const BasicBufferView<const T> & () const noexcept { return reinterpret_cast<const BasicBufferView<const T> &>(*this); }
 	constexpr size_t _pure gpos() const noexcept { return gptr - bptr; }
@@ -68,14 +70,17 @@ struct BasicDynamicBuffer : BasicBufferView<T> {
 			this->resize(std::bit_ceil(min_size));
 		}
 	}
-	void append(const T data[], size_t n) {
-		if (this->pptr + n > this->eptr) {
-			this->resize(std::bit_ceil(this->ppos() + n));
+	void append(std::span<const T> data) {
+		if (this->pptr + data.size() > this->eptr) {
+			this->resize(std::bit_ceil(this->ppos() + data.size()));
 		}
-		std::memcpy(this->pptr, data, n * sizeof(T)), this->pptr += n;
+		std::memcpy(this->pptr, data.data(), data.size_bytes()), this->pptr += data.size();
+	}
+	_deprecated void append(const T data[], size_t n) {
+		return this->append({ data, n });
 	}
 	std::enable_if_t<sizeof(T) == 1, void> append(const void *data, size_t n) {
-		return this->append(static_cast<const T *>(data), n);
+		return this->append({ static_cast<const T *>(data), n });
 	}
 private:
 	BasicDynamicBuffer(const BasicDynamicBuffer &) = delete;

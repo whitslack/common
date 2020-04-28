@@ -86,6 +86,28 @@ static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator
 	return sink;
 }
 
+template <typename T, size_t Extent>
+static inline std::enable_if_t<std::is_trivially_copyable_v<T> && Extent != std::dynamic_extent, Source &> operator>>(Source &source, std::span<T, Extent> span) {
+	source.read_fully(span.data(), span.size_bytes());
+	return source;
+}
+
+template <typename T, size_t Extent>
+static inline std::enable_if_t<std::is_trivially_copyable_v<T> && Extent != std::dynamic_extent, Sink &> operator<<(Sink &sink, std::span<const T, Extent> span) {
+	sink.write_fully(span.data(), span.size_bytes());
+	return sink;
+}
+
+template <typename T, size_t Extent>
+static inline std::enable_if_t<std::is_trivially_copyable_v<T> && Extent == std::dynamic_extent, Source &> operator>>(Source &source, std::span<T, Extent> span) = delete;
+
+template <typename T, size_t Extent>
+static inline std::enable_if_t<std::is_trivially_copyable_v<T> && Extent == std::dynamic_extent, Sink &> operator<<(Sink &sink, std::span<const T, Extent> span) {
+	write_varint<size_t>(sink, span.size());
+	sink.write_fully(span.data(), span.size_bytes());
+	return sink;
+}
+
 template <typename T>
 static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::basic_string<T> &string) {
 	string.resize(read_varint<size_t>(source));

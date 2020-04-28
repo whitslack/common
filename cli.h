@@ -7,6 +7,7 @@
 #include "charconv.h"
 #include "compiler.h"
 #include "narrow.h"
+#include "span.h"
 
 
 namespace cli {
@@ -59,7 +60,7 @@ static inline auto convert(std::chrono::duration<Rep, Period> &out, const char s
 
 
 class AbstractOption {
-	friend int parse(int, char *[], AbstractOption * const [], size_t);
+	friend int parse(int, char *[], std::span<AbstractOption * const>);
 
 public:
 	const char * const long_form;
@@ -215,15 +216,10 @@ protected:
 };
 
 
-int parse(int argc, char *argv[], AbstractOption * const opts[], size_t n_opts);
-
-template <size_t N>
-static inline int parse(int argc, char *argv[], AbstractOption * const (&opts)[N]) {
-	return parse(argc, argv, opts, N);
-}
+int parse(int argc, char *argv[], std::span<AbstractOption * const> opts);
 
 static inline int parse(int argc, char *argv[], std::initializer_list<AbstractOption *> opts) {
-	return parse(argc, argv, opts.begin(), opts.size());
+	return parse(argc, argv, { opts });
 }
 
 
