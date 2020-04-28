@@ -90,10 +90,10 @@ private:
 	explicit SignalSet(std::nullptr_t) { this->fill(); }
 
 public:
-	_pure operator const sigset_t & () const noexcept { return set; }
-	_pure operator sigset_t & () noexcept { return set; }
-	_pure operator const sigset_t * () const noexcept { return &set; }
-	_pure operator sigset_t * () noexcept { return &set; }
+	_const operator const sigset_t & () const noexcept { return set; }
+	_const operator sigset_t & () noexcept { return set; }
+	_const operator const sigset_t * () const noexcept { return &set; }
+	_const operator sigset_t * () noexcept { return &set; }
 
 	void clear() { sigemptyset(set); }
 	void fill() { sigfillset(set); }

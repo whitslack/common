@@ -124,10 +124,10 @@ public:
 	FDSet(std::initializer_list<int> fds) noexcept { this->clear(); for (int fd : fds) *this += fd; }
 
 public:
-	_pure operator const fd_set & () const noexcept { return set; }
-	_pure operator fd_set & () noexcept { return set; }
-	_pure operator const fd_set * () const noexcept { return &set; }
-	_pure operator fd_set * () noexcept { return &set; }
+	_const operator const fd_set & () const noexcept { return set; }
+	_const operator fd_set & () noexcept { return set; }
+	_const operator const fd_set * () const noexcept { return &set; }
+	_const operator fd_set * () noexcept { return &set; }
 
 	void clear() noexcept { FD_ZERO(&set); }
 	FDSet & operator+=(int fd) noexcept { FD_SET(fd, &set); return *this; }

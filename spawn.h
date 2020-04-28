@@ -16,8 +16,8 @@ private:
 public:
 	SpawnFileActions();
 	~SpawnFileActions();
-	_pure operator posix_spawn_file_actions_t * () noexcept { return &file_actions; }
-	_pure operator const posix_spawn_file_actions_t * () const noexcept { return &file_actions; }
+	_const operator posix_spawn_file_actions_t * () noexcept { return &file_actions; }
+	_const operator const posix_spawn_file_actions_t * () const noexcept { return &file_actions; }
 
 private:
 	SpawnFileActions(const SpawnFileActions &) = delete;
@@ -39,21 +39,21 @@ private:
 public:
 	SpawnAttributes();
 	~SpawnAttributes();
-	_pure operator posix_spawnattr_t * () noexcept { return &attr; }
-	_pure operator const posix_spawnattr_t * () const noexcept { return &attr; }
+	_const operator posix_spawnattr_t * () noexcept { return &attr; }
+	_const operator const posix_spawnattr_t * () const noexcept { return &attr; }
 
 private:
 	SpawnAttributes(const SpawnAttributes &) = delete;
 	SpawnAttributes & operator=(const SpawnAttributes &) = delete;
 
 public:
-	short get_flags() const;
+	short _pure get_flags() const;
 	void set_flags(short flags);
 
-	pid_t get_pgroup() const;
+	pid_t _pure get_pgroup() const;
 	void set_pgroup(pid_t pgroup);
 
-	int get_sched_policy() const;
+	int _pure get_sched_policy() const;
 	void set_sched_policy(int sched_policy);
 
 	void get_sched_param(struct sched_param *sched_param) const;
