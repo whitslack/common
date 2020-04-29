@@ -5,6 +5,7 @@
 #include <regex>
 #include <sstream>
 
+#include "hex.h"
 #include "memory.h"
 
 #define BITS(l, o) (((size_t(1) << (l)) - 1) << (o))
@@ -636,7 +637,6 @@ std::time_t rfc2822_date(std::string_view sv) {
 
 
 ssize_t ChunkedSource::read(void *buf, size_t n) {
-	static const int8_t UNHEX['f' - '0' + 1] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15 };
 	ssize_t r;
 	char c;
 	for (;;) {
@@ -654,8 +654,8 @@ ssize_t ChunkedSource::read(void *buf, size_t n) {
 						state = Size_CR;
 						break;
 					}
-					int8_t v;
-					if (_unlikely(c < '0' || c > 'f' || (v = UNHEX[static_cast<uint8_t>(c - '0')]) < 0)) {
+					int v;
+					if (_unlikely(c < '0' || c > 'f' || (v = HexDecoder::xdigit_value(static_cast<char>(c - '0'))) < 0)) {
 						throw std::ios_base::failure("invalid chunk size");
 					}
 					chunk_rem = chunk_rem << 4 | v;
@@ -736,7 +736,6 @@ size_t ChunkedSink::write(const void *buf, size_t n) {
 }
 
 size_t ChunkedSink::write(const void *buf, size_t n, bool flush) {
-	static const char HEX[16] = { '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f' };
 	size_t ret = 0, mask;
 	char c;
 	for (;;) {
@@ -755,32 +754,32 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool flush) {
 						if (write_size & BITS(16, 48)) {
 							if (write_size & BITS(8, 56)) {
 								if (mask = write_size & BITS(4, 60)) {
-									c = HEX[mask >> 60];
+									c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask >> 60));
 								}
 								else {
-									c = HEX[(mask = write_size & BITS(4, 56)) >> 56];
+									c = HexEncoder::xdigit_lower(static_cast<unsigned>((mask = write_size & BITS(4, 56)) >> 56));
 								}
 							}
 							else if (mask = write_size & BITS(4, 52)) {
-								c = HEX[mask >> 52];
+								c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask >> 52));
 							}
 							else {
-								c = HEX[(mask = write_size & BITS(4, 48)) >> 48];
+								c = HexEncoder::xdigit_lower(static_cast<unsigned>((mask = write_size & BITS(4, 48)) >> 48));
 							}
 						}
 						else if (write_size & BITS(8, 40)) {
 							if (mask = write_size & BITS(4, 44)) {
-								c = HEX[mask >> 44];
+								c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask >> 44));
 							}
 							else {
-								c = HEX[(mask = write_size & BITS(4, 40)) >> 40];
+								c = HexEncoder::xdigit_lower(static_cast<unsigned>((mask = write_size & BITS(4, 40)) >> 40));
 							}
 						}
 						else if (mask = write_size & BITS(4, 36)) {
-							c = HEX[mask >> 36];
+							c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask >> 36));
 						}
 						else {
-							c = HEX[(mask = write_size & BITS(4, 32)) >> 32];
+							c = HexEncoder::xdigit_lower(static_cast<unsigned>((mask = write_size & BITS(4, 32)) >> 32));
 						}
 					}
 					else
@@ -788,32 +787,32 @@ size_t ChunkedSink::write(const void *buf, size_t n, bool flush) {
 					if (write_size & BITS(16, 16)) {
 						if (write_size & BITS(8, 24)) {
 							if (mask = write_size & BITS(4, 28)) {
-								c = HEX[mask >> 28];
+								c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask >> 28));
 							}
 							else {
-								c = HEX[(mask = write_size & BITS(4, 24)) >> 24];
+								c = HexEncoder::xdigit_lower(static_cast<unsigned>((mask = write_size & BITS(4, 24)) >> 24));
 							}
 						}
 						else if (mask = write_size & BITS(4, 20)) {
-							c = HEX[mask >> 20];
+							c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask >> 20));
 						}
 						else {
-							c = HEX[(mask = write_size & BITS(4, 16)) >> 16];
+							c = HexEncoder::xdigit_lower(static_cast<unsigned>((mask = write_size & BITS(4, 16)) >> 16));
 						}
 					}
 					else if (write_size & BITS(8, 8)) {
 						if (mask = write_size & BITS(4, 12)) {
-							c = HEX[mask >> 12];
+							c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask >> 12));
 						}
 						else {
-							c = HEX[(mask = write_size & BITS(4, 8)) >> 8];
+							c = HexEncoder::xdigit_lower(static_cast<unsigned>((mask = write_size & BITS(4, 8)) >> 8));
 						}
 					}
 					else if (mask = write_size & BITS(4, 4)) {
-						c = HEX[mask >> 4];
+						c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask >> 4));
 					}
 					else {
-						c = HEX[mask = write_size & BITS(4, 0)];
+						c = HexEncoder::xdigit_lower(static_cast<unsigned>(mask = write_size & BITS(4, 0)));
 					}
 					if (sink.write(&c, 1) == 0) {
 						return ret;

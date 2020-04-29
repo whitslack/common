@@ -3,11 +3,10 @@
 #include <cctype>
 #include <stdexcept>
 
+#include "hex.h"
+
 
 bool HexDumpEncoder::process(std::byte * _restrict &out, size_t n_out, const std::byte *&in, size_t n_in) {
-	static constexpr char encode[16] = {
-		'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'
-	};
 	for (;;) {
 		switch (state) {
 			case 0:
@@ -19,7 +18,7 @@ bool HexDumpEncoder::process(std::byte * _restrict &out, size_t n_out, const std
 				if (n_out == 0) {
 					return false;
 				}
-				*out++ = static_cast<std::byte>(encode[out_addr >> (7 - state) * 4 & 0xF]), --n_out, ++state;
+				*out++ = static_cast<std::byte>(HexEncoder::xdigit_lower(out_addr >> (7 - state) * 4 & 0xF)), --n_out, ++state;
 				break;
 			case 8: case 9:
 			case 12: case 15: case 18: case 21: case 24: case 27: case 30: case 33: case 34:
@@ -38,8 +37,8 @@ bool HexDumpEncoder::process(std::byte * _restrict &out, size_t n_out, const std
 					return false;
 				}
 				auto pos = (state - 10) / 3;
-				int b = static_cast<int>(buf[pos] = *in++); --n_in;
-				*out++ = static_cast<std::byte>(encode[b >> 4]), --n_out, ++state;
+				unsigned b = static_cast<unsigned>(buf[pos] = *in++); --n_in;
+				*out++ = static_cast<std::byte>(HexEncoder::xdigit_lower(b >> 4)), --n_out, ++state;
 				_fallthrough;
 			}
 			case 11: case 14: case 17: case 20: case 23: case 26: case 29: case 32:
@@ -48,8 +47,8 @@ bool HexDumpEncoder::process(std::byte * _restrict &out, size_t n_out, const std
 					return false;
 				}
 				auto pos = (state - 10) / 3;
-				int b = static_cast<int>(buf[pos]);
-				*out++ = static_cast<std::byte>(encode[b & 0xF]), --n_out, ++state;
+				unsigned b = static_cast<unsigned>(buf[pos]);
+				*out++ = static_cast<std::byte>(HexEncoder::xdigit_lower(b & 0xF)), --n_out, ++state;
 				break;
 			}
 			case 60: case 77:
@@ -63,7 +62,7 @@ bool HexDumpEncoder::process(std::byte * _restrict &out, size_t n_out, const std
 				if (n_out == 0) {
 					return false;
 				}
-				int b = static_cast<int>(buf[state - 61]);
+				unsigned b = static_cast<unsigned>(buf[state - 61]);
 				*out++ = static_cast<std::byte>(std::isprint(b) ? b : '.'), --n_out, ++state;
 				break;
 			}
@@ -107,7 +106,7 @@ bool HexDumpEncoder::finish(std::byte *&out, size_t n_out) {
 			return true;
 		}
 		else {
-			int b = static_cast<int>(buf[col - 61]);
+			unsigned b = static_cast<unsigned>(buf[col - 61]);
 			*out++ = static_cast<std::byte>(std::isprint(b) ? b : '.'), --n_out, ++state;
 			break;
 		}

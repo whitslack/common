@@ -8,6 +8,8 @@
 #include <stdexcept>
 #include <string_view>
 
+#include "hex.h"
+
 
 namespace json {
 
@@ -164,7 +166,6 @@ std::ostream & String::format(std::ostream &os) const {
 }
 
 static std::ostream & format_string(std::ostream &os, std::string_view str) {
-	static const char HEX[] = "0123456789ABCDEF";
 	os.put('"');
 	for (char c : str) {
 		switch (c) {
@@ -191,7 +192,7 @@ static std::ostream & format_string(std::ostream &os, std::string_view str) {
 				break;
 			default:
 				if (static_cast<unsigned char>(c) <= 0x1F) {
-					os.put('\\').put('u').put('0').put('0').put(HEX[c >> 4]).put(HEX[c & (1 << 4) - 1]);
+					os.put('\\').put('u').put('0').put('0').put(HexEncoder::xdigit_upper(c >> 4)).put(HexEncoder::xdigit_upper(c & (1 << 4) - 1));
 				}
 				else {
 					os.put(c);
@@ -217,9 +218,8 @@ std::ostream & Boolean::format(std::ostream &os) const {
 
 
 static unsigned int from_hex(std::istream &is) {
-	static const int8_t UNHEX[] = { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, -1, 10, 11, 12, 13, 14, 15 };
 	int c = is.peek();
-	if (_unlikely(c < '0' || c > 'f' || (c = UNHEX[c - '0']) < 0)) {
+	if (_unlikely((c = HexDecoder::xdigit_value(std::istream::traits_type::to_char_type(c))) < 0)) {
 		throw std::ios_base::failure("invalid hex digit");
 	}
 	is.get();
