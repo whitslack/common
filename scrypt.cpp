@@ -41,11 +41,11 @@ static void salsa20_8_core(void * _restrict out, const void * _restrict in) noex
 }
 
 static void scrypt_block_mix(void * _restrict out, const void * _restrict in, size_t r) noexcept {
-	auto outb = reinterpret_cast<uint8_t (*)[64]>(out);
-	auto inb = reinterpret_cast<const uint8_t (*)[64]>(in);
+	auto outb = reinterpret_cast<std::byte (*)[64]>(out);
+	auto inb = reinterpret_cast<const std::byte (*)[64]>(in);
 	auto p = inb[2 * r - 1];
 	for (size_t i = 0; i < r; ++i) {
-		uint8_t t[64];
+		std::byte t[64];
 		for (size_t j = 0; j < 64; ++j) {
 			t[j] = p[j] ^ inb[i * 2][j];
 		}
@@ -60,16 +60,16 @@ static void scrypt_block_mix(void * _restrict out, const void * _restrict in, si
 }
 
 static void scrypt_ro_mix(void * _restrict out, const void * _restrict in, size_t r, size_t n) {
-	auto outb = reinterpret_cast<uint8_t *>(out);
+	auto outb = reinterpret_cast<std::byte *>(out);
 	auto buffer = make_buffer(n * r * 128);
-	auto v = reinterpret_cast<uint8_t (*)[r * 128]>(buffer.get());
+	auto v = reinterpret_cast<std::byte (*)[r * 128]>(buffer.get());
 	std::memcpy(v[0], in, sizeof v[0]);
 	for (size_t i = 1; i < n; ++i) {
 		scrypt_block_mix(v[i], v[i - 1], r);
 	}
 	scrypt_block_mix(outb, v[n - 1], r);
 	for (size_t i = 0; i < n; ++i) {
-		uint8_t t[r * 128];
+		std::byte t[r * 128];
 		size_t j = *reinterpret_cast<const le<size_t> *>(outb + r * 128 - 64) & n - 1;
 		for (size_t k = 0; k < r * 128; ++k) {
 			t[k] = outb[k] ^ v[j][k];

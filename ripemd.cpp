@@ -10,7 +10,7 @@ static const uint32_t ripemd160_init[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 
 RIPEMD160::RIPEMD160() noexcept : Hash(ripemd160_init) {
 }
 
-void RIPEMD160::update(const uint8_t (&block)[64]) {
+void RIPEMD160::update(const std::byte (&block)[64]) {
 	const uint32_t (&words)[16] = reinterpret_cast<const uint32_t (&)[16]>(block);
 	uint32_t a = state[0], b = state[1], c = state[2], d = state[3], e = state[4];
 #define _(A, B, C, D, E, r, s) A = std::rotl(A + (B ^ C ^ D) + words[r] + 0x00000000, s) + E, C = std::rotl(C, 10)

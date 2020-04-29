@@ -18,7 +18,7 @@ HMAC<Hash_Type>::HMAC(const void *key, size_t n) {
 		std::memset(secret + n, 0, sizeof secret - n);
 	}
 	for (size_t i = 0; i < sizeof secret; ++i) {
-		secret[i] ^= 0x36;
+		secret[i] ^= static_cast<std::byte>(0x36);
 	}
 	hash.write_fully(secret, sizeof secret);
 }
@@ -28,7 +28,7 @@ const typename HMAC<Hash_Type>::digest_type & HMAC<Hash_Type>::digest() {
 	auto ihash = hash.digest();
 	hash = hash_type();
 	for (size_t i = 0; i < sizeof secret; ++i) {
-		secret[i] ^= 0x36 ^ 0x5c;
+		secret[i] ^= static_cast<std::byte>(0x36 ^ 0x5c);
 	}
 	hash.write_fully(secret, sizeof secret);
 	hash.write_fully(ihash.data(), ihash.size());

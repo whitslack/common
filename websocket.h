@@ -123,7 +123,7 @@ public:
 	Socket socket;
 
 private:
-	std::array<uint8_t, 1460> request_buf;
+	std::array<std::byte, 1460> request_buf;
 	size_t request_pos;
 
 public:
@@ -151,7 +151,7 @@ public:
 private:
 	std::string key;
 	DelimitedSource delimited_source;
-	std::array<uint8_t, 1460> response_buf;
+	std::array<std::byte, 1460> response_buf;
 	size_t response_pos;
 
 public:

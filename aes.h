@@ -30,7 +30,7 @@ protected:
 	AESEncrypterBase() = default;
 
 public:
-	size_t process(uint8_t (&out)[16], const uint8_t in[], size_t n) noexcept;
+	size_t process(std::byte (&out)[16], const std::byte in[], size_t n) noexcept;
 
 };
 
@@ -42,7 +42,7 @@ protected:
 	explicit AESDecrypterBase(const AESEncrypterBase<Key_Size> &encrypter) noexcept;
 
 public:
-	size_t process(uint8_t (&out)[16], const uint8_t in[], size_t n) noexcept;
+	size_t process(std::byte (&out)[16], const std::byte in[], size_t n) noexcept;
 
 };
 
@@ -50,7 +50,7 @@ public:
 class AES128Encrypter : public AESEncrypterBase<16> {
 
 public:
-	explicit AES128Encrypter(const uint8_t (&key)[16]) noexcept;
+	explicit AES128Encrypter(const std::byte (&key)[16]) noexcept;
 
 };
 
@@ -58,7 +58,7 @@ public:
 class AES128Decrypter : public AESDecrypterBase<16> {
 
 public:
-	explicit AES128Decrypter(const uint8_t (&key)[16]) noexcept : AESDecrypterBase<16>(AES128Encrypter(key)) { }
+	explicit AES128Decrypter(const std::byte (&key)[16]) noexcept : AESDecrypterBase<16>(AES128Encrypter(key)) { }
 	explicit AES128Decrypter(const AES128Encrypter &encrypter) noexcept : AESDecrypterBase<16>(encrypter) { }
 
 };
@@ -67,7 +67,7 @@ public:
 class AES192Encrypter : public AESEncrypterBase<24> {
 
 public:
-	explicit AES192Encrypter(const uint8_t (&key)[24]) noexcept;
+	explicit AES192Encrypter(const std::byte (&key)[24]) noexcept;
 
 };
 
@@ -75,7 +75,7 @@ public:
 class AES192Decrypter : public AESDecrypterBase<24> {
 
 public:
-	explicit AES192Decrypter(const uint8_t (&key)[24]) noexcept : AESDecrypterBase<24>(AES192Encrypter(key)) { }
+	explicit AES192Decrypter(const std::byte (&key)[24]) noexcept : AESDecrypterBase<24>(AES192Encrypter(key)) { }
 	explicit AES192Decrypter(const AES192Encrypter &encrypter) noexcept : AESDecrypterBase<24>(encrypter) { }
 
 };
@@ -84,7 +84,7 @@ public:
 class AES256Encrypter : public AESEncrypterBase<32> {
 
 public:
-	explicit AES256Encrypter(const uint8_t (&key)[32]) noexcept;
+	explicit AES256Encrypter(const std::byte (&key)[32]) noexcept;
 
 };
 
@@ -92,7 +92,7 @@ public:
 class AES256Decrypter : public AESDecrypterBase<32> {
 
 public:
-	explicit AES256Decrypter(const uint8_t (&key)[32]) noexcept : AESDecrypterBase<32>(AES256Encrypter(key)) { }
+	explicit AES256Decrypter(const std::byte (&key)[32]) noexcept : AESDecrypterBase<32>(AES256Encrypter(key)) { }
 	explicit AES256Decrypter(const AES256Encrypter &encrypter) noexcept : AESDecrypterBase<32>(encrypter) { }
 
 };

@@ -24,14 +24,14 @@ static void memxor32(void *buf, size_t n, uint32_t mask, size_t phase) {
 #endif
 	union {
 		void *void_ptr;
-		uint8_t *uint8_ptr;
+		std::byte *byte_ptr;
 		vec_t *vec_ptr;
 		uintptr_t uintptr;
 	} ptr;
 	ptr.void_ptr = buf;
 	uint32_t mask_le = std::rotr(+as_le(mask), unsigned(phase * 8));
 	while (n > 0 && ptr.uintptr % sizeof(vec_t)) {
-		*ptr.uint8_ptr = static_cast<uint8_t>(*ptr.uint8_ptr ^ mask_le), ++ptr.uint8_ptr, --n;
+		*ptr.byte_ptr = *ptr.byte_ptr ^ static_cast<std::byte>(mask_le), ++ptr.byte_ptr, --n;
 		mask_le = std::rotr(mask_le, 8);
 	}
 	uint32_t mask_he = as_le(mask_le);
@@ -39,7 +39,7 @@ static void memxor32(void *buf, size_t n, uint32_t mask, size_t phase) {
 		*ptr.vec_ptr ^= mask_he, ++ptr.vec_ptr, n -= sizeof(vec_t);
 	}
 	while (n > 0) {
-		*ptr.uint8_ptr = static_cast<uint8_t>(*ptr.uint8_ptr ^ mask_le), ++ptr.uint8_ptr, --n;
+		*ptr.byte_ptr = *ptr.byte_ptr ^ static_cast<std::byte>(mask_le), ++ptr.byte_ptr, --n;
 		mask_le = std::rotr(mask_le, 8);
 	}
 }
@@ -99,18 +99,18 @@ ssize_t WebSocket::receive(Opcode &opcode, void *buf, size_t n) {
 		void *hdr_buf = &recv_mask;
 		size_t hdr_size = 2, payload_len = recv_state & 0x7F;
 		if (payload_len == 127) {
-			hdr_buf = static_cast<uint8_t *>(hdr_buf) - sizeof recv_data_rem;
+			hdr_buf = static_cast<std::byte *>(hdr_buf) - sizeof recv_data_rem;
 			hdr_size += sizeof recv_data_rem;
 		}
 		else if (payload_len == 126) {
-			hdr_buf = static_cast<uint8_t *>(hdr_buf) - sizeof(uint16_t);
+			hdr_buf = static_cast<std::byte *>(hdr_buf) - sizeof(uint16_t);
 			hdr_size += sizeof(uint16_t);
 		}
 		if (recv_hdr_pos > hdr_size || recv_mask) {
 			hdr_size += sizeof recv_mask;
 		}
 		if ((hdr_size -= recv_hdr_pos) > 0) {
-			ssize_t r = socket.read(static_cast<uint8_t *>(hdr_buf) - 2 + recv_hdr_pos, hdr_size);
+			ssize_t r = socket.read(static_cast<std::byte *>(hdr_buf) - 2 + recv_hdr_pos, hdr_size);
 			if (r <= 0) {
 				if (r < 0) {
 					opcode = End;
@@ -205,7 +205,7 @@ bool WebSocket::send(Opcode opcode, const void *buf, size_t n, bool more) {
 		}
 	}
 	else {
-		if ((send_data_rem -= socket.write(static_cast<const uint8_t *>(buf) + n - send_data_rem, send_data_rem)) > 0) {
+		if ((send_data_rem -= socket.write(static_cast<const std::byte *>(buf) + n - send_data_rem, send_data_rem)) > 0) {
 			return false;
 		}
 	}

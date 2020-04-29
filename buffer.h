@@ -1,7 +1,6 @@
 #pragma once
 
 #include <bit>
-#include <cstdint>
 #include <cstdlib>
 #include <cstring>
 #include <new>
@@ -27,7 +26,7 @@ struct BasicStaticBuffer {
 	void compact() noexcept { if (size_t gpos = this->gpos()) std::memmove(bptr, gptr, this->grem() * sizeof(T)), pptr -= gpos, gptr = bptr; }
 };
 
-using StaticBuffer = BasicStaticBuffer<uint8_t>;
+using StaticBuffer = BasicStaticBuffer<std::byte>;
 
 
 template <typename T>
@@ -72,4 +71,4 @@ private:
 #endif
 };
 
-using Buffer = BasicBuffer<uint8_t>;
+using Buffer = BasicBuffer<std::byte>;

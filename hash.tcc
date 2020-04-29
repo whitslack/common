@@ -24,14 +24,14 @@ size_t Hash<Block_Size, State_Size, Digest_Size, Word_Type, Length_Type, Big_End
 			return n;
 		}
 		std::memcpy(buffer + buffer_pos, buf, r);
-		buf = static_cast<const char *>(buf) - buffer_pos, n += buffer_pos;
+		buf = static_cast<const std::byte *>(buf) - buffer_pos, n += buffer_pos;
 		buffer_pos = 0;
 		block = buffer;
 	}
 	while (n >= block_size) {
-		this->update(*static_cast<const uint8_t (*)[block_size]>(block));
+		this->update(*static_cast<const std::byte (*)[block_size]>(block));
 		length += block_size;
-		block = buf = static_cast<const char *>(buf) + block_size;
+		block = buf = static_cast<const std::byte *>(buf) + block_size;
 		n -= block_size;
 	}
 	if (n > 0) {

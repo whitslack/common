@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 
 #include <gmp.h>
 
@@ -17,17 +16,17 @@
 
 #define MP_NLIMBS(n) (((n) + sizeof(mp_limb_t) - 1) / sizeof(mp_limb_t))
 
-void bytes_to_mpn(mp_limb_t mpn[], const uint8_t bytes[], size_t n) noexcept;
+void bytes_to_mpn(mp_limb_t mpn[], const std::byte bytes[], size_t n) noexcept;
 
 template <size_t N>
-static inline void bytes_to_mpn(mp_limb_t (&mpn)[MP_NLIMBS(N)], const uint8_t (&bytes)[N]) noexcept {
+static inline void bytes_to_mpn(mp_limb_t (&mpn)[MP_NLIMBS(N)], const std::byte (&bytes)[N]) noexcept {
 	bytes_to_mpn(mpn, bytes, N);
 }
 
-void mpn_to_bytes(uint8_t bytes[], const mp_limb_t mpn[], size_t n) noexcept;
+void mpn_to_bytes(std::byte bytes[], const mp_limb_t mpn[], size_t n) noexcept;
 
 template <size_t N>
-static inline void mpn_to_bytes(uint8_t (&bytes)[N], const mp_limb_t (&mpn)[MP_NLIMBS(N)]) noexcept {
+static inline void mpn_to_bytes(std::byte (&bytes)[N], const mp_limb_t (&mpn)[MP_NLIMBS(N)]) noexcept {
 	mpn_to_bytes(bytes, mpn, N);
 }
 

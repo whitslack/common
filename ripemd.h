@@ -7,6 +7,6 @@ public:
 	RIPEMD160() noexcept;
 
 protected:
-	void update(const uint8_t (&block)[64]) override;
+	void update(const std::byte (&block)[64]) override;
 
 };

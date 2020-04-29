@@ -97,10 +97,10 @@ public:
 };
 
 
-class MemorySource : public BasicStaticBuffer<const uint8_t>, public Source {
+class MemorySource : public BasicStaticBuffer<const std::byte>, public Source {
 
 public:
-	MemorySource(const void *buf, size_t n) noexcept : BasicStaticBuffer<const uint8_t>(static_cast<const uint8_t *>(buf), static_cast<const uint8_t *>(buf), static_cast<const uint8_t *>(buf) + n, static_cast<const uint8_t *>(buf) + n) { }
+	MemorySource(const void *buf, size_t n) noexcept : BasicStaticBuffer<const std::byte>(static_cast<const std::byte *>(buf), static_cast<const std::byte *>(buf), static_cast<const std::byte *>(buf) + n, static_cast<const std::byte *>(buf) + n) { }
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
@@ -112,7 +112,7 @@ public:
 class MemorySink : public StaticBuffer, public Sink {
 
 public:
-	MemorySink(void *buf, size_t n) noexcept : StaticBuffer(static_cast<uint8_t *>(buf), n) { }
+	MemorySink(void *buf, size_t n) noexcept : StaticBuffer(static_cast<std::byte *>(buf), n) { }
 
 public:
 	_nodiscard size_t write(const void *buf, size_t n) override;
@@ -189,10 +189,10 @@ class BufferedSourceBase : public Source {
 
 private:
 	Source &source;
-	uint8_t * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
+	std::byte * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
 
 protected:
-	explicit BufferedSourceBase(Source &source, uint8_t *buf_bptr, uint8_t *buf_eptr) noexcept : source(source), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
+	explicit BufferedSourceBase(Source &source, std::byte *buf_bptr, std::byte *buf_eptr) noexcept : source(source), buf_bptr(buf_bptr), buf_gptr(buf_bptr), buf_pptr(buf_bptr), buf_eptr(buf_eptr) { }
 
 public:
 	_nodiscard ssize_t read(void *buf, size_t n) override;
@@ -205,10 +205,10 @@ class BufferedSinkBase : public Sink {
 
 private:
 	Sink &sink;
-	uint8_t * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
+	std::byte * const buf_bptr, *buf_gptr, *buf_pptr, * const buf_eptr;
 
 protected:
-	explicit BufferedSinkBase(Sink &sink, uint8_t *buf_bptr, uint8_t *buf_eptr) noexcept : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_eptr), buf_pptr(buf_eptr), buf_eptr(buf_eptr) { }
+	explicit BufferedSinkBase(Sink &sink, std::byte *buf_bptr, std::byte *buf_eptr) noexcept : sink(sink), buf_bptr(buf_bptr), buf_gptr(buf_eptr), buf_pptr(buf_eptr), buf_eptr(buf_eptr) { }
 
 public:
 	_nodiscard size_t write(const void *buf, size_t n) override;
@@ -221,7 +221,7 @@ template <size_t Buffer_Size>
 class BufferedSource : public BufferedSourceBase {
 
 private:
-	std::array<uint8_t, Buffer_Size> buffer;
+	std::array<std::byte, Buffer_Size> buffer;
 
 public:
 	explicit BufferedSource(Source &source) noexcept : BufferedSourceBase(source, &*buffer.begin(), &*buffer.end()) { }
@@ -233,7 +233,7 @@ template <size_t Buffer_Size>
 class BufferedSink : public BufferedSinkBase {
 
 private:
-	std::array<uint8_t, Buffer_Size> buffer;
+	std::array<std::byte, Buffer_Size> buffer;
 
 public:
 	explicit BufferedSink(Sink &sink) noexcept : BufferedSinkBase(sink, &*buffer.begin(), &*buffer.end()) { }

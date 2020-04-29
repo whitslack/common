@@ -4,7 +4,7 @@
 
 
 static size_t varint_size(uint8_t first_byte) noexcept {
-	unsigned i = static_cast<uint8_t>(~first_byte);
+	unsigned i = ~first_byte;
 	if (i == 0) {
 		return 9;
 	}
@@ -44,7 +44,7 @@ Source & _varint_ops<4>::read_signed(Source &source, int32_t &value) {
 		case 4: {
 			int32_t x = b << 28;
 			be<uint32_t> d = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+			source.read_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 			value = (x >> 4 | d) + (x >> 31 | 1) * 0x102040;
 			break;
 		}
@@ -77,7 +77,7 @@ Sink & _varint_ops<4>::write_signed(Sink &sink, int32_t value) {
 		}
 		else if ((value += (1 << 13)) > ~(1 << 20)) {
 			be<uint32_t> d = ~(1 << 21) & value;
-			sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+			sink.write_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 		}
 		else if ((value += (1 << 20)) > ~(1 << 27)) {
 			be<uint32_t> d = ~(1 << 28) & value;
@@ -85,7 +85,7 @@ Sink & _varint_ops<4>::write_signed(Sink &sink, int32_t value) {
 		}
 		else {
 			be<uint32_t> a[2] = { 0xF7, value + (1 << 27) };
-			sink.write_fully(reinterpret_cast<uint8_t *>(a) + 3, sizeof a - 3);
+			sink.write_fully(reinterpret_cast<std::byte *>(a) + 3, sizeof a - 3);
 		}
 	}
 	else {
@@ -99,7 +99,7 @@ Sink & _varint_ops<4>::write_signed(Sink &sink, int32_t value) {
 		}
 		else if ((value -= (1 << 13)) < (1 << 20)) {
 			be<uint32_t> d = 0xC00000 | value;
-			sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+			sink.write_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 		}
 		else if ((value -= (1 << 20)) < (1 << 27)) {
 			be<uint32_t> d = 0xE0000000 | value;
@@ -107,7 +107,7 @@ Sink & _varint_ops<4>::write_signed(Sink &sink, int32_t value) {
 		}
 		else {
 			be<uint32_t> a[2] = { 0xF0, value - (1 << 27) };
-			sink.write_fully(reinterpret_cast<uint8_t *>(a) + 3, sizeof a - 3);
+			sink.write_fully(reinterpret_cast<std::byte *>(a) + 3, sizeof a - 3);
 		}
 	}
 	return sink;
@@ -134,7 +134,7 @@ Source & _varint_ops<4>::read_unsigned(Source &source, uint32_t &value) {
 		}
 		case 4: {
 			be<uint32_t> d = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+			source.read_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 			value = ((b & 0x0F) << 24 | d) + 0x204080;
 			break;
 		}
@@ -166,7 +166,7 @@ Sink & _varint_ops<4>::write_unsigned(Sink &sink, uint32_t value) {
 	}
 	else if ((value -= (1 << 14)) < (1 << 21)) {
 		be<uint32_t> d = 0xC00000 | value;
-		sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+		sink.write_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 	}
 	else if ((value -= (1 << 21)) < (1 << 28)) {
 		be<uint32_t> d = 0xE0000000 | value;
@@ -174,7 +174,7 @@ Sink & _varint_ops<4>::write_unsigned(Sink &sink, uint32_t value) {
 	}
 	else {
 		be<uint32_t> a[2] = { 0xF0, value - (1 << 28) };
-		sink.write_fully(reinterpret_cast<uint8_t *>(a) + 3, sizeof a - 3);
+		sink.write_fully(reinterpret_cast<std::byte *>(a) + 3, sizeof a - 3);
 	}
 	return sink;
 }
@@ -203,7 +203,7 @@ Source & _varint_ops<8>::read_signed(Source &source, int64_t &value) {
 		case 4: {
 			int32_t x = b << 28;
 			be<uint32_t> d = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+			source.read_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 			value = static_cast<int32_t>(x >> 4 | d) + (x >> 31 | 1) * 0x102040;
 			break;
 		}
@@ -217,20 +217,20 @@ Source & _varint_ops<8>::read_signed(Source &source, int64_t &value) {
 		case 6: {
 			int64_t x = static_cast<int64_t>(b) << 62;
 			be<uint64_t> q = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
+			source.read_fully(reinterpret_cast<std::byte *>(&q) + 3, sizeof q - 3);
 			value = (x >> 22 | q) + (x >> 63 | 1) * INT64_C(0x0408102040);
 			break;
 		}
 		case 7: {
 			int64_t x = static_cast<int64_t>(b) << 63;
 			be<uint64_t> q = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
+			source.read_fully(reinterpret_cast<std::byte *>(&q) + 2, sizeof q - 2);
 			value = (x >> 15 | q) + (x >> 63 | 1) * INT64_C(0x020408102040);
 			break;
 		}
 		case 8: {
 			int64_t x;
-			source.read_fully(reinterpret_cast<uint8_t *>(&x) + 1, sizeof x - 1);
+			source.read_fully(reinterpret_cast<std::byte *>(&x) + 1, sizeof x - 1);
 			x = as_be(x) << 8;
 			value = (x >> 8) + (x >> 63 | 1) * INT64_C(0x01020408102040);
 			break;
@@ -260,7 +260,7 @@ Sink & _varint_ops<8>::write_signed(Sink &sink, int64_t value) {
 		}
 		else if ((value += (1 << 13)) > ~(1 << 20)) {
 			be<uint32_t> d = static_cast<uint32_t>(~(1 << 21) & value);
-			sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+			sink.write_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 		}
 		else if ((value += (1 << 20)) > ~(1 << 27)) {
 			be<uint32_t> d = static_cast<uint32_t>(~(1 << 28) & value);
@@ -268,15 +268,15 @@ Sink & _varint_ops<8>::write_signed(Sink &sink, int64_t value) {
 		}
 		else if ((value += (1 << 27)) > ~(INT64_C(1) << 34)) {
 			be<uint64_t> q = ~(INT64_C(1) << 35) & value;
-			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
+			sink.write_fully(reinterpret_cast<std::byte *>(&q) + 3, sizeof q - 3);
 		}
 		else if ((value += (INT64_C(1) << 34)) > ~(INT64_C(1) << 41)) {
 			be<uint64_t> q = ~(INT64_C(1) << 42) & value;
-			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
+			sink.write_fully(reinterpret_cast<std::byte *>(&q) + 2, sizeof q - 2);
 		}
 		else if ((value += (INT64_C(1) << 41)) > ~(INT64_C(1) << 48)) {
 			be<uint64_t> q = ~(INT64_C(1) << 49) & value;
-			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 1, sizeof q - 1);
+			sink.write_fully(reinterpret_cast<std::byte *>(&q) + 1, sizeof q - 1);
 		}
 		else if ((value += (INT64_C(1) << 48)) > ~(INT64_C(1) << 55)) {
 			be<uint64_t> q = ~(INT64_C(1) << 56) & value;
@@ -284,7 +284,7 @@ Sink & _varint_ops<8>::write_signed(Sink &sink, int64_t value) {
 		}
 		else {
 			be<uint64_t> a[2] = { 0xFF, value + (INT64_C(1) << 55) };
-			sink.write_fully(reinterpret_cast<uint8_t *>(a) + 7, sizeof a - 7);
+			sink.write_fully(reinterpret_cast<std::byte *>(a) + 7, sizeof a - 7);
 		}
 	}
 	else {
@@ -298,7 +298,7 @@ Sink & _varint_ops<8>::write_signed(Sink &sink, int64_t value) {
 		}
 		else if ((value -= (1 << 13)) < (1 << 20)) {
 			be<uint32_t> d = static_cast<uint32_t>(0xC00000 | value);
-			sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+			sink.write_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 		}
 		else if ((value -= (1 << 20)) < (1 << 27)) {
 			be<uint32_t> d = static_cast<uint32_t>(0xE0000000 | value);
@@ -306,15 +306,15 @@ Sink & _varint_ops<8>::write_signed(Sink &sink, int64_t value) {
 		}
 		else if ((value -= (1 << 27)) < (INT64_C(1) << 34)) {
 			be<uint64_t> q = INT64_C(0xF000000000) | value;
-			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
+			sink.write_fully(reinterpret_cast<std::byte *>(&q) + 3, sizeof q - 3);
 		}
 		else if ((value -= (INT64_C(1) << 34)) < (INT64_C(1) << 41)) {
 			be<uint64_t> q = INT64_C(0xF80000000000) | value;
-			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
+			sink.write_fully(reinterpret_cast<std::byte *>(&q) + 2, sizeof q - 2);
 		}
 		else if ((value -= (INT64_C(1) << 41)) < (INT64_C(1) << 48)) {
 			be<uint64_t> q = INT64_C(0xFC000000000000) | value;
-			sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 1, sizeof q - 1);
+			sink.write_fully(reinterpret_cast<std::byte *>(&q) + 1, sizeof q - 1);
 		}
 		else if ((value -= (INT64_C(1) << 48)) < (INT64_C(1) << 55)) {
 			be<uint64_t> q = INT64_C(0xFE00000000000000) | value;
@@ -322,7 +322,7 @@ Sink & _varint_ops<8>::write_signed(Sink &sink, int64_t value) {
 		}
 		else {
 			be<uint64_t> a[2] = { 0xFF, value - (INT64_C(1) << 55) };
-			sink.write_fully(reinterpret_cast<uint8_t *>(a) + 7, sizeof a - 7);
+			sink.write_fully(reinterpret_cast<std::byte *>(a) + 7, sizeof a - 7);
 		}
 	}
 	return sink;
@@ -349,7 +349,7 @@ Source & _varint_ops<8>::read_unsigned(Source &source, uint64_t &value) {
 		}
 		case 4: {
 			be<uint32_t> d = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+			source.read_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 			value = ((b & 0x0F) << 24 | d) + 0x204080;
 			break;
 		}
@@ -361,19 +361,19 @@ Source & _varint_ops<8>::read_unsigned(Source &source, uint64_t &value) {
 		}
 		case 6: {
 			be<uint64_t> q = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
+			source.read_fully(reinterpret_cast<std::byte *>(&q) + 3, sizeof q - 3);
 			value = (static_cast<uint64_t>(b & 0x03) << 40 | q) + UINT64_C(0x0810204080);
 			break;
 		}
 		case 7: {
 			be<uint64_t> q = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
+			source.read_fully(reinterpret_cast<std::byte *>(&q) + 2, sizeof q - 2);
 			value = (static_cast<uint64_t>(b & 0x01) << 48 | q) + UINT64_C(0x040810204080);
 			break;
 		}
 		case 8: {
 			be<uint64_t> q = 0;
-			source.read_fully(reinterpret_cast<uint8_t *>(&q) + 1, sizeof q - 1);
+			source.read_fully(reinterpret_cast<std::byte *>(&q) + 1, sizeof q - 1);
 			value = q + UINT64_C(0x02040810204080);
 			break;
 		}
@@ -402,7 +402,7 @@ Sink & _varint_ops<8>::write_unsigned(Sink &sink, uint64_t value) {
 	}
 	else if ((value -= (1 << 14)) < (1 << 21)) {
 		be<uint32_t> d = 0xC00000 | static_cast<uint32_t>(value);
-		sink.write_fully(reinterpret_cast<uint8_t *>(&d) + 1, sizeof d - 1);
+		sink.write_fully(reinterpret_cast<std::byte *>(&d) + 1, sizeof d - 1);
 	}
 	else if ((value -= (1 << 21)) < (1 << 28)) {
 		be<uint32_t> d = 0xE0000000 | static_cast<uint32_t>(value);
@@ -410,15 +410,15 @@ Sink & _varint_ops<8>::write_unsigned(Sink &sink, uint64_t value) {
 	}
 	else if ((value -= (1 << 28)) < (UINT64_C(1) << 35)) {
 		be<uint64_t> q = UINT64_C(0xF000000000) | value;
-		sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 3, sizeof q - 3);
+		sink.write_fully(reinterpret_cast<std::byte *>(&q) + 3, sizeof q - 3);
 	}
 	else if ((value -= (UINT64_C(1) << 35)) < (UINT64_C(1) << 42)) {
 		be<uint64_t> q = UINT64_C(0xF80000000000) | value;
-		sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 2, sizeof q - 2);
+		sink.write_fully(reinterpret_cast<std::byte *>(&q) + 2, sizeof q - 2);
 	}
 	else if ((value -= (UINT64_C(1) << 42)) < (UINT64_C(1) << 49)) {
 		be<uint64_t> q = UINT64_C(0xFC000000000000) | value;
-		sink.write_fully(reinterpret_cast<uint8_t *>(&q) + 1, sizeof q - 1);
+		sink.write_fully(reinterpret_cast<std::byte *>(&q) + 1, sizeof q - 1);
 	}
 	else if ((value -= (UINT64_C(1) << 49)) < (UINT64_C(1) << 56)) {
 		be<uint64_t> q = UINT64_C(0xFE00000000000000) | value;
@@ -426,7 +426,7 @@ Sink & _varint_ops<8>::write_unsigned(Sink &sink, uint64_t value) {
 	}
 	else {
 		be<uint64_t> a[2] = { 0xFF, value - (UINT64_C(1) << 56) };
-		sink.write_fully(reinterpret_cast<uint8_t *>(a) + 7, sizeof a - 7);
+		sink.write_fully(reinterpret_cast<std::byte *>(a) + 7, sizeof a - 7);
 	}
 	return sink;
 }

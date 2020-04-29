@@ -128,7 +128,7 @@ template <size_t Key_Size>
 constexpr size_t AESBase<Key_Size>::sched_size;
 
 template <size_t Key_Size>
-size_t AESEncrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[], size_t n _unused) noexcept {
+size_t AESEncrypterBase<Key_Size>::process(std::byte (&out)[16], const std::byte in[], size_t n _unused) noexcept {
 	assert(n == 16);
 	uint32_t s0 = reinterpret_cast<const be<uint32_t> *>(in)[0] ^ this->key_schedule[0];
 	uint32_t s1 = reinterpret_cast<const be<uint32_t> *>(in)[1] ^ this->key_schedule[1];
@@ -236,7 +236,7 @@ AESDecrypterBase<Key_Size>::AESDecrypterBase(const AESEncrypterBase<Key_Size> &e
 }
 
 template <size_t Key_Size>
-size_t AESDecrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[], size_t n _unused) noexcept {
+size_t AESDecrypterBase<Key_Size>::process(std::byte (&out)[16], const std::byte in[], size_t n _unused) noexcept {
 	assert(n == 16);
 	uint32_t s0 = reinterpret_cast<const be<uint32_t> *>(in)[0] ^ this->key_schedule[0];
 	uint32_t s1 = reinterpret_cast<const be<uint32_t> *>(in)[1] ^ this->key_schedule[1];
@@ -324,7 +324,7 @@ size_t AESDecrypterBase<Key_Size>::process(uint8_t (&out)[16], const uint8_t in[
 }
 
 
-AES128Encrypter::AES128Encrypter(const uint8_t (&key)[16]) noexcept {
+AES128Encrypter::AES128Encrypter(const std::byte (&key)[16]) noexcept {
 	for (size_t i = 0; i < 4; ++i) {
 		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[4]>(key)[i];
 	}
@@ -343,7 +343,7 @@ AES128Encrypter::AES128Encrypter(const uint8_t (&key)[16]) noexcept {
 }
 
 
-AES192Encrypter::AES192Encrypter(const uint8_t (&key)[24]) noexcept {
+AES192Encrypter::AES192Encrypter(const std::byte (&key)[24]) noexcept {
 	for (size_t i = 0; i < 6; ++i) {
 		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[6]>(key)[i];
 	}
@@ -367,7 +367,7 @@ AES192Encrypter::AES192Encrypter(const uint8_t (&key)[24]) noexcept {
 }
 
 
-AES256Encrypter::AES256Encrypter(const uint8_t (&key)[32]) noexcept {
+AES256Encrypter::AES256Encrypter(const std::byte (&key)[32]) noexcept {
 	for (size_t i = 0; i < 8; ++i) {
 		key_schedule[i] = reinterpret_cast<const be<uint32_t> (&)[8]>(key)[i];
 	}

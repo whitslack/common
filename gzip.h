@@ -10,7 +10,7 @@ class GZipSource : public Source {
 private:
 	Source &source;
 	z_stream stream;
-	uint8_t ibuf[1 << 12];
+	std::byte ibuf[1 << 12];
 
 public:
 	explicit GZipSource(Source &source);
@@ -31,7 +31,7 @@ class GZipSink : public Sink {
 private:
 	Sink &sink;
 	z_stream stream;
-	uint8_t obuf[1 << 12];
+	std::byte obuf[1 << 12];
 
 public:
 	explicit GZipSink(Sink &sink, int level = Z_DEFAULT_COMPRESSION);

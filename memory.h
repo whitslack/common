@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <memory>
 
 #ifndef __cpp_lib_nonmember_container_access
@@ -11,6 +10,6 @@ namespace std {
 }
 #endif
 
-static inline std::unique_ptr<uint8_t[]> make_buffer(size_t size) {
-	return std::unique_ptr<uint8_t[]>(new uint8_t[size]);
+static inline std::unique_ptr<std::byte[]> make_buffer(size_t size) {
+	return std::unique_ptr<std::byte[]>(new std::byte[size]);
 }

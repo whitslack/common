@@ -11,7 +11,7 @@ static constexpr char encode[64] = {
 	'w', 'x', 'y', 'z', '0', '1', '2', '3', '4', '5', '6', '7', '8', '9', '+', '/'
 };
 
-bool Base64Encoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
+bool Base64Encoder::process(std::byte * _restrict &out, size_t n_out, const std::byte *&in, size_t n_in) {
 	unsigned b0, b1;
 	switch (state) {
 		case 0:
@@ -38,8 +38,8 @@ state0:
 			state = 0;
 			return false;
 		}
-		b0 = *in++, --n_in;
-		*out++ = encode[b0 >> 2], --n_out;
+		b0 = static_cast<unsigned>(*in++), --n_in;
+		*out++ = static_cast<std::byte>(encode[b0 >> 2]), --n_out;
 state1:
 		if (n_in == 0) {
 			state = 1, buf = static_cast<uint8_t>(b0);
@@ -49,8 +49,8 @@ state1:
 			state = 1, buf = static_cast<uint8_t>(b0);
 			return false;
 		}
-		b1 = *in++, --n_in;
-		*out++ = encode[b0 << 4 & 0x3F | b1 >> 4], --n_out;
+		b1 = static_cast<unsigned>(*in++), --n_in;
+		*out++ = static_cast<std::byte>(encode[b0 << 4 & 0x3F | b1 >> 4]), --n_out;
 state2:
 		if (n_in == 0) {
 			state = 2, buf = static_cast<uint8_t>(b1);
@@ -60,18 +60,18 @@ state2:
 			state = 2, buf = static_cast<uint8_t>(b1);
 			return false;
 		}
-		b0 = *in++, --n_in;
-		*out++ = encode[b1 << 2 & 0x3F | b0 >> 6], --n_out;
+		b0 = static_cast<unsigned>(*in++), --n_in;
+		*out++ = static_cast<std::byte>(encode[b1 << 2 & 0x3F | b0 >> 6]), --n_out;
 state3:
 		if (n_out == 0) {
 			state = 3, buf = static_cast<uint8_t>(b0);
 			return false;
 		}
-		*out++ = encode[b0 & 0x3F], --n_out;
+		*out++ = static_cast<std::byte>(encode[b0 & 0x3F]), --n_out;
 	}
 }
 
-bool Base64Encoder::finish(uint8_t *&out, size_t n_out) {
+bool Base64Encoder::finish(std::byte *&out, size_t n_out) {
 	switch (state) {
 		case 0:
 			state = 6;
@@ -80,20 +80,20 @@ bool Base64Encoder::finish(uint8_t *&out, size_t n_out) {
 			if (n_out == 0) {
 				return false;
 			}
-			*out++ = encode[buf << 4 & 0x3F], --n_out;
+			*out++ = static_cast<std::byte>(encode[buf << 4 & 0x3F]), --n_out;
 			_fallthrough;
 		case 4:
 			if (n_out == 0) {
 				state = 4;
 				return false;
 			}
-			*out++ = '=', --n_out;
+			*out++ = static_cast<std::byte>('='), --n_out;
 			goto state5;
 		case 2:
 			if (n_out == 0) {
 				return false;
 			}
-			*out++ = encode[buf << 2 & 0x3F], --n_out;
+			*out++ = static_cast<std::byte>(encode[buf << 2 & 0x3F]), --n_out;
 			_fallthrough;
 		case 5:
 state5:
@@ -101,14 +101,14 @@ state5:
 				state = 5;
 				return false;
 			}
-			*out++ = '=', --n_out;
+			*out++ = static_cast<std::byte>('='), --n_out;
 			state = 6;
 			return true;
 		case 3:
 			if (n_out == 0) {
 				return false;
 			}
-			*out++ = encode[buf & 0x3F], --n_out;
+			*out++ = static_cast<std::byte>(encode[buf & 0x3F]), --n_out;
 			state = 6;
 			_fallthrough;
 		case 6:
@@ -119,7 +119,7 @@ state5:
 }
 
 
-bool Base64Decoder::process(uint8_t * _restrict &out, size_t n_out, const uint8_t *&in, size_t n_in) {
+bool Base64Decoder::process(std::byte * _restrict &out, size_t n_out, const std::byte *&in, size_t n_in) {
 	static constexpr int8_t decode[80] = {
 		62, -1, -1, -1, 63, 52, 53, 54, 55, 56, 57, 58, 59, 60, 61, -1, -1, -1, -1, -1,
 		-1, -1,  0,  1,  2,  3,  4,  5,  6,  7,  8,  9, 10, 11, 12, 13, 14, 15, 16, 17,
@@ -150,7 +150,7 @@ state0:
 			state = 0;
 			return true;
 		}
-		b0 = *in++, --n_in;
+		b0 = static_cast<unsigned>(*in++), --n_in;
 		if (_unlikely((b0 -= '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0)) {
 			throw std::ios_base::failure("invalid base64");
 		}
@@ -163,17 +163,17 @@ state1:
 			state = 1, buf = static_cast<uint8_t>(b0);
 			return false;
 		}
-		b1 = *in++, --n_in;
+		b1 = static_cast<unsigned>(*in++), --n_in;
 		if (_unlikely((b1 -= '+') > 'z' - '+' || static_cast<int>(b1 = decode[b1]) < 0)) {
 			throw std::ios_base::failure("invalid base64");
 		}
-		*out++ = static_cast<uint8_t>(b0 << 2 | b1 >> 4), --n_out;
+		*out++ = static_cast<std::byte>(b0 << 2 | b1 >> 4), --n_out;
 state2:
 		if (n_in == 0) {
 			state = 2, buf = static_cast<uint8_t>(b1);
 			return true;
 		}
-		if (*in == '=') {
+		if (*in == static_cast<std::byte>('=')) {
 			++in, --n_in;
 			goto state4;
 		}
@@ -181,17 +181,17 @@ state2:
 			state = 2, buf = static_cast<uint8_t>(b1);
 			return false;
 		}
-		b0 = *in++, --n_in;
+		b0 = static_cast<unsigned>(*in++), --n_in;
 		if (_unlikely((b0 -= '+') > 'z' - '+' || static_cast<int>(b0 = decode[b0]) < 0)) {
 			throw std::ios_base::failure("invalid base64");
 		}
-		*out++ = static_cast<uint8_t>(b1 << 4 | b0 >> 2), --n_out;
+		*out++ = static_cast<std::byte>(b1 << 4 | b0 >> 2), --n_out;
 state3:
 		if (n_in == 0) {
 			state = 3, buf = static_cast<uint8_t>(b0);
 			return true;
 		}
-		if (*in == '=') {
+		if (*in == static_cast<std::byte>('=')) {
 			++in, --n_in;
 			goto state5;
 		}
@@ -199,18 +199,18 @@ state3:
 			state = 3, buf = static_cast<uint8_t>(b0);
 			return false;
 		}
-		b1 = *in++, --n_in;
+		b1 = static_cast<unsigned>(*in++), --n_in;
 		if (_unlikely((b1 -= '+') > 'z' - '+' || static_cast<int>(b1 = decode[b1]) < 0)) {
 			throw std::ios_base::failure("invalid base64");
 		}
-		*out++ = static_cast<uint8_t>(b0 << 6 | b1), --n_out;
+		*out++ = static_cast<std::byte>(b0 << 6 | b1), --n_out;
 	}
 state4:
 	if (n_in == 0) {
 		state = 4;
 		return true;
 	}
-	if (_unlikely(*in != '=')) {
+	if (_unlikely(*in != static_cast<std::byte>('='))) {
 		throw std::ios_base::failure("invalid base64");
 	}
 	++in, --n_in;
@@ -222,7 +222,7 @@ state5:
 	throw std::ios_base::failure("invalid base64");
 }
 
-bool Base64Decoder::finish(uint8_t *&, size_t) {
+bool Base64Decoder::finish(std::byte *&, size_t) {
 	if (_unlikely(state != 0 && state != 5)) {
 		throw std::ios_base::failure("invalid base64");
 	}

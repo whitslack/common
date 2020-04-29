@@ -1,7 +1,6 @@
 #pragma once
 
 #include <cstddef>
-#include <cstdint>
 #include <cstring>
 
 #include "io.h"
@@ -13,7 +12,7 @@ class Hash : public Sink {
 public:
 	typedef Word_Type word_type;
 	typedef Length_Type length_type;
-	typedef std::array<uint8_t, Digest_Size> digest_type;
+	typedef std::array<std::byte, Digest_Size> digest_type;
 
 public:
 	static constexpr size_t block_size = Block_Size, digest_size = Digest_Size;
@@ -27,7 +26,7 @@ protected:
 
 private:
 	length_type length = 0;
-	uint8_t buffer[block_size];
+	std::byte buffer[block_size];
 	size_t buffer_pos = 0;
 
 protected:
@@ -40,6 +39,6 @@ public:
 	_nodiscard const digest_type & digest();
 
 protected:
-	virtual void update(const uint8_t (&block)[block_size]) = 0;
+	virtual void update(const std::byte (&block)[block_size]) = 0;
 
 };

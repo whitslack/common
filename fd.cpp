@@ -546,7 +546,7 @@ void FileDescriptor::pread_fully(void *buf, size_t nbyte, off_t offset) const {
 	while (nbyte > 0) {
 		ssize_t r = this->pread(buf, nbyte, offset);
 		if (_likely(r > 0)) {
-			buf = static_cast<uint8_t *>(buf) + r, nbyte -= r, offset += r;
+			buf = static_cast<std::byte *>(buf) + r, nbyte -= r, offset += r;
 		}
 		else if (r < 0) {
 			throw std::ios_base::failure("premature EOF");
@@ -561,7 +561,7 @@ void FileDescriptor::pwrite_fully(const void *buf, size_t nbyte, off_t offset) {
 	while (nbyte > 0) {
 		size_t w = this->pwrite(buf, nbyte, offset);
 		if (_likely(w > 0)) {
-			buf = static_cast<const uint8_t *>(buf) + w, nbyte -= w, offset += w;
+			buf = static_cast<const std::byte *>(buf) + w, nbyte -= w, offset += w;
 		}
 		else {
 			throw std::logic_error("non-blocking write in blocking context");
@@ -935,7 +935,7 @@ ssize_t preadv(int fd, const struct iovec iov[], int iovcnt, off_t offset) {
 	auto buf = make_buffer(size);
 	ssize_t ret = ::pread(fd, buf.get(), size, offset);
 	if (ret > 0) {
-		const uint8_t *p = buf.get();
+		const std::byte *p = buf.get();
 		size_t r = ret;
 		do {
 			size_t n = std::min(r, iov->iov_len);
@@ -972,7 +972,7 @@ ssize_t pwritev(int fd, const struct iovec iov[], int iovcnt, off_t offset) {
 		return ::pwrite(fd, one_buf, size, offset);
 	}
 	auto buf = make_buffer(size);
-	uint8_t *p = buf.get();
+	std::byte *p = buf.get();
 	for (int i = 0; i < iovcnt; ++i) {
 		std::memcpy(p, iov[i].iov_base, iov[i].iov_len);
 		p += iov[i].iov_len;

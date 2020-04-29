@@ -21,14 +21,14 @@ template void prf<HMAC<SHA384>>(const void *, size_t, const void *, size_t, void
 
 void pbkdf2(prf_t *prf, size_t prf_out_len, const void *password, size_t password_len, const void *salt, size_t salt_len, size_t c, void *key, size_t key_len) {
 	size_t i = 0;
-	uint8_t salt_ext[salt_len + sizeof(uint32_t)], f[prf_out_len], f1[prf_out_len];
+	std::byte salt_ext[salt_len + sizeof(uint32_t)], f[prf_out_len], f1[prf_out_len];
 	std::memcpy(salt_ext, salt, salt_len);
 	while (key_len > 0) {
 		++i;
-		salt_ext[salt_len + 0] = static_cast<uint8_t>(i >> 24);
-		salt_ext[salt_len + 1] = static_cast<uint8_t>(i >> 16);
-		salt_ext[salt_len + 2] = static_cast<uint8_t>(i >>  8);
-		salt_ext[salt_len + 3] = static_cast<uint8_t>(i >>  0);
+		salt_ext[salt_len + 0] = static_cast<std::byte>(i >> 24);
+		salt_ext[salt_len + 1] = static_cast<std::byte>(i >> 16);
+		salt_ext[salt_len + 2] = static_cast<std::byte>(i >>  8);
+		salt_ext[salt_len + 3] = static_cast<std::byte>(i >>  0);
 		(*prf)(password, password_len, salt_ext, sizeof salt_ext, f1, prf_out_len);
 		std::memcpy(f, f1, sizeof f);
 		for (size_t j = 1; j < c; ++j) {
@@ -39,6 +39,6 @@ void pbkdf2(prf_t *prf, size_t prf_out_len, const void *password, size_t passwor
 		}
 		size_t n = std::min(key_len, prf_out_len);
 		std::memcpy(key, f, n);
-		key = static_cast<uint8_t *>(key) + n, key_len -= n;
+		key = static_cast<std::byte *>(key) + n, key_len -= n;
 	}
 }

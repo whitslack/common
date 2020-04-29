@@ -11,7 +11,7 @@ public:
 	static constexpr size_t digest_size = hash_type::digest_size;
 
 private:
-	uint8_t secret[hash_type::block_size];
+	std::byte secret[hash_type::block_size];
 	hash_type hash;
 
 public:

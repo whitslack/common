@@ -171,7 +171,7 @@ template <>
 struct std::hash<struct in6_addr> {
 	constexpr size_t _pure operator () (const struct in6_addr &addr) const noexcept {
 		size_t hash { }, len = sizeof addr.s6_addr;
-		for (const uint8_t *ptr = addr.s6_addr; len >= sizeof hash; ptr += sizeof hash, len -= sizeof hash) {
+		for (auto ptr = reinterpret_cast<const std::byte *>(addr.s6_addr); len >= sizeof hash; ptr += sizeof hash, len -= sizeof hash) {
 			hash ^= *reinterpret_cast<const size_t *>(ptr);
 		}
 		return as_be(hash);

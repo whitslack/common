@@ -10,7 +10,7 @@ static const uint32_t sha1_init[5] = { 0x67452301, 0xefcdab89, 0x98badcfe, 0x103
 SHA1::SHA1() noexcept : Hash(sha1_init) {
 }
 
-void SHA1::update(const uint8_t (&block)[64]) {
+void SHA1::update(const std::byte (&block)[64]) {
 	uint32_t words[80];
 	for (size_t i = 0; i < 16; ++i) {
 		words[i] = reinterpret_cast<const be<uint32_t> (&)[16]>(block)[i];
@@ -51,7 +51,7 @@ static const uint32_t sha256_round_constants[64] = {
 };
 
 template <size_t Digest_Size>
-void SHA256Base<Digest_Size>::update(const uint8_t (&block)[64]) {
+void SHA256Base<Digest_Size>::update(const std::byte (&block)[64]) {
 	uint32_t words[64];
 	for (size_t i = 0; i < 16; ++i) {
 		words[i] = reinterpret_cast<const be<uint32_t> (&)[16]>(block)[i];
@@ -110,7 +110,7 @@ static const uint64_t sha512_round_constants[80] = {
 };
 
 template <size_t Digest_Size>
-void SHA512Base<Digest_Size>::update(const uint8_t (&block)[128]) {
+void SHA512Base<Digest_Size>::update(const std::byte (&block)[128]) {
 	uint64_t words[80];
 	for (size_t i = 0; i < 16; ++i) {
 		words[i] = reinterpret_cast<const be<uint64_t> (&)[16]>(block)[i];
