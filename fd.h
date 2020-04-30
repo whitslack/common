@@ -166,9 +166,9 @@ public:
 #ifdef __linux__
 		void mremap(size_t new_size, int flags = 0) { addr = linux::mremap(addr, len, new_size, flags), len = new_size; }
 #endif
-		void madvise(size_t offset, size_t len, int advice) { posix::madvise(static_cast<std::byte *>(addr) + offset, len, advice); }
-		void mprotect(size_t offset, size_t len, int prot) { posix::mprotect(static_cast<std::byte *>(addr) + offset, len, prot); }
-		void msync(size_t offset, size_t len, int flags = MS_ASYNC) { posix::msync(static_cast<std::byte *>(addr) + offset, len, flags); }
+		void madvise(size_t offset, size_t len, int advice) { return posix::madvise(static_cast<std::byte *>(addr) + offset, len, advice); }
+		void mprotect(size_t offset, size_t len, int prot) { return posix::mprotect(static_cast<std::byte *>(addr) + offset, len, prot); }
+		void msync(size_t offset, size_t len, int flags = MS_ASYNC) { return posix::msync(static_cast<std::byte *>(addr) + offset, len, flags); }
 	};
 
 protected:
@@ -208,7 +208,7 @@ public:
 	_nodiscard size_t pwrite(const void *buf, size_t nbyte, off_t offset) { return posix::pwrite(fd, buf, nbyte, offset); }
 	_nodiscard ssize_t preadv(const struct iovec iov[], int iovcnt, off_t offset) const { return posix::preadv(fd, iov, iovcnt, offset); }
 	_nodiscard size_t pwritev(const struct iovec iov[], int iovcnt, off_t offset) { return posix::pwritev(fd, iov, iovcnt, offset); }
-	void lockf(int function, off_t size) { posix::lockf(fd, function, size); }
+	void lockf(int function, off_t size) { return posix::lockf(fd, function, size); }
 	int fcntl(int cmd) { return posix::fcntl(fd, cmd); }
 	int fcntl(int cmd, int arg) { return posix::fcntl(fd, cmd, arg); }
 	int fcntl(int cmd, void *arg) { return posix::fcntl(fd, cmd, arg); }
@@ -217,32 +217,32 @@ public:
 	int ioctl(int request, void *arg) { return posix::ioctl(fd, request, arg); }
 	bool isatty() const { return posix::isatty(fd); }
 	off_t lseek(off_t offset, int whence = SEEK_SET) { return posix::lseek(fd, offset, whence); }
-	void fstat(struct stat *buf) const { posix::fstat(fd, buf); }
-	void fchdir() const { posix::fchdir(fd); }
-	void fchmod(mode_t mode) { posix::fchmod(fd, mode); }
-	void fchown(uid_t owner, gid_t group) { posix::fchown(fd, owner, group); }
-	void fallocate(off_t offset, off_t len) { posix::fallocate(fd, offset, len); }
-	void ftruncate(off_t length = 0) { posix::ftruncate(fd, length); }
-	void futimens(const struct timespec times[2]) { posix::futimens(fd, times); }
-	void fsync() { posix::fsync(fd); }
-	void fdatasync() { posix::fdatasync(fd); }
-	void fadvise(off_t offset, off_t length, int advice) const { posix::fadvise(fd, offset, length, advice); }
+	void fstat(struct stat *buf) const { return posix::fstat(fd, buf); }
+	void fchdir() const { return posix::fchdir(fd); }
+	void fchmod(mode_t mode) { return posix::fchmod(fd, mode); }
+	void fchown(uid_t owner, gid_t group) { return posix::fchown(fd, owner, group); }
+	void fallocate(off_t offset, off_t len) { return posix::fallocate(fd, offset, len); }
+	void ftruncate(off_t length = 0) { return posix::ftruncate(fd, length); }
+	void futimens(const struct timespec times[2]) { return posix::futimens(fd, times); }
+	void fsync() { return posix::fsync(fd); }
+	void fdatasync() { return posix::fdatasync(fd); }
+	void fadvise(off_t offset, off_t length, int advice) const { return posix::fadvise(fd, offset, length, advice); }
 	MemoryMapping mmap(off_t off, size_t len, int prot = PROT_READ, int flags = MAP_SHARED) { return { posix::mmap(nullptr, len, prot, flags, fd, off), len }; }
 
-	void faccessat(const char *path, int amode, int flag = 0) const { posix::faccessat(fd, path, amode, flag); }
-	void fchmodat(const char *path, mode_t mode, int flag = 0) const { posix::fchmodat(fd, path, mode, flag); }
-	void fchownat(const char *path, uid_t owner, gid_t group, int flag = 0) const { posix::fchownat(fd, path, owner, group, flag); }
-	void fstatat(const char * _restrict path, struct stat * _restrict buf, int flag = 0) const { posix::fstatat(fd, path, buf, flag); }
-	void linkat(const char *path1, const char *path2, int flag = 0) const { posix::linkat(fd, path1, fd, path2, flag); }
-	void mkdirat(const char *path, mode_t mode = 0777) const { posix::mkdirat(fd, path, mode); }
-	void mkfifoat(const char *path, mode_t mode = 0666) const { posix::mkfifoat(fd, path, mode); }
-	void mknodat(const char *path, mode_t mode, dev_t dev) const { posix::mknodat(fd, path, mode, dev); }
+	void faccessat(const char *path, int amode, int flag = 0) const { return posix::faccessat(fd, path, amode, flag); }
+	void fchmodat(const char *path, mode_t mode, int flag = 0) const { return posix::fchmodat(fd, path, mode, flag); }
+	void fchownat(const char *path, uid_t owner, gid_t group, int flag = 0) const { return posix::fchownat(fd, path, owner, group, flag); }
+	void fstatat(const char * _restrict path, struct stat * _restrict buf, int flag = 0) const { return posix::fstatat(fd, path, buf, flag); }
+	void linkat(const char *path1, const char *path2, int flag = 0) const { return posix::linkat(fd, path1, fd, path2, flag); }
+	void mkdirat(const char *path, mode_t mode = 0777) const { return posix::mkdirat(fd, path, mode); }
+	void mkfifoat(const char *path, mode_t mode = 0666) const { return posix::mkfifoat(fd, path, mode); }
+	void mknodat(const char *path, mode_t mode, dev_t dev) const { return posix::mknodat(fd, path, mode, dev); }
 	FileDescriptor openat(const char *path, int oflag, mode_t mode = 0666) const { return FileDescriptor(posix::openat(fd, path, oflag, mode)); }
 	size_t readlinkat(const char * _restrict path, char * _restrict buf, size_t bufsize) const { return posix::readlinkat(fd, path, buf, bufsize); }
-	void renameat(const char *oldpath, const char *newpath) const { posix::renameat(fd, oldpath, fd, newpath); }
-	void symlinkat(const char *path1, const char *path2) const { posix::symlinkat(path1, fd, path2); }
-	void unlinkat(const char *path, int flag = 0) const { posix::unlinkat(fd, path, flag); }
-	void utimensat(const char *path, const struct timespec times[2], int flag = 0) const { posix::utimensat(fd, path, times, flag); }
+	void renameat(const char *oldpath, const char *newpath) const { return posix::renameat(fd, oldpath, fd, newpath); }
+	void symlinkat(const char *path1, const char *path2) const { return posix::symlinkat(path1, fd, path2); }
+	void unlinkat(const char *path, int flag = 0) const { return posix::unlinkat(fd, path, flag); }
+	void utimensat(const char *path, const struct timespec times[2], int flag = 0) const { return posix::utimensat(fd, path, times, flag); }
 
 	void pread_fully(void *buf, size_t nbyte, off_t offset) const;
 	void pwrite_fully(const void *buf, size_t nbyte, off_t offset);
