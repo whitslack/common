@@ -197,7 +197,7 @@ public:
 
 	void creat(const char *path, mode_t mode = 0666) { *this = FileDescriptor(posix::creat(path, mode)); }
 	void open(const char *path, int oflag = O_RDONLY | O_CLOEXEC, mode_t mode = 0666) { *this = FileDescriptor(path, oflag, mode); }
-	void close() { posix::close(fd), fd = -1; }
+	void close() { return posix::close(std::exchange(fd, -1)); }
 	_nodiscard ssize_t read(void *buf, size_t n) override { return posix::read(fd, buf, n); }
 	_nodiscard size_t write(const void *buf, size_t n) override { return posix::write(fd, buf, n); }
 	_nodiscard ssize_t read(const Source::BufferPointer bufs[], size_t count) override { return this->readv(reinterpret_cast<const struct iovec *>(bufs), static_cast<int>(count)); }
