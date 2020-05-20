@@ -1,11 +1,11 @@
 #pragma once
 
 #include <array>
-#include <bit>
 #include <cstdlib>
 #include <cstring>
 #include <new>
 
+#include "bit.h"
 #include "compiler.h"
 
 
@@ -65,12 +65,12 @@ struct BasicDynamicBuffer : BasicBufferView<T> {
 	}
 	void ensure(size_t min_size) {
 		if (this->size() < min_size) {
-			this->resize(std::ceil2(min_size));
+			this->resize(std::bit_ceil(min_size));
 		}
 	}
 	void append(const T data[], size_t n) {
 		if (this->pptr + n > this->eptr) {
-			this->resize(std::ceil2(this->ppos() + n));
+			this->resize(std::bit_ceil(this->ppos() + n));
 		}
 		std::memcpy(this->pptr, data, n * sizeof(T)), this->pptr += n;
 	}
