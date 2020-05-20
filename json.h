@@ -28,23 +28,23 @@ public:
 	virtual ~Value() = default;
 
 public:
-	virtual Object & as_object();
-	virtual const Object & as_object() const;
+	_noreturn virtual Object & as_object();
+	_noreturn virtual const Object & as_object() const;
 
-	virtual Array & as_array();
-	virtual const Array & as_array() const;
+	_noreturn virtual Array & as_array();
+	_noreturn virtual const Array & as_array() const;
 
-	virtual Number & as_number();
-	virtual const Number & as_number() const;
+	_noreturn virtual Number & as_number();
+	_noreturn virtual const Number & as_number() const;
 
-	virtual Integer & as_integer();
-	virtual const Integer & as_integer() const;
+	_noreturn virtual Integer & as_integer();
+	_noreturn virtual const Integer & as_integer() const;
 
-	virtual String & as_string();
-	virtual const String & as_string() const;
+	_noreturn virtual String & as_string();
+	_noreturn virtual const String & as_string() const;
 
-	virtual Boolean & as_boolean();
-	virtual const Boolean & as_boolean() const;
+	_noreturn virtual Boolean & as_boolean();
+	_noreturn virtual const Boolean & as_boolean() const;
 
 protected:
 	virtual std::ostream & format(std::ostream &) const = 0;
