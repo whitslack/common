@@ -63,9 +63,13 @@ tests : $(TESTS)
 clean : $(CLEAN)
 	rm -rf $(sort $(OBJDIR) $(LIBDIR) $(BINDIR))
 
-$(OBJDIR)/%.o : %.c
-	mkdir -p $(@D) && $(COMPILE.c) -MMD -MP -MQ $@ -o $@ $<
-$(OBJDIR)/%.o : %.cpp
-	mkdir -p $(@D) && $(COMPILE.cpp) -MMD -MP -MQ $@ -o $@ $<
+%/ :
+	mkdir -p $@
 
 -include $(addprefix $(OBJDIR)/,$(addsuffix .d,$(sort $(basename $(SOURCES)))))
+
+.SECONDEXPANSION:
+$(OBJDIR)/%.o : %.c | $$(@D)/
+	$(COMPILE.c) -MMD -MP -MQ $@ -o $@ $<
+$(OBJDIR)/%.o : %.cpp | $$(@D)/
+	$(COMPILE.cpp) -MMD -MP -MQ $@ -o $@ $<
