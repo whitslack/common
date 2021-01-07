@@ -7,8 +7,8 @@ template class Readable<Source>;
 template class Writable<Sink>;
 template class Flushable<Sink>;
 
-template class InputSource<>;
-template class OutputSink<>;
+template class InputSource<std::reference_wrapper<Source>>;
+template class OutputSink<std::reference_wrapper<Sink>>;
 template class InputSource<LimitedReadable<>>;
 template class OutputSink<LimitedWritable<>>;
 template class InputSource<DelimitedReadable<>>;

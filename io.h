@@ -131,7 +131,7 @@ extern template class Writable<Sink>;
 extern template class Flushable<Sink>;
 
 
-template <typename Input = std::reference_wrapper<Source>>
+template <typename Input>
 class InputSource : public Input, public Source {
 
 public:
@@ -149,10 +149,13 @@ private:
 
 };
 
-extern template class InputSource<>;
+template <typename Input>
+InputSource(Input &) -> InputSource<std::reference_wrapper<Input>>;
+
+extern template class InputSource<std::reference_wrapper<Source>>;
 
 
-template <typename Output = std::reference_wrapper<Sink>>
+template <typename Output>
 class OutputSink : public Output, public Sink {
 
 public:
@@ -172,7 +175,10 @@ private:
 
 };
 
-extern template class OutputSink<>;
+template <typename Output>
+OutputSink(Output &) -> OutputSink<std::reference_wrapper<Output>>;
+
+extern template class OutputSink<std::reference_wrapper<Sink>>;
 
 
 template <typename Input = Source &>
