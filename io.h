@@ -26,10 +26,6 @@ struct ConstBufferPointer {
 
 template <typename Derived, typename... Args>
 class Readable {
-	friend Derived;
-
-private:
-	constexpr Readable() noexcept = default;
 
 public:
 	_nodiscard ssize_t read(std::span<const BufferPointer> bufs, Args &&...args);
@@ -52,10 +48,6 @@ protected:
 
 template <typename Derived, typename... Args>
 class Writable {
-	friend Derived;
-
-private:
-	constexpr Writable() noexcept = default;
 
 public:
 	_nodiscard size_t write(std::span<const ConstBufferPointer> bufs, Args &&...args);
@@ -78,10 +70,6 @@ protected:
 
 template <typename Derived, typename... Args>
 class Flushable {
-	friend Derived;
-
-private:
-	constexpr Flushable() noexcept = default;
 
 public:
 	template <typename T = Derived>
