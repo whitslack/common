@@ -6,7 +6,7 @@
 #include <ostream>
 
 
-std::string _pure format_byte_count(uintmax_t count) {
+std::string _pure format_byte_count(uintmax_t count, char decimal_point) {
 	static_assert(std::numeric_limits<uintmax_t>::digits == 32 || std::numeric_limits<uintmax_t>::digits == 64);
 	if (count < 10000) {
 		char buf[6];
@@ -47,7 +47,7 @@ std::string _pure format_byte_count(uintmax_t count) {
 	auto [ptr, ec] = std::to_chars(std::begin(buf), std::end(buf), count / (uintmax_t(1) << 10));
 	assert(ec == std::errc { });
 	if (count < 100 * (uintmax_t(1) << 10)) {
-		*ptr++ = '.';
+		*ptr++ = decimal_point;
 		if (count < 10 * (uintmax_t(1) << 10)) {
 			count = (count * 100 >> 10) % 100;
 			assert(count >= 10); // we never have #.0#
@@ -64,7 +64,7 @@ std::string _pure format_byte_count(uintmax_t count) {
 }
 
 std::ostream & operator<<(std::ostream &os, const struct byte_count &bc) {
-	auto formatted = format_byte_count(bc.count);
+	auto formatted = format_byte_count(bc.count, std::use_facet<std::numpunct<char>>(os.getloc()).decimal_point());
 	auto flags = os.flags();
 	if ((flags & std::ios_base::adjustfield) == std::ios_base::internal) {
 		os.setf(std::ios_base::right, std::ios_base::adjustfield);
