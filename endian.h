@@ -28,10 +28,14 @@ struct be {
 	constexpr _pure operator T () const noexcept(noexcept(T(bswap(value_be)))) { return bswap(value_be); }
 #endif
 	constexpr explicit _pure operator bool () const noexcept(noexcept(bool(value_be))) { return value_be; }
-	constexpr bool _pure operator==(const be<T> &rhs) const noexcept(noexcept(bool(value_be == rhs.value_be))) { return value_be == rhs.value_be; }
+	constexpr bool _pure operator!() const noexcept(noexcept(bool(!value_be))) { return !value_be; }
+	constexpr bool _pure operator==(const be &rhs) const noexcept(noexcept(bool(value_be == rhs.value_be))) { return value_be == rhs.value_be; }
 	constexpr decltype(auto) operator&=(const be &rhs) noexcept(noexcept(value_be &= rhs.value_be)) { return value_be &= rhs.value_be, *this; }
 	constexpr decltype(auto) operator|=(const be &rhs) noexcept(noexcept(value_be |= rhs.value_be)) { return value_be |= rhs.value_be, *this; }
 	constexpr decltype(auto) operator^=(const be &rhs) noexcept(noexcept(value_be ^= rhs.value_be)) { return value_be ^= rhs.value_be, *this; }
+	template <typename R> constexpr auto _pure operator&(R &&rhs) const noexcept(noexcept(be(*this) &= std::forward<R>(rhs))) -> std::enable_if_t<std::is_same_v<T, decltype(value_be & std::forward<R>(rhs))>, be> { return be(*this) &= std::forward<R>(rhs); }
+	template <typename R> constexpr auto _pure operator|(R &&rhs) const noexcept(noexcept(be(*this) |= std::forward<R>(rhs))) -> std::enable_if_t<std::is_same_v<T, decltype(value_be | std::forward<R>(rhs))>, be> { return be(*this) |= std::forward<R>(rhs); }
+	template <typename R> constexpr auto _pure operator^(R &&rhs) const noexcept(noexcept(be(*this) ^= std::forward<R>(rhs))) -> std::enable_if_t<std::is_same_v<T, decltype(value_be ^ std::forward<R>(rhs))>, be> { return be(*this) ^= std::forward<R>(rhs); }
 
 };
 
@@ -51,10 +55,14 @@ struct le {
 	constexpr _pure operator T () const noexcept(std::is_nothrow_copy_constructible_v<T>) { return value_le; }
 #endif
 	constexpr explicit _pure operator bool () const noexcept(noexcept(bool(value_le))) { return value_le; }
-	constexpr bool _pure operator==(const le<T> &rhs) const noexcept(noexcept(bool(value_le == rhs.value_le))) { return value_le == rhs.value_le; }
+	constexpr bool _pure operator!() const noexcept(noexcept(bool(!value_le))) { return !value_le; }
+	constexpr bool _pure operator==(const le &rhs) const noexcept(noexcept(bool(value_le == rhs.value_le))) { return value_le == rhs.value_le; }
 	constexpr decltype(auto) operator&=(const le &rhs) noexcept(noexcept(value_le &= rhs.value_le)) { return value_le &= rhs.value_le, *this; }
 	constexpr decltype(auto) operator|=(const le &rhs) noexcept(noexcept(value_le |= rhs.value_le)) { return value_le |= rhs.value_le, *this; }
 	constexpr decltype(auto) operator^=(const le &rhs) noexcept(noexcept(value_le ^= rhs.value_le)) { return value_le ^= rhs.value_le, *this; }
+	template <typename R> constexpr auto _pure operator&(R &&rhs) const noexcept(noexcept(le(*this) &= std::forward<R>(rhs))) -> std::enable_if_t<std::is_same_v<T, decltype(value_le & std::forward<R>(rhs))>, le> { return le(*this) &= std::forward<R>(rhs); }
+	template <typename R> constexpr auto _pure operator|(R &&rhs) const noexcept(noexcept(le(*this) |= std::forward<R>(rhs))) -> std::enable_if_t<std::is_same_v<T, decltype(value_le | std::forward<R>(rhs))>, le> { return le(*this) |= std::forward<R>(rhs); }
+	template <typename R> constexpr auto _pure operator^(R &&rhs) const noexcept(noexcept(le(*this) ^= std::forward<R>(rhs))) -> std::enable_if_t<std::is_same_v<T, decltype(value_le ^ std::forward<R>(rhs))>, le> { return le(*this) ^= std::forward<R>(rhs); }
 
 };
 
