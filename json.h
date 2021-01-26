@@ -18,7 +18,7 @@ class Real;
 class String;
 class Boolean;
 
-typedef std::unique_ptr<Value> ValuePtr;
+typedef std::shared_ptr<Value> ValuePtr;
 
 
 class Value {
