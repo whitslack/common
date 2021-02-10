@@ -150,6 +150,9 @@ struct std::hash<struct sockaddr_in6> {
 };
 
 
+std::string _pure to_string(const struct in_addr &addr);
+std::string _pure to_string(const struct in6_addr &addr);
+
 std::ostream & operator<<(std::ostream &os, const struct in_addr &addr);
 std::ostream & operator<<(std::ostream &os, const struct in6_addr &addr);
 std::istream & operator>>(std::istream &is, struct in_addr &addr);

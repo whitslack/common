@@ -29,6 +29,22 @@ struct sockaddr * SocketAddress::alloc(socklen_t size) {
 }
 
 
+std::string to_string(const struct in_addr &addr) {
+	char buf[INET_ADDRSTRLEN];
+	if (_unlikely(!::inet_ntop(AF_INET, &addr, buf, sizeof buf))) {
+		throw std::system_error(errno, std::system_category(), "inet_ntop");
+	}
+	return buf;
+}
+
+std::string to_string(const struct in6_addr &addr) {
+	char buf[INET6_ADDRSTRLEN];
+	if (_unlikely(!::inet_ntop(AF_INET6, &addr, buf, sizeof buf))) {
+		throw std::system_error(errno, std::system_category(), "inet_ntop");
+	}
+	return buf;
+}
+
 std::ostream & operator<<(std::ostream &os, const struct in_addr &addr) {
 	char buf[INET_ADDRSTRLEN];
 	if (_unlikely(!::inet_ntop(AF_INET, &addr, buf, sizeof buf))) {
