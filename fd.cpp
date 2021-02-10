@@ -999,7 +999,7 @@ ssize_t preadv(int fd, const struct iovec iov[], int iovcnt, off_t offset) {
 	if (one_buf) {
 		return ::pread(fd, one_buf, size, offset);
 	}
-	auto buf = make_buffer(size);
+	auto buf = std::make_unique_for_overwrite<std::byte[]>(size);
 	ssize_t ret = ::pread(fd, buf.get(), size, offset);
 	if (ret > 0) {
 		const std::byte *p = buf.get();
@@ -1038,7 +1038,7 @@ ssize_t pwritev(int fd, const struct iovec iov[], int iovcnt, off_t offset) {
 	if (one_buf) {
 		return ::pwrite(fd, one_buf, size, offset);
 	}
-	auto buf = make_buffer(size);
+	auto buf = std::make_unique_for_overwrite<std::byte[]>(size);
 	std::byte *p = buf.get();
 	for (int i = 0; i < iovcnt; ++i) {
 		std::memcpy(p, iov[i].iov_base, iov[i].iov_len);

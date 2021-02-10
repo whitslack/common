@@ -10,9 +10,16 @@ namespace std {
 }
 #endif
 
-static inline std::unique_ptr<std::byte[]> make_buffer(size_t size) {
-	return std::unique_ptr<std::byte[]>(new std::byte[size]);
+
+namespace polyfill {
+	template <typename T> inline std::enable_if_t<!std::is_array_v<T>, std::unique_ptr<T>> make_unique_for_overwrite() { return std::unique_ptr<T>(new T); }
+	template <typename T> inline std::enable_if_t<std::is_unbounded_array_v<T>, std::unique_ptr<T>> make_unique_for_overwrite(size_t n) { return std::unique_ptr<T>(new std::remove_extent_t<T>[n]); }
+	template <typename T, typename... Args> inline std::enable_if_t<std::is_bounded_array_v<T>, std::unique_ptr<T>> make_unique_for_overwrite(Args &&...args) = delete;
 }
+namespace std {
+	using namespace polyfill;
+}
+
 
 template <typename T>
 using unique_c_ptr = std::unique_ptr<T, std::integral_constant<void (*)(void *), &std::free>>;

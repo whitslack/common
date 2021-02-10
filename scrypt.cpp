@@ -61,7 +61,7 @@ static void scrypt_block_mix(void * _restrict out, const void * _restrict in, si
 
 static void scrypt_ro_mix(void * _restrict out, const void * _restrict in, size_t r, size_t n) {
 	auto outb = reinterpret_cast<std::byte *>(out);
-	auto buffer = make_buffer(n * r * 128);
+	auto buffer = std::make_unique_for_overwrite<std::byte[]>(n * r * 128);
 	auto v = reinterpret_cast<std::byte (*)[r * 128]>(buffer.get());
 	std::memcpy(v[0], in, sizeof v[0]);
 	for (size_t i = 1; i < n; ++i) {
@@ -79,7 +79,7 @@ static void scrypt_ro_mix(void * _restrict out, const void * _restrict in, size_
 }
 
 void scrypt(void *out, size_t out_len, const void *pass, size_t pass_len, const void *salt, size_t salt_len, size_t r, size_t n, size_t p) {
-	auto buffer = make_buffer(2 * p * r * 128);
+	auto buffer = std::make_unique_for_overwrite<std::byte[]>(2 * p * r * 128);
 	auto b0 = buffer.get(), b1 = b0 + p * r * 128;
 	pbkdf2(&prf<HMAC<SHA256>>, 32, pass, pass_len, salt, salt_len, 1, b0, p * r * 128);
 	size_t c;
