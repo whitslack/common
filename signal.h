@@ -31,9 +31,9 @@ void sigpending(sigset_t &set);
 void sigprocmask(int how, const sigset_t & _restrict set, sigset_t * _restrict oset = nullptr);
 void sigqueue(pid_t pid, int signo, const union sigval value);
 void sigsuspend(const sigset_t &sigmask);
-int sigtimedwait(const sigset_t & _restrict set, siginfo_t * _restrict info, const struct timespec & _restrict timeout);
-int sigwait(const sigset_t &set);
-int sigwaitinfo(const sigset_t & _restrict set, siginfo_t * _restrict info);
+unsigned sigtimedwait(const sigset_t & _restrict set, siginfo_t * _restrict info, const struct timespec & _restrict timeout);
+unsigned sigwait(const sigset_t &set);
+unsigned sigwaitinfo(const sigset_t & _restrict set, siginfo_t * _restrict info);
 
 void sigemptyset(sigset_t &set);
 void sigfillset(sigset_t &set);

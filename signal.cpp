@@ -117,15 +117,18 @@ void sigsuspend(const sigset_t &sigmask) {
 	}
 }
 
-int sigtimedwait(const sigset_t & _restrict set, siginfo_t * _restrict info, const struct timespec & _restrict timeout) {
+unsigned sigtimedwait(const sigset_t & _restrict set, siginfo_t * _restrict info, const struct timespec & _restrict timeout) {
 	int sig;
 	if (_unlikely((sig = ::sigtimedwait(&set, info, &timeout)) < 0)) {
+		if (errno == EAGAIN) {
+			return 0;
+		}
 		throw std::system_error(errno, std::system_category(), "sigtimedwait");
 	}
 	return sig;
 }
 
-int sigwait(const sigset_t &set) {
+unsigned sigwait(const sigset_t &set) {
 	int sig;
 	if (int error = ::sigwait(&set, &sig); _unlikely(error != 0)) {
 		throw std::system_error(error, std::system_category(), "sigwait");
@@ -133,7 +136,7 @@ int sigwait(const sigset_t &set) {
 	return sig;
 }
 
-int sigwaitinfo(const sigset_t & _restrict set, siginfo_t * _restrict info) {
+unsigned sigwaitinfo(const sigset_t & _restrict set, siginfo_t * _restrict info) {
 	int sig;
 	if (_unlikely((sig = ::sigwaitinfo(&set, info)) < 0)) {
 		throw std::system_error(errno, std::system_category(), "sigwaitinfo");
