@@ -6,12 +6,17 @@
 #include <ostream>
 
 
-std::string _pure format_byte_count(uintmax_t count, char decimal_point) {
+static std::string _pure format_byte_count(uintmax_t count, char decimal_point, char sign) {
 	static_assert(std::numeric_limits<uintmax_t>::digits == 32 || std::numeric_limits<uintmax_t>::digits == 64);
+	char buf[9];
+	std::to_chars_result res { };
+	char *&ptr = res.ptr = buf;
+	if (sign) {
+		*ptr++ = sign;
+	}
 	if (count < 10000) {
-		char buf[6];
-		auto [ptr, ec] = std::to_chars(std::begin(buf), std::end(buf), count);
-		assert(ec == std::errc { });
+		res = std::to_chars(ptr, std::end(buf), count);
+		assert(res.ec == std::errc { });
 		*ptr++ = ' ', *ptr++ = 'B';
 		return { buf, ptr };
 	}
@@ -43,9 +48,8 @@ std::string _pure format_byte_count(uintmax_t count, char decimal_point) {
 		prefix = 'E';
 		count >>= 50;
 	}
-	char buf[8];
-	auto [ptr, ec] = std::to_chars(std::begin(buf), std::end(buf), count / (uintmax_t(1) << 10));
-	assert(ec == std::errc { });
+	res = std::to_chars(ptr, std::end(buf), count / (uintmax_t(1) << 10));
+	assert(res.ec == std::errc { });
 	if (count < 100 * (uintmax_t(1) << 10)) {
 		*ptr++ = decimal_point;
 		if (count < 10 * (uintmax_t(1) << 10)) {
@@ -55,20 +59,27 @@ std::string _pure format_byte_count(uintmax_t count, char decimal_point) {
 		else {
 			count = (count * 10 >> 10) % 10;
 		}
-		auto [ptr1, ec] = std::to_chars(ptr, std::end(buf), count);
-		assert(ec == std::errc { });
-		ptr = ptr1;
+		res = std::to_chars(ptr, std::end(buf), count);
+		assert(res.ec == std::errc { });
 	}
 	*ptr++ = ' ', *ptr++ = prefix, *ptr++ = 'i', *ptr++ = 'B';
 	return { buf, ptr };
 }
 
-std::ostream & operator<<(std::ostream &os, const struct byte_count &bc) {
-	auto formatted = format_byte_count(bc.count, std::use_facet<std::numpunct<char>>(os.getloc()).decimal_point());
+std::string _pure format_byte_count(uintmax_t count, char decimal_point) {
+	return format_byte_count(count, decimal_point, '\0');
+}
+
+std::string _pure format_byte_count(intmax_t count, char decimal_point) {
+	return count < 0 ? format_byte_count(-count, decimal_point, '-') : format_byte_count(count, decimal_point, '\0');
+}
+
+static std::ostream & print_byte_count(std::ostream &os, uintmax_t count, char sign) {
+	auto formatted = format_byte_count(count, std::use_facet<std::numpunct<char>>(os.getloc()).decimal_point(), sign);
 	auto flags = os.flags();
 	if ((flags & std::ios_base::adjustfield) == std::ios_base::internal) {
 		os.setf(std::ios_base::right, std::ios_base::adjustfield);
-		if (auto width = os.width(); width > 4 && bc.count < 10000) {
+		if (count < 10000) {
 			formatted.append(2, os.fill());
 		}
 	}
@@ -76,3 +87,14 @@ std::ostream & operator<<(std::ostream &os, const struct byte_count &bc) {
 	os.flags(flags);
 	return os;
 }
+
+std::ostream & operator<<(std::ostream &os, const struct byte_count<true> &bc) {
+	return bc.count < 0 ? print_byte_count(os, -bc.count, '-') : print_byte_count(os, bc.count, os.flags() & std::ios_base::showpos ? '+' : '\0');
+}
+
+std::ostream & operator<<(std::ostream &os, const struct byte_count<false> &bc) {
+	return print_byte_count(os, bc.count, '\0');
+}
+
+template struct byte_count<true>;
+template struct byte_count<false>;
