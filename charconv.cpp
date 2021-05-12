@@ -36,14 +36,14 @@ static inline std::to_chars_result to_chars(char *first, char *last, T value) {
 }
 
 
-namespace std {
+namespace polyfill {
 
-std::from_chars_result _weak from_chars(const char *first, const char *last, float &value) { return ::from_chars<float, &::strtof>(first, last, value); }
-std::from_chars_result _weak from_chars(const char *first, const char *last, double &value) { return ::from_chars<double, &::strtod>(first, last, value); }
-std::from_chars_result _weak from_chars(const char *first, const char *last, long double &value) { return ::from_chars<long double, &::strtold>(first, last, value); }
+std::from_chars_result from_chars(const char *first, const char *last, float &value) { return ::from_chars<float, &::strtof>(first, last, value); }
+std::from_chars_result from_chars(const char *first, const char *last, double &value) { return ::from_chars<double, &::strtod>(first, last, value); }
+std::from_chars_result from_chars(const char *first, const char *last, long double &value) { return ::from_chars<long double, &::strtold>(first, last, value); }
 
-std::to_chars_result _weak to_chars(char *first, char *last, float value) { return ::to_chars<float, &::strfromf>(first, last, value); }
-std::to_chars_result _weak to_chars(char *first, char *last, double value) { return ::to_chars<double, &::strfromd>(first, last, value); }
-std::to_chars_result _weak to_chars(char *first, char *last, long double value) { return ::to_chars<long double, &::strfroml>(first, last, value); }
+std::to_chars_result to_chars(char *first, char *last, float value) { return ::to_chars<float, &::strfromf>(first, last, value); }
+std::to_chars_result to_chars(char *first, char *last, double value) { return ::to_chars<double, &::strfromd>(first, last, value); }
+std::to_chars_result to_chars(char *first, char *last, long double value) { return ::to_chars<long double, &::strfroml>(first, last, value); }
 
-} // namespace std
+} // namespace polyfill
