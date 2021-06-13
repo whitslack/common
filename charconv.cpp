@@ -1,6 +1,7 @@
 #include "charconv.h"
 
 #include <cstdlib>
+#include <limits>
 #include <string>
 
 #include "compiler.h"
