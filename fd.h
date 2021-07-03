@@ -39,7 +39,7 @@ void chown(const char *path, uid_t owner, gid_t group);
 void close(int fildes);
 _nodiscard int creat(const char *path, mode_t mode = 0666);
 _nodiscard int dup(int fildes);
-_nodiscard int dup2(int fildes, int fildes2);
+int dup2(int fildes, int fildes2);
 void faccessat(int fd, const char *path, int amode, int flag = 0);
 void fadvise(int fd, off_t offset, off_t len, int advice);
 void fallocate(int fd, off_t offset, off_t len);
@@ -175,8 +175,8 @@ protected:
 	int fd;
 
 public:
-	FileDescriptor() noexcept : fd(-1) { }
-	explicit FileDescriptor(int fd) noexcept : fd(fd) { }
+	constexpr FileDescriptor() noexcept : fd(-1) { }
+	constexpr explicit FileDescriptor(int fd) noexcept : fd(fd) { }
 	explicit FileDescriptor(const char *path, int oflag, mode_t mode = 0666) : fd(posix::open(path, oflag, mode)) { }
 	FileDescriptor(FileDescriptor &&move) noexcept : fd(move.fd) { move.fd = -1; }
 	FileDescriptor & operator=(FileDescriptor &&move) noexcept { return this->swap(move), *this; }
