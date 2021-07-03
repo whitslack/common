@@ -486,9 +486,9 @@ private:
 public:
 	explicit SourceBuf(Source &source) noexcept;
 	SourceBuf(const SourceBuf &) = delete;
-	SourceBuf & operator = (const SourceBuf &) = delete;
+	SourceBuf & operator=(const SourceBuf &) = delete;
 	SourceBuf(SourceBuf &&) = default;
-	SourceBuf & operator = (SourceBuf &&) = default;
+	SourceBuf & operator=(SourceBuf &&) = default;
 
 protected:
 	std::streambuf * setbuf(char_type s[], std::streamsize n) override;
@@ -506,9 +506,9 @@ protected:
 public:
 	explicit SinkBuf(Sink &sink) noexcept : sink(sink) { }
 	SinkBuf(const SinkBuf &) = delete;
-	SinkBuf & operator = (const SinkBuf &) = delete;
+	SinkBuf & operator=(const SinkBuf &) = delete;
 	SinkBuf(SinkBuf &&) = default;
-	SinkBuf & operator = (SinkBuf &&) = default;
+	SinkBuf & operator=(SinkBuf &&) = default;
 
 protected:
 	std::streambuf * setbuf(char_type s[], std::streamsize n) override;

@@ -21,7 +21,7 @@ public:
 
 private:
 	SpawnFileActions(const SpawnFileActions &) = delete;
-	SpawnFileActions & operator = (const SpawnFileActions &) = delete;
+	SpawnFileActions & operator=(const SpawnFileActions &) = delete;
 
 public:
 	void add_close(int fd);
@@ -44,7 +44,7 @@ public:
 
 private:
 	SpawnAttributes(const SpawnAttributes &) = delete;
-	SpawnAttributes & operator = (const SpawnAttributes &) = delete;
+	SpawnAttributes & operator=(const SpawnAttributes &) = delete;
 
 public:
 	short get_flags() const;

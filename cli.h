@@ -101,7 +101,7 @@ public:
 		return args.size();
 	}
 
-	const argument_type & _pure operator [] (size_t i) const noexcept {
+	const argument_type & _pure operator[](size_t i) const noexcept {
 		return args[i];
 	}
 

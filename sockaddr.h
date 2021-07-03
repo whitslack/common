@@ -54,9 +54,9 @@ public:
 	constexpr SocketAddress(const struct sockaddr_in &sin) noexcept : u { } { u.size = sizeof sin; u.small.u.sin = sin; }
 	constexpr SocketAddress(const struct sockaddr_in6 &sin6) noexcept : u { } { u.size = sizeof sin6; u.small.u.sin6 = sin6; }
 	SocketAddress(const SocketAddress &copy) : SocketAddress(copy, copy.size()) { }
-	SocketAddress & operator = (const SocketAddress &copy) { return this->assign(copy, copy.size()), *this; }
+	SocketAddress & operator=(const SocketAddress &copy) { return this->assign(copy, copy.size()), *this; }
 	SocketAddress(SocketAddress &&move) noexcept : SocketAddress() { this->swap(move); }
-	SocketAddress & operator = (SocketAddress &&move) noexcept { return this->swap(move), *this; }
+	SocketAddress & operator=(SocketAddress &&move) noexcept { return this->swap(move), *this; }
 	void swap(SocketAddress &other) noexcept { using std::swap; swap(u, other.u); }
 	friend void swap(SocketAddress &lhs, SocketAddress &rhs) noexcept { lhs.swap(rhs); }
 	~SocketAddress() { if (_unlikely(u.size > sizeof u.small.u)) std::free(u.large.ptr); }
@@ -73,9 +73,9 @@ public:
 	struct sockaddr * alloc(socklen_t size);
 	void assign(const struct sockaddr *address, socklen_t size) { std::memcpy(this->alloc(size), address, size); }
 
-	friend constexpr bool _pure operator == (const SocketAddress &lhs, const SocketAddress &rhs) noexcept { return lhs.u.size == rhs.u.size && std::memcmp(lhs, rhs, lhs.u.size) == 0; }
-	friend constexpr bool _pure operator < (const SocketAddress &lhs, const SocketAddress &rhs) noexcept { return lhs.u.size < rhs.u.size || lhs.u.size == rhs.u.size && std::memcmp(lhs, rhs, lhs.u.size) < 0; }
-	friend constexpr bool _pure operator > (const SocketAddress &lhs, const SocketAddress &rhs) noexcept { return lhs.u.size > rhs.u.size || lhs.u.size == rhs.u.size && std::memcmp(lhs, rhs, lhs.u.size) > 0; }
+	friend constexpr bool _pure operator==(const SocketAddress &lhs, const SocketAddress &rhs) noexcept { return lhs.u.size == rhs.u.size && std::memcmp(lhs, rhs, lhs.u.size) == 0; }
+	friend constexpr bool _pure operator<(const SocketAddress &lhs, const SocketAddress &rhs) noexcept { return lhs.u.size < rhs.u.size || lhs.u.size == rhs.u.size && std::memcmp(lhs, rhs, lhs.u.size) < 0; }
+	friend constexpr bool _pure operator>(const SocketAddress &lhs, const SocketAddress &rhs) noexcept { return lhs.u.size > rhs.u.size || lhs.u.size == rhs.u.size && std::memcmp(lhs, rhs, lhs.u.size) > 0; }
 
 #define _N(LT, RT) \
 	_N_(LT, RT, ==, !=) \
@@ -86,7 +86,7 @@ public:
 _N(SocketAddress, SocketAddress)
 
 #define _(T, M) \
-	friend constexpr bool _pure operator == (const SocketAddress &lhs, const T &rhs) noexcept { return lhs.u.size == sizeof(T) && lhs.u.small.u.M == rhs; } \
+	friend constexpr bool _pure operator==(const SocketAddress &lhs, const T &rhs) noexcept { return lhs.u.size == sizeof(T) && lhs.u.small.u.M == rhs; } \
 	_R(T, ==, ==) \
 	__(T, M, <, >) \
 	__(T, M, >, <) \
@@ -119,14 +119,14 @@ _(struct sockaddr_in6, sin6)
 
 template <>
 struct std::hash<struct in_addr> {
-	constexpr size_t _pure operator () (const struct in_addr &addr) const noexcept {
+	constexpr size_t _pure operator()(const struct in_addr &addr) const noexcept {
 		return as_be(addr.s_addr);
 	}
 };
 
 template <>
 struct std::hash<struct in6_addr> {
-	constexpr size_t _pure operator () (const struct in6_addr &addr) const noexcept {
+	constexpr size_t _pure operator()(const struct in6_addr &addr) const noexcept {
 		size_t hash { }, len = sizeof addr.s6_addr;
 		for (auto ptr = reinterpret_cast<const std::byte *>(addr.s6_addr); len >= sizeof hash; ptr += sizeof hash, len -= sizeof hash) {
 			hash ^= *reinterpret_cast<const size_t *>(ptr);
@@ -137,20 +137,20 @@ struct std::hash<struct in6_addr> {
 
 template <>
 struct std::hash<struct sockaddr_in> {
-	constexpr size_t _pure operator () (const struct sockaddr_in &addr) const noexcept {
+	constexpr size_t _pure operator()(const struct sockaddr_in &addr) const noexcept {
 		return hash<struct in_addr>()(addr.sin_addr) ^ as_be(addr.sin_port);
 	}
 };
 
 template <>
 struct std::hash<struct sockaddr_in6> {
-	constexpr size_t _pure operator () (const struct sockaddr_in6 &addr) const noexcept {
+	constexpr size_t _pure operator()(const struct sockaddr_in6 &addr) const noexcept {
 		return hash<struct in6_addr>()(addr.sin6_addr) ^ as_be(addr.sin6_port);
 	}
 };
 
 
-std::ostream & operator << (std::ostream &os, const struct in_addr &addr);
-std::ostream & operator << (std::ostream &os, const struct in6_addr &addr);
-std::istream & operator >> (std::istream &is, struct in_addr &addr);
-std::istream & operator >> (std::istream &is, struct in6_addr &addr);
+std::ostream & operator<<(std::ostream &os, const struct in_addr &addr);
+std::ostream & operator<<(std::ostream &os, const struct in6_addr &addr);
+std::istream & operator>>(std::istream &is, struct in_addr &addr);
+std::istream & operator>>(std::istream &is, struct in6_addr &addr);

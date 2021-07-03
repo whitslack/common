@@ -232,7 +232,7 @@ HttpHeaders::const_iterator HttpHeaders::find_token(std::string_view field_name,
 	return this->end();
 }
 
-std::istream & operator >> (std::istream &is, HttpRequestHeaders &headers) {
+std::istream & operator>>(std::istream &is, HttpRequestHeaders &headers) {
 	/*
 	 * RFC 2616 §4.1:
 	 * In the interest of robustness, servers SHOULD ignore any empty
@@ -247,11 +247,11 @@ std::istream & operator >> (std::istream &is, HttpRequestHeaders &headers) {
 	return read_header_fields(is, headers);
 }
 
-std::ostream & operator << (std::ostream &os, const HttpRequestHeaders &headers) {
+std::ostream & operator<<(std::ostream &os, const HttpRequestHeaders &headers) {
 	return write_header_fields(os << headers.method << ' ' << headers.request_uri << ' ' << headers.protocol_version << "\r\n", headers);
 }
 
-std::istream & operator >> (std::istream &is, HttpResponseHeaders &headers) {
+std::istream & operator>>(std::istream &is, HttpResponseHeaders &headers) {
 	if (_unlikely(!read_word(is, headers.protocol_version) || headers.protocol_version.empty() || is.get() != ' ' || !(is >> headers.status_code) || is.get() != ' ' || !std::getline(is, headers.reason_phrase) || headers.reason_phrase.empty() || headers.reason_phrase.back() != '\r')) {
 		throw std::ios_base::failure("bad status line");
 	}
@@ -259,7 +259,7 @@ std::istream & operator >> (std::istream &is, HttpResponseHeaders &headers) {
 	return read_header_fields(is, headers);
 }
 
-std::ostream & operator << (std::ostream &os, const HttpResponseHeaders &headers) {
+std::ostream & operator<<(std::ostream &os, const HttpResponseHeaders &headers) {
 	return write_header_fields(os << headers.protocol_version << ' ' << headers.status_code << ' ' << headers.reason_phrase << "\r\n", headers);
 }
 

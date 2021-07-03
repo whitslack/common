@@ -97,13 +97,13 @@ public:
 
 	void clear() { sigemptyset(set); }
 	void fill() { sigfillset(set); }
-	SignalSet & operator += (int signo) { sigaddset(set, signo); return *this; }
-	SignalSet & operator -= (int signo) { sigdelset(set, signo); return *this; }
-	bool operator & (int signo) const { return sigismember(set, signo); }
+	SignalSet & operator+=(int signo) { sigaddset(set, signo); return *this; }
+	SignalSet & operator-=(int signo) { sigdelset(set, signo); return *this; }
+	bool operator&(int signo) const { return sigismember(set, signo); }
 #ifdef _GNU_SOURCE
 	bool empty() const { return sigisemptyset(set); }
-	SignalSet & operator |= (const SignalSet &rhs) { sigorset(set, set, rhs.set); return *this; }
-	SignalSet & operator &= (const SignalSet &rhs) { sigandset(set, set, rhs.set); return *this; }
+	SignalSet & operator|=(const SignalSet &rhs) { sigorset(set, set, rhs.set); return *this; }
+	SignalSet & operator&=(const SignalSet &rhs) { sigandset(set, set, rhs.set); return *this; }
 #endif
 
 };

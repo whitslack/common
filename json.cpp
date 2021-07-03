@@ -374,7 +374,7 @@ static std::istream & copy_digits(std::ostream &os, std::istream &is, size_t lim
 	return is;
 }
 
-std::istream & operator >> (std::istream &is, ValuePtr &value) {
+std::istream & operator>>(std::istream &is, ValuePtr &value) {
 	is >> std::ws;
 	switch (is.peek()) {
 		case '{': {
@@ -458,7 +458,7 @@ std::istream & operator >> (std::istream &is, ValuePtr &value) {
 	throw std::ios_base::failure("expected object, array, number, string, boolean, or null");
 }
 
-std::ostream & operator << (std::ostream &os, const Value &value) {
+std::ostream & operator<<(std::ostream &os, const Value &value) {
 	auto orig_flags = os.flags(std::ios_base::dec);
 	auto orig_precision = os.precision(std::numeric_limits<double>::digits10);
 	os.width(0);
@@ -468,7 +468,7 @@ std::ostream & operator << (std::ostream &os, const Value &value) {
 	return os;
 }
 
-std::ostream & operator << (std::ostream &os, const ValuePtr &value) {
+std::ostream & operator<<(std::ostream &os, const ValuePtr &value) {
 	return value ? os << *value : os << "null";
 }
 

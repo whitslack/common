@@ -130,9 +130,9 @@ public:
 	_pure operator fd_set * () noexcept { return &set; }
 
 	void clear() noexcept { FD_ZERO(&set); }
-	FDSet & operator += (int fd) noexcept { FD_SET(fd, &set); return *this; }
-	FDSet & operator -= (int fd) noexcept { FD_CLR(fd, &set); return *this; }
-	bool _pure operator & (int fd) const noexcept { return FD_ISSET(fd, &set); }
+	FDSet & operator+=(int fd) noexcept { FD_SET(fd, &set); return *this; }
+	FDSet & operator-=(int fd) noexcept { FD_CLR(fd, &set); return *this; }
+	bool _pure operator&(int fd) const noexcept { return FD_ISSET(fd, &set); }
 
 };
 
@@ -151,12 +151,12 @@ public:
 	public:
 		MemoryMapping() noexcept : addr(MAP_FAILED), len() { }
 		MemoryMapping(MemoryMapping &&move) noexcept : addr(move.addr), len(move.len) { move.addr = MAP_FAILED; }
-		MemoryMapping & operator = (MemoryMapping &&move) noexcept { return this->swap(move), *this; }
+		MemoryMapping & operator=(MemoryMapping &&move) noexcept { return this->swap(move), *this; }
 		~MemoryMapping() { if (addr != MAP_FAILED) posix::munmap(addr, len); }
 	private:
 		MemoryMapping(void *addr, size_t len) noexcept : addr(addr), len(len) { }
 		MemoryMapping(const MemoryMapping &) = delete;
-		MemoryMapping & operator = (const MemoryMapping &) = delete;
+		MemoryMapping & operator=(const MemoryMapping &) = delete;
 	public:
 		void swap(MemoryMapping &other) noexcept { using std::swap; swap(addr, other.addr), swap(len, other.len); }
 		friend void swap(MemoryMapping &lhs, MemoryMapping &rhs) noexcept { lhs.swap(rhs); }
@@ -179,14 +179,14 @@ public:
 	explicit FileDescriptor(int fd) noexcept : fd(fd) { }
 	explicit FileDescriptor(const char *path, int oflag, mode_t mode = 0666) : fd(posix::open(path, oflag, mode)) { }
 	FileDescriptor(FileDescriptor &&move) noexcept : fd(move.fd) { move.fd = -1; }
-	FileDescriptor & operator = (FileDescriptor &&move) noexcept { return this->swap(move), *this; }
+	FileDescriptor & operator=(FileDescriptor &&move) noexcept { return this->swap(move), *this; }
 	~FileDescriptor() { if (fd >= 0) posix::close(fd); }
 	void swap(FileDescriptor &other) noexcept { using std::swap; swap(fd, other.fd); }
 	friend void swap(FileDescriptor &lhs, FileDescriptor &rhs) noexcept { lhs.swap(rhs); }
 
 private:
 	FileDescriptor(const FileDescriptor &) = delete;
-	FileDescriptor & operator = (const FileDescriptor &) = delete;
+	FileDescriptor & operator=(const FileDescriptor &) = delete;
 
 public:
 	_pure explicit operator bool () const noexcept { return fd >= 0; }

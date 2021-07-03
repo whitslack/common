@@ -37,8 +37,8 @@ public:
 
 };
 
-std::istream & operator >> (std::istream &is, HttpRequestHeaders &headers);
-std::ostream & operator << (std::ostream &os, const HttpRequestHeaders &headers);
+std::istream & operator>>(std::istream &is, HttpRequestHeaders &headers);
+std::ostream & operator<<(std::ostream &os, const HttpRequestHeaders &headers);
 
 
 class HttpResponseHeaders : public HttpHeaders {
@@ -54,8 +54,8 @@ public:
 
 };
 
-std::istream & operator >> (std::istream &is, HttpResponseHeaders &headers);
-std::ostream & operator << (std::ostream &os, const HttpResponseHeaders &headers);
+std::istream & operator>>(std::istream &is, HttpResponseHeaders &headers);
+std::ostream & operator<<(std::ostream &os, const HttpResponseHeaders &headers);
 
 
 std::string rfc2822_date(const struct std::tm &tm);

@@ -26,12 +26,12 @@ public:
 	public:
 		Iterator() noexcept : ptr() { }
 		_pure operator struct addrinfo * () const noexcept { return ptr; }
-		struct addrinfo * _pure operator -> () const noexcept { return ptr; }
-		Iterator & operator ++ () noexcept {
+		struct addrinfo * _pure operator->() const noexcept { return ptr; }
+		Iterator & operator++() noexcept {
 			ptr = ptr->ai_next;
 			return *this;
 		}
-		Iterator operator ++ (int) noexcept {
+		Iterator operator++(int) noexcept {
 			Iterator copy(*this);
 			ptr = ptr->ai_next;
 			return copy;
@@ -53,7 +53,7 @@ public:
 private:
 	explicit GAIResults(struct addrinfo *res) noexcept : res(res) { }
 	GAIResults(const GAIResults &) = delete;
-	GAIResults & operator = (const GAIResults &) = delete;
+	GAIResults & operator=(const GAIResults &) = delete;
 
 };
 
@@ -61,20 +61,20 @@ GAIResults getaddrinfo(const char host[], const char service[] = nullptr, int fa
 GAIResults getaddrinfo(const char host_and_service[], in_port_t default_port, int family = AF_UNSPEC, int type = SOCK_STREAM, int protocol = 0, int flags = AI_V4MAPPED | AI_ADDRCONFIG);
 
 
-std::ostream & operator << (std::ostream &os, const struct sockaddr &addr);
-std::ostream & operator << (std::ostream &os, const struct sockaddr_in &addr);
-std::ostream & operator << (std::ostream &os, const struct sockaddr_in6 &addr);
+std::ostream & operator<<(std::ostream &os, const struct sockaddr &addr);
+std::ostream & operator<<(std::ostream &os, const struct sockaddr_in &addr);
+std::ostream & operator<<(std::ostream &os, const struct sockaddr_in6 &addr);
 
-static inline std::ostream & operator << (std::ostream &os, const SocketAddress &addr) {
+static inline std::ostream & operator<<(std::ostream &os, const SocketAddress &addr) {
 	return os << *addr;
 }
 
-static inline std::ostream & operator << (std::ostream &os, const struct sockaddr_storage &addr) {
+static inline std::ostream & operator<<(std::ostream &os, const struct sockaddr_storage &addr) {
 	return os << reinterpret_cast<const struct sockaddr &>(addr);
 }
 
-std::istream & operator >> (std::istream &is, struct sockaddr_in &addr);
-std::istream & operator >> (std::istream &is, struct sockaddr_in6 &addr);
-std::istream & operator >> (std::istream &is, SocketAddress &addr);
+std::istream & operator>>(std::istream &is, struct sockaddr_in &addr);
+std::istream & operator>>(std::istream &is, struct sockaddr_in6 &addr);
+std::istream & operator>>(std::istream &is, SocketAddress &addr);
 
 void convert(SocketAddress &addr, const char str[]);

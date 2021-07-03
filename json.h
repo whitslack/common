@@ -22,7 +22,7 @@ typedef std::unique_ptr<Value> ValuePtr;
 
 
 class Value {
-	friend std::ostream & operator << (std::ostream &, const Value &);
+	friend std::ostream & operator<<(std::ostream &, const Value &);
 
 public:
 	virtual ~Value() = default;
@@ -63,8 +63,8 @@ private:
 public:
 	_pure operator map_t * () noexcept { return &map; }
 	_pure operator const map_t * () const noexcept { return &map; }
-	map_t * _pure operator -> () noexcept { return &map; }
-	const map_t * _pure operator -> () const noexcept { return &map; }
+	map_t * _pure operator->() noexcept { return &map; }
+	const map_t * _pure operator->() const noexcept { return &map; }
 
 	const Value * find(const std::string &key) const _pure;
 	const Value & get(const std::string &key) const _pure;
@@ -100,8 +100,8 @@ private:
 public:
 	_pure operator vector_t * () noexcept { return &vector; }
 	_pure operator const vector_t * () const noexcept { return &vector; }
-	vector_t * _pure operator -> () noexcept { return &vector; }
-	const vector_t * _pure operator -> () const noexcept { return &vector; }
+	vector_t * _pure operator->() noexcept { return &vector; }
+	const vector_t * _pure operator->() const noexcept { return &vector; }
 
 	void insert(std::nullptr_t) {
 		vector.emplace_back(nullptr);
@@ -184,8 +184,8 @@ public:
 
 	_pure operator std::string * () noexcept { return &string; }
 	_pure operator const std::string * () const noexcept { return &string; }
-	std::string * _pure operator -> () noexcept { return &string; }
-	const std::string * _pure operator -> () const noexcept { return &string; }
+	std::string * _pure operator->() noexcept { return &string; }
+	const std::string * _pure operator->() const noexcept { return &string; }
 
 	String & as_string() override final _const;
 	const String & as_string() const override final _const;
@@ -216,10 +216,10 @@ protected:
 };
 
 
-std::istream & operator >> (std::istream &, ValuePtr &);
+std::istream & operator>>(std::istream &, ValuePtr &);
 
-std::ostream & operator << (std::ostream &, const Value &);
+std::ostream & operator<<(std::ostream &, const Value &);
 
-std::ostream & operator << (std::ostream &, const ValuePtr &);
+std::ostream & operator<<(std::ostream &, const ValuePtr &);
 
 } // namespace json

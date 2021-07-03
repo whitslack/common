@@ -22,7 +22,7 @@ public:
 		callback_itr_t callback_itr;
 	public:
 		CallbackRegistration(CallbackRegistration &&move) noexcept : callbacks_ptr(move.callbacks_ptr), callback_itr(move.callback_itr) { move.callbacks_ptr = nullptr; }
-		CallbackRegistration & operator = (CallbackRegistration &&move) noexcept { return this->swap(move), *this; }
+		CallbackRegistration & operator=(CallbackRegistration &&move) noexcept { return this->swap(move), *this; }
 		~CallbackRegistration() {
 			if (callbacks_ptr) {
 				callbacks_ptr->remove_callback(callback_itr), callbacks_ptr = nullptr;
@@ -33,7 +33,7 @@ public:
 	private:
 		explicit CallbackRegistration(Callbacks *callbacks_ptr, callback_itr_t callback_itr) noexcept : callbacks_ptr(callbacks_ptr), callback_itr(callback_itr) { }
 		CallbackRegistration(const CallbackRegistration &) = delete;
-		CallbackRegistration & operator = (const CallbackRegistration &) = delete;
+		CallbackRegistration & operator=(const CallbackRegistration &) = delete;
 	};
 
 private:

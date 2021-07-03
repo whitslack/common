@@ -40,7 +40,7 @@ struct BasicStaticBuffer : BasicBufferView<T>, std::array<T, N> {
 	constexpr BasicStaticBuffer() noexcept : BasicBufferView<T>(this->begin(), this->end()) { }
 private:
 	BasicStaticBuffer(const BasicStaticBuffer &) = delete;
-	BasicStaticBuffer & operator = (const BasicStaticBuffer &) = delete;
+	BasicStaticBuffer & operator=(const BasicStaticBuffer &) = delete;
 };
 
 template <size_t N>
@@ -52,7 +52,7 @@ struct BasicDynamicBuffer : BasicBufferView<T> {
 	BasicDynamicBuffer() noexcept = default;
 	explicit BasicDynamicBuffer(size_t size) : BasicBufferView<T>(static_cast<T *>(size == 0 ? nullptr : sizeof(T) == 1 ? std::malloc(size) : reallocarray(nullptr, size, sizeof(T))), size) { if (_unlikely(!this->bptr && size)) throw std::bad_alloc(); }
 	BasicDynamicBuffer(BasicDynamicBuffer &&move) noexcept : BasicBufferView<T>(std::move(move)) { move.eptr = move.pptr = move.gptr = move.bptr = nullptr; }
-	BasicDynamicBuffer & operator = (BasicDynamicBuffer &&move) noexcept { return this->swap(move), *this; }
+	BasicDynamicBuffer & operator=(BasicDynamicBuffer &&move) noexcept { return this->swap(move), *this; }
 	~BasicDynamicBuffer() noexcept { std::free(this->bptr); }
 	void swap(BasicDynamicBuffer &other) noexcept { using std::swap; swap(this->bptr, other.bptr), swap(this->gptr, other.gptr), swap(this->pptr, other.pptr), swap(this->eptr, other.eptr); }
 	friend void swap(BasicDynamicBuffer &lhs, BasicDynamicBuffer &rhs) noexcept { lhs.swap(rhs); }
@@ -84,7 +84,7 @@ struct BasicDynamicBuffer : BasicBufferView<T> {
 	}
 private:
 	BasicDynamicBuffer(const BasicDynamicBuffer &) = delete;
-	BasicDynamicBuffer & operator = (const BasicDynamicBuffer &) = delete;
+	BasicDynamicBuffer & operator=(const BasicDynamicBuffer &) = delete;
 #if !__GLIBC__ || !__GLIBC_PREREQ(2, 26)
 	static inline void * reallocarray(void *ptr, size_t nmemb, size_t size) noexcept {
 		return size == 0 || nmemb <= SIZE_MAX / size ? std::realloc(ptr, nmemb * size) : nullptr;

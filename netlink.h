@@ -89,7 +89,7 @@ public:
 	explicit Message(size_t max = ::sysconf(_SC_PAGESIZE));
 	explicit Message(struct nl_msg *msg) noexcept : msg(msg) { ::nlmsg_get(msg); }
 	Message(Message &&move) noexcept : msg(move.msg) { move.msg = nullptr; }
-	Message & operator = (Message &&move) noexcept { return this->swap(move), *this; }
+	Message & operator=(Message &&move) noexcept { return this->swap(move), *this; }
 	~Message() { if (msg) ::nlmsg_free(msg), msg = nullptr; }
 	void swap(Message &other) noexcept { using std::swap; swap(msg, other.msg); }
 	friend void swap(Message &lhs, Message &rhs) noexcept { lhs.swap(rhs); }
@@ -98,7 +98,7 @@ public:
 
 private:
 	Message(const Message &) = delete;
-	Message & operator = (const Message &) = delete;
+	Message & operator=(const Message &) = delete;
 
 public:
 	void * reserve(size_t len, int pad);
@@ -150,7 +150,7 @@ private:
 public:
 	Socket();
 	Socket(Socket &&move) noexcept : sk(move.sk) { move.sk = nullptr; }
-	Socket & operator = (Socket &&move) noexcept { return this->swap(move), *this; }
+	Socket & operator=(Socket &&move) noexcept { return this->swap(move), *this; }
 	virtual ~Socket() { if (sk) ::nl_socket_free(sk), sk = nullptr; }
 	void swap(Socket &other) noexcept { using std::swap; swap(sk, other.sk); }
 	friend void swap(Socket &lhs, Socket &rhs) noexcept { lhs.swap(rhs); }
@@ -160,7 +160,7 @@ public:
 
 private:
 	Socket(const Socket &) = delete;
-	Socket & operator = (const Socket &) = delete;
+	Socket & operator=(const Socket &) = delete;
 
 public:
 	void disable_seq_check() noexcept { ::nl_socket_disable_seq_check(sk); }

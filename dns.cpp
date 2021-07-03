@@ -78,7 +78,7 @@ GAIResults getaddrinfo(const char host_and_service[], in_port_t default_port, in
 }
 
 
-std::ostream & operator << (std::ostream &os, const struct sockaddr &addr) {
+std::ostream & operator<<(std::ostream &os, const struct sockaddr &addr) {
 	switch (addr.sa_family) {
 		case AF_INET:
 			return os << reinterpret_cast<const struct sockaddr_in &>(addr);
@@ -89,7 +89,7 @@ std::ostream & operator << (std::ostream &os, const struct sockaddr &addr) {
 	}
 }
 
-std::ostream & operator << (std::ostream &os, const struct sockaddr_in &addr) {
+std::ostream & operator<<(std::ostream &os, const struct sockaddr_in &addr) {
 	assert(addr.sin_family == AF_INET);
 	char host[NI_MAXHOST], serv[NI_MAXSERV];
 	if (int error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV); _unlikely(error != 0)) {
@@ -103,7 +103,7 @@ std::ostream & operator << (std::ostream &os, const struct sockaddr_in &addr) {
 	return os << host << ':' << serv;
 }
 
-std::ostream & operator << (std::ostream &os, const struct sockaddr_in6 &addr) {
+std::ostream & operator<<(std::ostream &os, const struct sockaddr_in6 &addr) {
 	assert(addr.sin6_family == AF_INET6);
 	char host[NI_MAXHOST], serv[NI_MAXSERV];
 	if (int error = ::getnameinfo(reinterpret_cast<const sockaddr *>(&addr), static_cast<socklen_t>(sizeof addr), host, static_cast<socklen_t>(sizeof host), serv, static_cast<socklen_t>(sizeof serv), NI_NUMERICHOST | NI_NUMERICSERV); _unlikely(error != 0)) {
@@ -117,7 +117,7 @@ std::ostream & operator << (std::ostream &os, const struct sockaddr_in6 &addr) {
 	return os << '[' << host << "]:" << serv;
 }
 
-std::istream & operator >> (std::istream &is, struct sockaddr_in &addr) {
+std::istream & operator>>(std::istream &is, struct sockaddr_in &addr) {
 	if (std::string s; is >> s) {
 		for (auto &ai : getaddrinfo(s.c_str(), in_port_t(0), AF_INET, 0, 0, AI_NUMERICHOST | AI_NUMERICSERV)) {
 			if (ai.ai_family == AF_INET && ai.ai_addrlen == sizeof addr) {
@@ -130,7 +130,7 @@ std::istream & operator >> (std::istream &is, struct sockaddr_in &addr) {
 	return is;
 }
 
-std::istream & operator >> (std::istream &is, struct sockaddr_in6 &addr) {
+std::istream & operator>>(std::istream &is, struct sockaddr_in6 &addr) {
 	if (std::string s; is >> s) {
 		for (auto &ai : getaddrinfo(s.c_str(), in_port_t(0), AF_INET6, 0, 0, AI_NUMERICHOST | AI_NUMERICSERV)) {
 			if (ai.ai_family == AF_INET6 && ai.ai_addrlen == sizeof addr) {
@@ -143,7 +143,7 @@ std::istream & operator >> (std::istream &is, struct sockaddr_in6 &addr) {
 	return is;
 }
 
-std::istream & operator >> (std::istream &is, SocketAddress &addr) {
+std::istream & operator>>(std::istream &is, SocketAddress &addr) {
 	if (std::string s; is >> s) {
 		for (auto &ai : getaddrinfo(s.c_str(), in_port_t(0), AF_UNSPEC, 0, 0, AI_NUMERICHOST | AI_NUMERICSERV)) {
 			addr.assign(ai.ai_addr, ai.ai_addrlen);

@@ -92,7 +92,7 @@ __(char32_t)
 	struct name { \
 		typedef void is_transparent; \
 		template <typename... Args> \
-		bool _pure operator () (Args &&...args) const noexcept { \
+		bool _pure operator()(Args &&...args) const noexcept { \
 			return ci::compare(std::forward<Args>(args)...) Op 0; \
 		} \
 	};

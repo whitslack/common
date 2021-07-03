@@ -29,7 +29,7 @@ struct sockaddr * SocketAddress::alloc(socklen_t size) {
 }
 
 
-std::ostream & operator << (std::ostream &os, const struct in_addr &addr) {
+std::ostream & operator<<(std::ostream &os, const struct in_addr &addr) {
 	char buf[INET_ADDRSTRLEN];
 	if (_unlikely(!::inet_ntop(AF_INET, &addr, buf, sizeof buf))) {
 		throw std::system_error(errno, std::system_category(), "inet_ntop");
@@ -37,7 +37,7 @@ std::ostream & operator << (std::ostream &os, const struct in_addr &addr) {
 	return os << buf;
 }
 
-std::ostream & operator << (std::ostream &os, const struct in6_addr &addr) {
+std::ostream & operator<<(std::ostream &os, const struct in6_addr &addr) {
 	char buf[INET6_ADDRSTRLEN];
 	if (_unlikely(!::inet_ntop(AF_INET6, &addr, buf, sizeof buf))) {
 		throw std::system_error(errno, std::system_category(), "inet_ntop");
@@ -45,7 +45,7 @@ std::ostream & operator << (std::ostream &os, const struct in6_addr &addr) {
 	return os << buf;
 }
 
-std::istream & operator >> (std::istream &is, struct in_addr &addr) {
+std::istream & operator>>(std::istream &is, struct in_addr &addr) {
 	if (std::string s; is >> s) {
 		if (auto r = ::inet_pton(AF_INET, s.c_str(), &addr); _unlikely(r <= 0)) {
 			if (_unlikely(r < 0)) {
@@ -57,7 +57,7 @@ std::istream & operator >> (std::istream &is, struct in_addr &addr) {
 	return is;
 }
 
-std::istream & operator >> (std::istream &is, struct in6_addr &addr) {
+std::istream & operator>>(std::istream &is, struct in6_addr &addr) {
 	if (std::string s; is >> s) {
 		if (auto r = ::inet_pton(AF_INET6, s.c_str(), &addr); _unlikely(r <= 0)) {
 			if (_unlikely(r < 0)) {

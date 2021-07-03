@@ -50,8 +50,8 @@ private:
 	T &&x;
 public:
 	constexpr explicit varint(T &&x) noexcept : x(x) { }
-	friend Source & operator >> (Source &source, varint varint) { return read_varint(source, varint.x); }
-	friend Sink & operator << (Sink &sink, varint varint) { return write_varint(sink, varint.x); }
+	friend Source & operator>>(Source &source, varint varint) { return read_varint(source, varint.x); }
+	friend Sink & operator<<(Sink &sink, varint varint) { return write_varint(sink, varint.x); }
 };
 
 template <typename T>
@@ -75,13 +75,13 @@ static inline T read_varint(Source &source) {
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, T &value) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator>>(Source &source, T &value) {
 	source.read_fully(&value, sizeof value);
 	return source;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const T &value) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator<<(Sink &sink, const T &value) {
 	sink.write_fully(&value, sizeof value);
 	return sink;
 }
@@ -109,35 +109,35 @@ static inline std::enable_if_t<std::is_trivially_copyable_v<T> && Extent == std:
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::basic_string<T> &string) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator>>(Source &source, std::basic_string<T> &string) {
 	string.resize(read_varint<size_t>(source));
 	source.read_fully(&string.front(), string.size() * sizeof(T));
 	return source;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const std::basic_string<T> &string) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator<<(Sink &sink, const std::basic_string<T> &string) {
 	write_varint(sink, string.size());
 	sink.write_fully(string.data(), string.size() * sizeof(T));
 	return sink;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::vector<T> &vector) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Source> & operator>>(Source &source, std::vector<T> &vector) {
 	vector.resize(read_varint<size_t>(source));
 	source.read_fully(vector.data(), vector.size() * sizeof(T));
 	return source;
 }
 
 template <typename T>
-static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const std::vector<T> &vector) {
+static inline std::enable_if_t<std::is_trivially_copyable_v<T>, Sink> & operator<<(Sink &sink, const std::vector<T> &vector) {
 	write_varint(sink, vector.size());
 	sink.write_fully(vector.data(), vector.size() * sizeof(T));
 	return sink;
 }
 
 template <typename T, size_t N>
-static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::array<T, N> &array) {
+static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Source> & operator>>(Source &source, std::array<T, N> &array) {
 	for (auto &element : array) {
 		source >> element;
 	}
@@ -145,7 +145,7 @@ static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Source> & opera
 }
 
 template <typename T, size_t N>
-static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const std::array<T, N> &array) {
+static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Sink> & operator<<(Sink &sink, const std::array<T, N> &array) {
 	for (auto &element : array) {
 		sink << element;
 	}
@@ -153,7 +153,7 @@ static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Sink> & operato
 }
 
 template <typename T>
-static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Source> & operator >> (Source &source, std::vector<T> &vector) {
+static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Source> & operator>>(Source &source, std::vector<T> &vector) {
 	vector.resize(read_varint<size_t>(source));
 	for (auto &element : vector) {
 		source >> element;
@@ -162,7 +162,7 @@ static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Source> & opera
 }
 
 template <typename T>
-static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Sink> & operator << (Sink &sink, const std::vector<T> &vector) {
+static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Sink> & operator<<(Sink &sink, const std::vector<T> &vector) {
 	write_varint(sink, vector.size());
 	for (auto &element : vector) {
 		sink << element;
@@ -171,17 +171,17 @@ static inline std::enable_if_t<!std::is_trivially_copyable_v<T>, Sink> & operato
 }
 
 template <typename T1, typename T2>
-static inline Source & operator >> (Source &source, std::pair<T1, T2> &pair) {
+static inline Source & operator>>(Source &source, std::pair<T1, T2> &pair) {
 	return source >> pair.first >> pair.second;
 }
 
 template <typename T1, typename T2>
-static inline Sink & operator << (Sink &sink, const std::pair<T1, T2> &pair) {
+static inline Sink & operator<<(Sink &sink, const std::pair<T1, T2> &pair) {
 	return sink << pair.first << pair.second;
 }
 
 template <typename K, typename T, typename... _>
-static inline Source & operator >> (Source &source, std::map<K, T, _...> &map) {
+static inline Source & operator>>(Source &source, std::map<K, T, _...> &map) {
 	map.clear();
 	for (auto count = read_varint<size_t>(source); count > 0; --count) {
 		std::pair<K, T> pair;
@@ -192,7 +192,7 @@ static inline Source & operator >> (Source &source, std::map<K, T, _...> &map) {
 }
 
 template <typename K, typename T, typename... _>
-static inline Sink & operator << (Sink &sink, const std::map<K, T, _...> &map) {
+static inline Sink & operator<<(Sink &sink, const std::map<K, T, _...> &map) {
 	write_varint(sink, map.size());
 	for (auto &pair : map) {
 		sink << pair;
@@ -211,7 +211,7 @@ static inline std::enable_if_t<I == sizeof...(Types), Source> & read_tuple(Sourc
 }
 
 template <typename... Types>
-static inline Source & operator >> (Source &source, std::tuple<Types...> &tuple) {
+static inline Source & operator>>(Source &source, std::tuple<Types...> &tuple) {
 	return read_tuple<0>(source, tuple);
 }
 
@@ -226,7 +226,7 @@ static inline std::enable_if_t<I == sizeof...(Types), Sink> & write_tuple(Sink &
 }
 
 template <typename... Types>
-static inline Sink & operator << (Sink &sink, const std::tuple<Types...> &tuple) {
+static inline Sink & operator<<(Sink &sink, const std::tuple<Types...> &tuple) {
 	return write_tuple<0>(sink, tuple);
 }
 

@@ -18,7 +18,7 @@ public:
 
 private:
 	GZipSource(const GZipSource &) = delete;
-	GZipSource & operator = (const GZipSource &) = delete;
+	GZipSource & operator=(const GZipSource &) = delete;
 
 public:
 	ssize_t read(void *buf, size_t n) override;
@@ -39,7 +39,7 @@ public:
 
 private:
 	GZipSink(const GZipSink &) = delete;
-	GZipSink & operator = (const GZipSink &) = delete;
+	GZipSink & operator=(const GZipSink &) = delete;
 
 public:
 	size_t write(const void *buf, size_t n) override;
