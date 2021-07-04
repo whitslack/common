@@ -1,5 +1,6 @@
 #include "../ci.h"
 
+#include <algorithm>
 #include <cassert>
 #include <map>
 #include <string>
@@ -47,6 +48,11 @@ int main() {
 
 	std::map<std::string, std::string, ci::less> map { { "foo", "bar" } };
 	assert(map.find("Foo") != map.end());
+
+	auto il = { "foo"sv, "bar"sv };
+	auto il_ci = { "foo"_ci, "bar"_ci };
+	assert(std::find(il.begin(), il.end(), "foo"_ci) == il.begin());
+	assert(std::find(il_ci.begin(), il_ci.end(), "foo"sv) == il_ci.begin());
 
 	return 0;
 }

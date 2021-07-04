@@ -68,16 +68,15 @@ inline namespace literals {
 	static constexpr u32string_view _const operator ""_ci (const char32_t data[], size_t size) noexcept { return { data, size }; }
 }
 
-#define _(CharT, NS1, NS2) \
-	static inline int _pure compare(std::basic_string_view<CharT, NS1::char_traits<CharT>> str1, std::basic_string_view<CharT, NS2::char_traits<CharT>> str2) noexcept { \
+#define _(CharT) { \
 		int c = ci::char_traits<CharT>::compare(str1.data(), str2.data(), std::min(str1.size(), str2.size())); \
 		return c ? c : (str1.size() > str2.size()) - (str1.size() < str2.size()); \
 	}
 #define __(CharT) \
-	_(CharT, std, std) \
-	_(CharT, std, ci) \
-	_(CharT, ci, std) \
-	_(CharT, ci, ci)
+	static inline int _pure compare(std::basic_string_view<CharT> str1, std::basic_string_view<CharT> str2) noexcept _(CharT) \
+	template <typename Traits1> static inline int _pure compare(std::basic_string_view<CharT, Traits1> str1, std::basic_string_view<CharT> str2) noexcept _(CharT) \
+	template <typename Traits2> static inline int _pure compare(std::basic_string_view<CharT> str1, std::basic_string_view<CharT, Traits2> str2) noexcept _(CharT) \
+	template <typename Traits1, typename Traits2> static inline int _pure compare(std::basic_string_view<CharT, Traits1> str1, std::basic_string_view<CharT, Traits2> str2) noexcept _(CharT)
 __(char)
 __(wchar_t)
 #ifdef __cpp_char8_t
@@ -107,6 +106,8 @@ _(greater_equal, >=)
 } // namespace ci
 
 
+namespace std {
+
 #define _(CharT, Op) \
 	static inline bool _pure operator Op (std::basic_string_view<CharT, std::char_traits<CharT>> str1, std::basic_string_view<CharT, ci::char_traits<CharT>> str2) noexcept { \
 		return ci::compare(str1, str2) Op 0; \
@@ -131,3 +132,5 @@ __(char16_t)
 __(char32_t)
 #undef __
 #undef _
+
+} // namespace std
