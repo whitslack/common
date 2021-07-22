@@ -15,8 +15,8 @@ const char Log::fatal_label[] = "FATAL";
 int LogBuf::sync() {
 	auto ret = this->std::stringbuf::sync();
 	if (stream_ptr) {
-		auto str = this->str();
-		stream_ptr->write(str.data(), str.size()).flush();
+		auto sv = this->view();
+		stream_ptr->write(sv.data(), sv.size()).flush();
 	}
 	return ret;
 }
