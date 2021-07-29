@@ -17,16 +17,22 @@ struct BasicBufferView {
 	constexpr BasicBufferView(T *bptr, T *gptr, T *pptr, T *eptr) noexcept : bptr(bptr), gptr(gptr), pptr(pptr), eptr(eptr) { }
 	constexpr BasicBufferView(T *bptr, T *eptr) noexcept : BasicBufferView(bptr, bptr, bptr, eptr) { }
 	constexpr BasicBufferView(T *bptr, size_t size) noexcept : BasicBufferView(bptr, bptr + size) { }
-	constexpr BasicBufferView(std::span<T> span) noexcept : BasicBufferView(span.begin(), span.end()) { }
+	constexpr BasicBufferView(std::span<T> span) noexcept : BasicBufferView(span.data(), span.size()) { }
 	constexpr _const operator BasicBufferView<const T> & () noexcept { return reinterpret_cast<BasicBufferView<const T> &>(*this); }
 	constexpr _const operator const BasicBufferView<const T> & () const noexcept { return reinterpret_cast<const BasicBufferView<const T> &>(*this); }
+	constexpr std::span<T> _pure gspan() const noexcept { return { gptr, pptr }; }
+	constexpr std::span<T> _pure pspan() const noexcept { return { pptr, eptr }; }
 	constexpr size_t _pure gpos() const noexcept { return gptr - bptr; }
 	constexpr void gpos(size_t gpos) noexcept { gptr = bptr + gpos; }
 	constexpr size_t _pure ppos() const noexcept { return pptr - bptr; }
 	constexpr void ppos(size_t ppos) noexcept { pptr = bptr + ppos; }
 	constexpr size_t _pure grem() const noexcept { return pptr - gptr; }
 	constexpr size_t _pure prem() const noexcept { return eptr - pptr; }
+	constexpr void gbump(size_t n) noexcept { gptr += n; }
+	constexpr void pbump(size_t n) noexcept { pptr += n; }
 	constexpr size_t _pure size() const noexcept { return eptr - bptr; }
+	constexpr bool _pure empty() const noexcept { return !this->grem(); }
+	constexpr bool _pure full() const noexcept { return !this->prem(); }
 	constexpr void clear() noexcept { pptr = gptr = bptr; }
 	void compact() noexcept { if (size_t gpos = this->gpos()) std::memmove(bptr, gptr, this->grem() * sizeof(T)), pptr -= gpos, gptr = bptr; }
 };
@@ -37,10 +43,15 @@ using ConstBufferView = BasicBufferView<const std::byte>;
 
 template <typename T, size_t N>
 struct BasicStaticBuffer : BasicBufferView<T>, std::array<T, N> {
-	constexpr BasicStaticBuffer() noexcept : BasicBufferView<T>(this->begin(), this->end()) { }
+	constexpr BasicStaticBuffer() noexcept : BasicBufferView<T>(this->data(), this->size()) { }
 private:
 	BasicStaticBuffer(const BasicStaticBuffer &) = delete;
 	BasicStaticBuffer & operator=(const BasicStaticBuffer &) = delete;
+public:
+	constexpr _const operator BasicStaticBuffer<const T, N> & () noexcept { return reinterpret_cast<BasicStaticBuffer<const T, N> &>(*this); }
+	constexpr _const operator const BasicStaticBuffer<const T, N> & () const noexcept { return reinterpret_cast<const BasicStaticBuffer<const T, N> &>(*this); }
+	using std::array<T, N>::size;
+	using BasicBufferView<T>::empty;
 };
 
 template <size_t N>
@@ -56,6 +67,8 @@ struct BasicDynamicBuffer : BasicBufferView<T> {
 	~BasicDynamicBuffer() noexcept { std::free(this->bptr); }
 	void swap(BasicDynamicBuffer &other) noexcept { using std::swap; swap(this->bptr, other.bptr), swap(this->gptr, other.gptr), swap(this->pptr, other.pptr), swap(this->eptr, other.eptr); }
 	friend void swap(BasicDynamicBuffer &lhs, BasicDynamicBuffer &rhs) noexcept { lhs.swap(rhs); }
+	constexpr _const operator BasicDynamicBuffer<const T> & () noexcept { return reinterpret_cast<BasicDynamicBuffer<const T> &>(*this); }
+	constexpr _const operator const BasicDynamicBuffer<const T> & () const noexcept { return reinterpret_cast<const BasicDynamicBuffer<const T> &>(*this); }
 	void resize(size_t size) {
 		T *new_bptr = static_cast<T *>(sizeof(T) == 1 ? std::realloc(this->bptr, size) : reallocarray(this->bptr, size, sizeof(T)));
 		if (_unlikely(!new_bptr && size)) {
